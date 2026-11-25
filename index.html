@@ -1478,6 +1478,304 @@ STAGE.push(
  FIN('△DEF の面積は？',6),{ch:2,types:['c2b','c2d'],chk:()=>Math.abs(area([Dd,E,F])/area([A,B,Cc,Dd])-6/72)<1e-9});})()
 );
 /*CH2-END*/
+/*CH3-START*/
+/* ==================== 第3章 合同と証明 ==================== */
+SKILLS.push(
+ {id:'c3a',ch:3,name:'何を示せばよいか',desc:'結論から逆にたどり、どの三角形の合同を言えばよいかを決める',ready:true},
+ {id:'c3b',ch:3,name:'合同条件を選ぶ',desc:'等しい辺と角の位置から、使える合同条件を決める',ready:true},
+ {id:'c3c',ch:3,name:'等しい根拠を見つける',desc:'共通な辺・対頂角・錯角・正三角形の辺を根拠にする',ready:true},
+ {id:'c3d',ch:3,name:'証明の流れを組み立てる',desc:'仮定 → 根拠 → 合同 → 結論の順に、1行ずつつなぐ',ready:true},
+ {id:'c3e',ch:3,name:'図形の性質の証明',desc:'二等辺三角形・平行四辺形の性質を、合同から導く',ready:true});
+const CONG=['3組の辺がそれぞれ等しい','2組の辺とその間の角がそれぞれ等しい','1組の辺とその両端の角がそれぞれ等しい'];
+PROBS.push(
+/* ---- 何を示せばよいか ---- */
+(()=>{const A=[200,35],B=[70,245],C=[330,245],D=mid(B,C);
+ return Q('f1','c3a',1,'AB＝AC、∠BAD＝∠CAD のとき、BD＝CD となることを証明します。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),tk(A,B,1),tk(A,C,1),tk(B,D,2,{hidden:1,id:'k1'}),tk(D,C,2,{hidden:1,id:'k2'}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcS('m1',A,B,D,'●',{r:34}),arcS('m2',A,D,C,'●',{r:40})],
+ [CHO('c3a','仮定と結論を正しく分けたのは？','仮定：AB＝AC、∠BAD＝∠CAD　結論：BD＝CD',
+   [['仮定：BD＝CD　結論：AB＝AC','「〜のとき」の部分が仮定、「〜となる」の部分が結論だよ。'],['仮定：AB＝AC、BD＝CD　結論：∠BAD＝∠CAD','BD＝CD はこれから示すこと（結論）。仮定に入れてはいけないよ。']],
+   ['sAB','sAC','m1','m2'],'「〜のとき」が仮定、「〜となることを証明」が結論。','仮定は AB＝AC と ∠BAD＝∠CAD。結論は BD＝CD。','仮定と結論を分ける'),
+  CHO('c3a','BD＝CD を言うには、どの2つの三角形の合同を示す？','△ABD と △ACD',
+   [['△ABC と △ABD','BD と CD を、それぞれ別の三角形の「対応する辺」としてふくむ2つを選ぼう。'],['△ABD と △ADC の大きさをくらべる','合同を示せば「対応する辺は等しい」が使える。大きさくらべでは証明にならないよ。']],
+   ['sAD'],'BD をふくむ三角形と、CD をふくむ三角形。','BD は △ABD、CD は △ACD の辺。この2つの合同を示せばよい。','△ABD ≡ △ACD を示せばよい',{show:['k1','k2']})],
+ FCH('BD＝CD を示すために使う合同と条件は？','△ABD ≡ △ACD（2組の辺とその間の角）',['△ABD ≡ △ACD（3組の辺）','△ABC ≡ △ACD（2組の辺とその間の角）']),{chk:()=>Math.abs(D2(B,D)-D2(C,D))<1e-9});})(),
+
+(()=>{const A=[95,60],B=[45,235],C=[300,235],D=[A[0]+C[0]-B[0],A[1]];
+ return Q('f2','c3a',2,'四角形 ABCD で AB ∥ DC、AB＝DC のとき、AD ∥ BC となることを証明します。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sDA',D,A),sg('sAC',A,C,{dash:1,hidden:1}),tk(A,B,1),tk(D,C,1),{t:'par',p:mid(A,B),d:dirTo(A,B)},{t:'par',p:mid(D,C),d:dirTo(D,C)},pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcS('m1',A,C,D,'●',{hidden:1,r:30}),arcS('m2',C,A,B,'●',{hidden:1,r:30})],
+ [CHO('c3a','AD ∥ BC を示すには、何が等しいと言えばよい？','錯角（∠CAD と ∠ACB）',
+   [['AD と BC の長さ','長さが等しくても、平行とは言えないよ。平行を示すのは「錯角（または同位角）が等しい」。'],['∠A と ∠C','∠A と ∠C は錯角の位置ではないよ。']],
+   ['sDA','sBC'],'平行を示す道具は「錯角が等しい」「同位角が等しい」。そのためには、2本の線をつなぐ線が必要。','対角線 AC を引くと、∠CAD と ∠ACB が錯角になる。','平行 ← 錯角 ∠CAD ＝ ∠ACB',{show:['sAC','m1','m2']}),
+  CHO('c3a','その錯角をふくむ、合同を示す2つの三角形は？','△ABC と △CDA',
+   [['△ABD と △CDB','対角線 BD ではなく、さっき引いた AC で考えよう。∠CAD と ∠ACB をふくむ三角形だよ。'],['△ABC と △ADC の面積','面積ではなく、合同を示そう。']],
+   ['sAC'],'∠ACB は △ABC の角、∠CAD は △CDA の角。','△ABC ≡ △CDA が言えれば、対応する角 ∠ACB ＝ ∠CAD。','△ABC ≡ △CDA を示す')],
+ FCH('AD ∥ BC を示す流れとして正しいのは？','対角線 AC を引く → △ABC ≡ △CDA → ∠ACB ＝ ∠CAD（錯角）→ AD ∥ BC',['AD ＝ BC を示す → AD ∥ BC','△ABD ≡ △CDB → AB ∥ DC']),{chk:()=>Math.abs(angAt(A,C,D)-angAt(C,A,B))<1e-9});})(),
+
+(()=>{const O=[200,150],A=from(O,150,110),B=from(O,330,110),Cc=from(O,215,100),D=from(O,35,100);
+ return Q('f3','c3a',2,'線分 AB と CD が点Oで交わり、O は AB と CD のそれぞれの中点です。このとき AC ∥ DB となることを証明します。',
+ [sg('sAB',A,B),sg('sCD',Cc,D),sg('sAC',A,Cc),sg('sDB',D,B),tk(A,O,1),tk(O,B,1),tk(Cc,O,2),tk(O,D,2),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(O,'O'),
+  arcS('m1',A,O,Cc,'●',{hidden:1,r:28}),arcS('m2',B,O,D,'●',{hidden:1,r:28})],
+ [CHO('c3a','AC ∥ DB を示すには、どの角が等しいと言えばよい？','錯角 ∠OAC と ∠OBD',
+   [['∠AOC と ∠BOD','この2つは対頂角で、もともと等しい。平行を示す角ではないよ。'],['∠OAC と ∠OCA','同じ三角形の中の角。平行を示すには、2本の線と交わる線（AB）でできる錯角を使う。']],
+   ['sAC','sDB','sAB'],'AC と DB は、どちらも直線 AB と交わっている。','直線 AB と AC、DB がつくる錯角 ∠OAC と ∠OBD が等しければ AC ∥ DB。','平行 ← 錯角 ∠OAC ＝ ∠OBD',{show:['m1','m2']}),
+  CHO('c3a','その角をふくむ2つの三角形は？','△OAC と △OBD',[['△OAD と △OBC','∠OAC と ∠OBD をふくむのは、AC 側と DB 側の三角形だよ。'],['△ABC と △ABD','∠OAC はふくむけれど、合同を示すのに辺や角がそろわないよ。']],
+   ['sAC','sDB'],'錯角の頂点 A と B に注目。','△OAC ≡ △OBD を示せば、∠OAC ＝ ∠OBD。','△OAC ≡ △OBD を示す')],
+ FCH('△OAC ≡ △OBD の合同条件は？',CONG[1],[CONG[0],CONG[2]]),{chk:()=>Math.abs(angAt(A,O,Cc)-angAt(B,O,D))<1e-9});})(),
+
+(()=>{const B=[40,250],C=[260,250],A=inter(B,60,C,120),D=lerp(B,C,0.35),E=from(A,dirTo(A,D)+60,D2(A,D));
+ return Q('f4','c3a',3,'△ABC と △ADE は正三角形で、点Dは辺BC上にあります。∠ACE の大きさを求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),sg('sAE',A,E),sg('sDE',D,E),sg('sCE',C,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  arcS('m1',A,B,D,'●',{hidden:1,r:34}),arcS('m2',A,C,E,'●',{hidden:1,r:34}),arcV('aB',B,C,A,'60°',60,{r:22,hidden:1}),arcV('ax',C,A,E,'x',60,{x:1,r:22})],
+ [CHO('c3a','∠ACE（x）を求めるために、合同を示す2つの三角形は？','△ABD と △ACE',
+   [['△ADC と △AEC','この2つは合同にならないよ。正三角形の辺（AB＝AC、AD＝AE）をそれぞれふくむ三角形を選ぼう。'],['△ABC と △ADE','どちらも正三角形だけど、大きさがちがうので合同ではないよ。']],
+   ['sAB','sAC','sAD','sAE'],'x は C の角。x をふくむ三角形と、その「対応する」三角形は？','△ACE と △ABD。AB＝AC、AD＝AE（正三角形の辺）。','△ABD ≡ △ACE を示す'),
+  CHO('c3c','∠BAD ＝ ∠CAE の理由は？','どちらも 60° から ∠DAC を引いた角',[['対頂角','∠BAD と ∠CAE は向かい合っていないよ。'],['錯角','平行線はないよ。']],
+   ['sAD','sAC'],'∠BAC も ∠DAE も 60°。どちらにも ∠DAC がふくまれている。','∠BAD ＝ 60° − ∠DAC ＝ ∠CAE。','∠BAD ＝ ∠CAE（60° − ∠DAC）',{show:['m1','m2'],match:['m1','m2']}),
+  CHO('c3b','合同条件は？',CONG[1],[[CONG[0],'BD と CE が等しいことは、まだわかっていないよ。'],[CONG[2],'等しい角は1組（∠BAD ＝ ∠CAE）だけだよ。']],
+   [],'AB＝AC、AD＝AE、その間の角 ∠BAD ＝ ∠CAE。','2組の辺とその間の角がそれぞれ等しい。','2辺とその間の角 → △ABD ≡ △ACE',{show:['aB'],label:{ax:'60°'}})],
+ FIN('∠ACE は何度？',60,{unit:'°'}),{chk:()=>Math.abs(D2(B,D)-D2(C,E))<1e-9});})(),
+
+(()=>{const SC=46,A=[105,30],B=[105,30+5*SC],C=[105+5*SC,30+5*SC],D=[105+5*SC,30],E=[B[0]+2*SC,B[1]],F=[C[0],C[1]-2*SC],G=lnX(A,E,B,F);
+ return Q('f5','c3a',3,'正方形 ABCD で、点E、F は辺 BC、CD 上にあり、BE＝CF です。AE と BF の交点を G とするとき、∠AGB の大きさを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sAE',A,E),sg('sBF',B,F),tk(B,E,1),tk(C,F,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),pt(G,'G'),
+  arcS('m1',A,B,E,'●',{hidden:1,r:44}),arcS('m2',B,C,F,'●',{hidden:1,r:44}),arcV('ax',G,B,A,'x',90,{x:1,r:16})],
+ [CHO('c3a','x を求めるために、合同を示す2つの三角形は？','△ABE と △BCF',[['△ABG と △BEG','この2つは合同にならないよ。BE＝CF をふくむ三角形を選ぼう。'],['△ABE と △ADF','AD 側には、BE と等しい辺がないよ。']],
+   ['sAE','sBF'],'印のついた BE と CF。それぞれをふくむ直角三角形は？','△ABE（BE をふくむ）と △BCF（CF をふくむ）。','△ABE ≡ △BCF を示す'),
+  CHO('c3b','合同条件は？',CONG[1],[[CONG[0],'AE と BF が等しいことは、まだわからないよ。'],[CONG[2],'等しい角は直角の1組だけだよ。']],
+   ['s1','s2'],'AB＝BC（正方形）、BE＝CF（仮定）、∠ABE＝∠BCF＝90°。','2組の辺とその間の角がそれぞれ等しい。','2辺とその間の角 → △ABE ≡ △BCF',{show:['m1','m2'],match:['m1','m2']}),
+  CHO('c3c','∠BAE ＝ ∠CBF から、x がわかる理由は？','△ABG で ∠BAG ＋ ∠ABG ＝ ∠CBF ＋ ∠ABG ＝ 90°',[['∠BAE と ∠CBF が錯角だから','錯角ではないよ。'],['x は正方形の角だから','x は正方形の頂点の角ではないよ。']],
+   ['sBF'],'∠ABG ＋ ∠CBF ＝ ∠ABC ＝ 90°。','∠BAG ＝ ∠CBF なので、∠BAG ＋ ∠ABG ＝ 90°。△ABG で x ＝ 180° − 90° ＝ 90°。','∠BAG ＋ ∠ABG ＝ 90° → x ＝ 90°',{label:{ax:'90°'}})],
+ FIN('∠AGB は何度？',90,{unit:'°'}));})(),
+
+/* ---- 合同条件を選ぶ ---- */
+(()=>{const T=tri3([40,235],15,5,3.5,4,32),U=tri3([215,120],-20,5,3.5,4,32);
+ return Q('j1','c3b',1,'2つの三角形で、同じ印の辺・角は等しいものとします。△ABC と △DEF は合同と言えますか。',
+ [sg('s1',T.A,T.B),sg('s2',T.B,T.C),sg('s3',T.C,T.A),sg('t1',U.A,U.B),sg('t2',U.B,U.C),sg('t3',U.C,U.A),tk(T.A,T.B,1),tk(U.A,U.B,1),tk(T.B,T.C,2),tk(U.B,U.C,2),
+  arcS('m1',T.B,T.C,T.A,'●'),arcS('m2',U.B,U.C,U.A,'●'),pt(T.A,'A'),pt(T.B,'B'),pt(T.C,'C'),pt(U.A,'D'),pt(U.B,'E'),pt(U.C,'F')],
+ [CHO('c3b','使える合同条件は？',CONG[1],[[CONG[0],'等しいとわかっている辺は2組。3組目（AC と DF）はわからないよ。'],[CONG[2],'等しい角は1組だけだよ。']],
+   ['s1','s2','m1'],'等しい角 ● は、等しい2辺のあいだにある？','AB＝DE、BC＝EF、その間の角 ∠B ＝ ∠E。','2組の辺とその間の角 → 合同')],
+ FCH('△ABC と △DEF の合同条件は？',CONG[1],[CONG[0],'合同とは言えない']),{chk:()=>Math.abs(D2(T.A,T.C)-D2(U.A,U.C))<1e-9});})(),
+
+(()=>{const T=tri3([35,240],5,5.5,4,4.6,30),U=tri3([360,90],195,5.5,4,4.6,30);
+ return Q('j2','c3b',2,'同じ印の辺・角は等しいものとします。△ABC と △DEF は合同と言えますか。',
+ [sg('s1',T.A,T.B),sg('s2',T.B,T.C),sg('s3',T.C,T.A),sg('t1',U.A,U.B),sg('t2',U.B,U.C),sg('t3',U.C,U.A),tk(T.B,T.C,1),tk(U.B,U.C,1),
+  arcS('m1',T.B,T.C,T.A,'●'),arcS('m2',U.B,U.C,U.A,'●'),arcS('n1',T.A,T.B,T.C,'○'),arcS('n2',U.A,U.B,U.C,'○'),arcS('c1',T.C,T.A,T.B,'×',{hidden:1}),arcS('c2',U.C,U.A,U.B,'×',{hidden:1}),
+  pt(T.A,'A'),pt(T.B,'B'),pt(T.C,'C'),pt(U.A,'D'),pt(U.B,'E'),pt(U.C,'F')],
+ [CHO('c3b','使える合同条件は？','1組の辺とその両端の角（残りの角 ∠C ＝ ∠F も等しくなる）',
+   [['合同とは言えない（等しい辺の両端に、等しい角がそろっていない）','2組の角が等しければ、残りの角も 180° から引いて等しくなる。∠C ＝ ∠F を加えれば、BC の両端の角がそろうよ。'],[CONG[1],'等しいとわかっている辺は1組だけだよ。']],
+   ['s2','m1','n1'],'∠A ＝ ∠D、∠B ＝ ∠E。三角形の内角の和を使うと、∠C と ∠F は？','∠C ＝ 180° − ∠A − ∠B ＝ ∠F。BC＝EF とその両端の角 ∠B ＝ ∠E、∠C ＝ ∠F。','残りの角も等しい → 1辺とその両端の角',{show:['c1','c2']})],
+ FCH('△ABC と △DEF の合同条件は？',CONG[2],[CONG[1],'合同とは言えない']),{chk:()=>Math.abs(D2(T.A,T.B)-D2(U.A,U.B))<1e-9});})(),
+
+(()=>{const SC=30,B=[40,240],A=from(B,50,5*SC),C1=(()=>{const a=5,ac=4.2,c=a;const ang=50*RAD;const bx=5*Math.cos(ang),by=5*Math.sin(ang);/* A=(bx,by) relative, find x on x-axis with dist to A = ac */const dy=by,dx=Math.sqrt(ac*ac-dy*dy);return [[B[0]+(bx+dx)*SC,240],[B[0]+(bx-dx)*SC,240]];})();
+ const C=C1[0],E=[255,240],D=from(E,50,5*SC),F=[E[0]+(C1[1][0]-B[0]),240];
+ return Q('j3','c3b',2,'同じ印の辺・角は等しいものとします。△ABC と △DEF は合同と言えますか。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,A),sg('t1',D,E),sg('t2',E,F),sg('t3',F,D),tk(A,B,1),tk(D,E,1),tk(A,C,2),tk(D,F,2),
+  arcS('m1',B,C,A,'●',{r:28}),arcS('m2',E,F,D,'●',{r:28}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F')],
+ [CHO('c3b','合同と言えるか？','言えない（等しい角が、等しい2辺のあいだにない）',
+   [[CONG[1]+'から、言える','● の角 ∠B は、等しい2辺 AB と AC のあいだの角ではないよ。じっさい、図の2つは形がちがう。'],[CONG[0]+'から、言える','等しいとわかっている辺は2組だけだよ。']],
+   ['m1','s1','s3'],'等しい角 ● は、等しい2辺（1本線・2本線）にはさまれている？','2辺と、そのあいだにない角が等しくても、合同とは限らない。図のように形のちがう三角形ができる。','2辺＋はさまれていない角 → 合同とは言えない')],
+ FCH('△ABC と △DEF について正しいのは？','合同とは言えない',[CONG[1]+'ので合同',CONG[2]+'ので合同']),{chk:()=>Math.abs(D2(A,C)-D2(D,F))<1e-9&&Math.abs(D2(B,C)-D2(E,F))>1});})(),
+
+(()=>{const O=[45,235],X=from(O,0,330),Y=from(O,44,330),Pp=from(O,22,220),H=[Pp[0],235],K=(()=>{const u=[Math.cos(44*RAD),-Math.sin(44*RAD)],t=(Pp[0]-O[0])*u[0]+(Pp[1]-O[1])*u[1];return [O[0]+u[0]*t,O[1]+u[1]*t];})();
+ return Q('j4','c3b',3,'∠XOY の二等分線上の点 P から、OX、OY に垂線 PH、PK をひきました。PH＝PK となることを証明するとき、△OPH と △OPK の合同条件は？',
+ [sg('sOX',O,X),sg('sOY',O,Y),sg('sOP',O,Pp),sg('sPH',Pp,H),sg('sPK',Pp,K),rt(H,O,Pp),rt(K,Pp,O),pt(O,'O'),pt(Pp,'P'),pt(H,'H'),pt(K,'K'),{t:'nm',p:[372,228],s:'X'},{t:'nm',p:[285,40],s:'Y'},
+  arcS('m1',O,H,Pp,'●',{r:60}),arcS('m2',O,Pp,K,'●',{r:70})],
+ [CHO('c3c','OP について言えることは？','2つの三角形に共通な辺（斜辺）',[['OP は ∠XOY の二等分線なので、OP＝PH','二等分線は「角」を半分にする線。長さが等しくなるわけではないよ。'],['OP は2つの三角形で長さがちがう','OP は1本の線分。どちらの三角形にも同じ OP がふくまれている（共通）。']],
+   ['sOP'],'OP は △OPH の辺でもあり、△OPK の辺でもある。','OP は共通で、どちらの直角三角形でも斜辺。','OP は共通な斜辺'),
+  CHO('c3b','合同条件は？','直角三角形の斜辺と1つの鋭角がそれぞれ等しい',[['直角三角形の斜辺と他の1辺がそれぞれ等しい','PH＝PK はこれから示すこと。まだ使えないよ。'],[CONG[2],'1組の辺（OP）の両端の角は ∠POH と ∠OPH。∠OPH ＝ ∠OPK はまだわからないので、直角三角形の条件を使おう。']],
+   ['m1','m2','sOP'],'直角三角形で、斜辺 OP 共通、鋭角 ∠POH ＝ ∠POK。','直角三角形の斜辺と1つの鋭角がそれぞれ等しいので △OPH ≡ △OPK。','直角三角形の斜辺と1鋭角 → 合同')],
+ FCH('△OPH と △OPK の合同条件は？','直角三角形の斜辺と1つの鋭角がそれぞれ等しい',['直角三角形の斜辺と他の1辺がそれぞれ等しい',CONG[1]]),{chk:()=>Math.abs(D2(Pp,H)-D2(Pp,K))<1e-9});})(),
+
+(()=>{const A=[200,40],C=[200,262],B=from(A,235,140),D=from(A,305,140);
+ return Q('j5','c3b',3,'四角形 ABCD で AB＝AD、CB＝CD、∠BAD＝70° です。∠BAC の大きさを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sAC',A,C),tk(A,B,1),tk(A,D,1),tk(C,B,2),tk(C,D,2),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aA',A,B,D,'70°',70,{r:20,lr:20,whole:1}),arcS('m1',A,B,C,'',{r:42,hidden:1}),arcV('ax',A,B,C,'x',35,{x:1,r:42})],
+ [CHO('c3b','△ABC と △ADC の合同条件は？',CONG[0],[[CONG[1],'等しい角は、まだわかっていないよ。'],['合同とは言えない','AB＝AD、CB＝CD、AC は共通。3組の辺が等しいよ。']],
+   ['sAC','s1','s4','s2','s3'],'AC はどちらの三角形にもふくまれている。','AB＝AD、CB＝CD、AC 共通なので、3組の辺がそれぞれ等しい。','3辺（AC は共通）→ △ABC ≡ △ADC'),
+  INP('x は何度？',35,{unit:'°',look:['aA','ax'],hint:'∠BAC ＝ ∠DAC（合同な図形の対応する角）。70° を半分に。',ans:'∠BAC ＝ ∠DAC なので x ＝ 70 ÷ 2 ＝ 35°',sum:'合同 → ∠BAC ＝ ∠DAC → x ＝ 35°',after:{label:{ax:'35°'}}})],
+ FIN('∠BAC は何度？',35,{unit:'°'}));})(),
+
+/* ---- 等しい根拠を見つける ---- */
+(()=>{const A=[90,55],B=[40,235],C=[310,235],D=[A[0]+C[0]-B[0],A[1]];
+ return Q('q1','c3c',1,'四角形 ABCD で AB＝CD、AD＝CB です。△ABD ≡ △CDB を示すとき、3組目の辺 BD が等しい理由は？',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sBD',B,D),tk(A,B,1),tk(C,D,1),tk(A,D,2),tk(B,C,2),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D')],
+ [CHO('c3c','BD ＝ DB の理由は？','共通（同じ1本の線分）',[['仮定より','BD については、問題文には何も書かれていないよ。'],['対頂角は等しい','BD は角ではなく辺だよ。']],
+   ['sBD'],'BD は、△ABD にも △CDB にもふくまれる1本の線分。','BD は2つの三角形に共通。','BD は共通')],
+ FCH('△ABD ≡ △CDB の合同条件は？',CONG[0],[CONG[1],CONG[2]]),{chk:()=>Math.abs(D2(A,B)-D2(C,D))<1e-9});})(),
+
+(()=>{const SC=26,O=[195,150],A=from(O,155,4*SC),B=from(O,335,4*SC),Cc=from(O,215,3*SC),D=from(O,35,3*SC),sc=D2(A,Cc)/5;
+ return Q('q2','c3c',2,'線分 AB、CD は点 O で交わり、OA＝OB、OC＝OD です。AC＝5 のとき、BD の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sCD',Cc,D),sg('sAC',A,Cc),sg('sBD',B,D),tk(A,O,1),tk(O,B,1),tk(Cc,O,2),tk(O,D,2),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(O,'O'),
+  arcS('m1',O,A,Cc,'●',{r:18,hidden:1}),arcS('m2',O,B,D,'●',{r:18,hidden:1}),LEN('l1',A,Cc,'5',5,1),LEN('ax',B,D,'x',5,1,{x:1})],
+ [CHO('c3c','∠AOC ＝ ∠BOD の理由は？','対頂角は等しい',[['仮定より','角については、問題文に何も書かれていないよ。'],['錯角は等しい','AC と BD が平行とは書いていないよ。']],
+   ['sAB','sCD'],'∠AOC と ∠BOD は、2本の線分が交わってできる向かい合う角。','対頂角は等しいので ∠AOC ＝ ∠BOD。','∠AOC ＝ ∠BOD（対頂角）',{show:['m1','m2'],match:['m1','m2']}),
+  CHO('c3b','合同条件と、BD の長さについて言えることは？','2組の辺とその間の角 → △OAC ≡ △OBD → BD ＝ AC',[['3組の辺 → BD ＝ AC','BD ＝ AC はこれから示すこと。3組目の辺としては使えないよ。'],['合同とは言えない','OA＝OB、OC＝OD、その間の角は対頂角で等しいよ。']],
+   [],'OA＝OB、OC＝OD、その間の角は対頂角で等しい。','△OAC ≡ △OBD。合同な図形の対応する辺は等しいので BD ＝ AC ＝ 5。','合同 → BD ＝ AC ＝ 5',{label:{ax:'5'}})],
+ FIN('BD の長さは？',5),{scale:sc});})(),
+
+(()=>{const SC=28,A=[60,70],B=[60+6*SC,70],O=[200,150],D=[2*O[0]-A[0],2*O[1]-A[1]],Cc=[2*O[0]-B[0],2*O[1]-B[1]];
+ return Q('q3','c3c',2,'AB ∥ CD で、O は線分 AD の中点です。AB＝6 のとき、CD の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sCD',Cc,D),sg('sAD',A,D),sg('sBC',B,Cc),{t:'par',p:mid(A,B)},{t:'par',p:mid(Cc,D)},tk(A,O,1),tk(O,D,1),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(O,'O'),
+  arcS('m1',A,B,O,'●',{r:30,hidden:1}),arcS('m2',D,Cc,O,'●',{r:30,hidden:1}),arcS('n1',O,A,B,'○',{r:16,hidden:1}),arcS('n2',O,D,Cc,'○',{r:16,hidden:1}),
+  LEN('l1',A,B,'6',6,1),LEN('ax',Cc,D,'x',6,-1,{x:1})],
+ [CHO('c3c','△OAB と △ODC で、等しいと言える角とその理由の組み合わせは？','∠OAB ＝ ∠ODC（錯角）と ∠AOB ＝ ∠DOC（対頂角）',
+   [['∠OAB ＝ ∠ODC（同位角）だけ','AB ∥ CD で、AD と交わってできる角は錯角の位置。さらに点 O には対頂角もあるよ。'],['∠ABO ＝ ∠DOC（対頂角）','∠ABO は点 B の角。対頂角は、点 O で向かい合う2つの角だよ。']],
+   ['sAB','sCD','sAD'],'平行線 AB・CD と直線 AD。点 O では2本の線分が交わっている。','AB ∥ CD より錯角 ∠OAB ＝ ∠ODC、対頂角 ∠AOB ＝ ∠DOC。','錯角と対頂角',{show:['m1','m2','n1','n2'],match:['m1','m2','n1','n2']}),
+  CHO('c3b','合同条件と、CD について言えることは？','1組の辺とその両端の角 → △OAB ≡ △ODC → CD ＝ AB',[[CONG[1]+' → CD ＝ AB','等しい辺は OA ＝ OD の1組だけだよ。'],['合同とは言えない','OA ＝ OD と、その両端の角（錯角・対頂角）が等しいよ。']],
+   [],'等しい辺は OA ＝ OD。その両端の角は？','OA ＝ OD とその両端の角 → △OAB ≡ △ODC。CD ＝ AB ＝ 6。','1辺と両端の角 → CD ＝ 6',{label:{ax:'6'}})],
+ FIN('CD の長さは？',6),{scale:SC});})(),
+
+(()=>{const B=[40,245],C=[185,245],E=[345,245],A=inter(B,60,C,120),D=inter(C,60,E,120),sc=D2(B,D)/7;
+ return Q('q4','c3c',3,'△ABC と △DCE は正三角形で、B、C、E は一直線上にあります。BD＝7 のとき、AE の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBE',B,E),sg('sDC',D,C),sg('sDE',D,E),sg('sBD',B,D),sg('sAE',A,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  arcS('m1',C,B,D,'●',{r:24,hidden:1,whole:1}),arcS('m2',C,A,E,'●',{r:30,hidden:1,whole:1}),LEN('l1',B,D,'7',7,1,{off:12}),LEN('ax',A,E,'x',7,1,{x:1,off:12})],
+ [CHO('c3c','△BCD ≡ △ACE を示すとき、∠BCD ＝ ∠ACE の理由は？','どちらも 60° に ∠ACD をたした角',[['対頂角','∠BCD と ∠ACE は向かい合っていないよ。'],['どちらも正三角形の角で 60°','∠BCD と ∠ACE は、正三角形の角そのものではないよ（60° より大きい）。']],
+   ['sBD','sAE','sAC','sDC'],'∠BCA ＝ 60°、∠DCE ＝ 60°。∠BCD と ∠ACE の両方にふくまれる角は？','∠BCD ＝ 60° ＋ ∠ACD ＝ ∠ACE。','∠BCD ＝ ∠ACE（60° ＋ ∠ACD）',{show:['m1','m2'],match:['m1','m2']}),
+  CHO('c3b','合同条件と、AE について言えることは？','2組の辺とその間の角 → △BCD ≡ △ACE → AE ＝ BD',[['3組の辺 → AE ＝ BD','AE ＝ BD はこれから示すこと。使えないよ。'],[CONG[2]+' → AE ＝ BD','等しい角は1組だけ。辺が2組（BC＝AC、CD＝CE）だよ。']],
+   [],'BC＝AC、CD＝CE（正三角形の辺）、その間の角。','△BCD ≡ △ACE なので AE ＝ BD ＝ 7。','2辺と間の角 → AE ＝ 7',{label:{ax:'7'}})],
+ FIN('AE の長さは？',7),{scale:sc,chk:()=>Math.abs(D2(B,D)-D2(A,E))<1e-9});})(),
+
+(()=>{const A=[120,150],B=from(A,180,85),D=from(A,270,85),C=from(B,270,85),E=from(A,340,110),G=from(A,70,110),F=from(E,70,110),sc=D2(B,E)/9;
+ return Q('q5','c3c',3,'四角形 ABCD と AEFG は正方形です。BE＝9 のとき、DG の長さを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('t1',A,E),sg('t2',E,F),sg('t3',F,G),sg('t4',G,A),sg('sBE',B,E),sg('sDG',D,G),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),pt(G,'G'),
+  arcS('m1',A,B,E,'●',{r:22,hidden:1,whole:1}),arcS('m2',A,D,G,'●',{r:28,hidden:1,whole:1}),LEN('l1',B,E,'9',9,-1,{off:14,at:0.22}),LEN('ax',D,G,'x',9,1,{x:1,off:14,at:0.78})],
+ [CHO('c3c','△ABE ≡ △ADG を示すとき、∠BAE ＝ ∠DAG の理由は？','どちらも 90° に ∠DAE をたした角',[['対頂角','∠BAE と ∠DAG は向かい合っていないよ。'],['どちらも 90°','∠BAE と ∠DAG は 90° より大きいよ。']],
+   ['sBE','sDG'],'∠BAD ＝ 90°、∠EAG ＝ 90°。両方にふくまれる角は？','∠BAE ＝ 90° ＋ ∠DAE ＝ ∠DAG。','∠BAE ＝ ∠DAG（90° ＋ ∠DAE）',{show:['m1','m2'],match:['m1','m2']}),
+  CHO('c3b','合同条件と、DG について言えることは？','2組の辺とその間の角 → △ABE ≡ △ADG → DG ＝ BE',[['3組の辺 → DG ＝ BE','DG ＝ BE はこれから示すこと。使えないよ。'],['合同とは言えない','AB＝AD、AE＝AG（正方形の辺）、その間の角も等しいよ。']],
+   [],'AB＝AD、AE＝AG、その間の角。','△ABE ≡ △ADG なので DG ＝ BE ＝ 9。','2辺と間の角 → DG ＝ 9',{label:{ax:'9'}})],
+ FIN('DG の長さは？',9),{scale:sc,chk:()=>Math.abs(D2(B,E)-D2(D,G))<1e-9});})(),
+
+/* ---- 証明の流れを組み立てる ---- */
+(()=>{const A=[200,35],B=[70,245],C=[330,245],D=mid(B,C);
+ return Q('w1','c3d',1,'AB＝AC、∠BAD＝∠CAD のとき BD＝CD の証明です。\n△ABD と △ACD で、仮定より AB＝AC …①、∠BAD＝∠CAD …②、［　ア　］…③。①②③より…',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),tk(A,B,1),tk(A,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcS('m1',A,B,D,'●',{r:34}),arcS('m2',A,D,C,'●',{r:40})],
+ [CHO('c3d','［ア］に入るのは？','AD は共通',[['BD＝CD','BD＝CD は結論。証明のとちゅうで使ってはいけないよ。'],['∠ADB＝∠ADC','この角が等しい根拠は、まだないよ。']],
+   ['sAD'],'①②で「2組目の辺と角」がそろった。あと1つ、2つの三角形が共有しているものは？','AD は △ABD と △ACD に共通な辺。','③ AD は共通'),
+  CHO('c3d','①②③のあと、結論までの書き方として正しいのは？','2組の辺とその間の角がそれぞれ等しいので △ABD ≡ △ACD。合同な図形の対応する辺は等しいので BD＝CD',
+   [['△ABD ≡ △ACD なので、仮定より BD＝CD','BD＝CD は仮定ではないよ。合同から言える「対応する辺は等しい」が根拠。'],['BD＝CD なので △ABD ≡ △ACD','順番が逆。合同を先に示し、そこから BD＝CD を言うよ。']],
+   [],'合同条件 → 合同 → 対応する辺の順。','合同条件を書いて △ABD ≡ △ACD、「合同な図形の対応する辺は等しい」から BD＝CD。','合同 → 対応する辺は等しい → 結論')],
+ FCH('［ア］に入るのは？','AD は共通',['BD＝CD','∠ADB＝∠ADC']),{chk:()=>Math.abs(D2(B,D)-D2(C,D))<1e-9});})(),
+
+(()=>{const O=[200,150],A=from(O,150,110),B=from(O,330,110),Cc=from(O,215,100),D=from(O,35,100);
+ return Q('w2','c3d',2,'O は線分 AB、CD の中点です。AC ∥ DB の証明で、次に書く1行を選びます。\n△OAC と △OBD で、仮定より OA＝OB …①、OC＝OD …②',
+ [sg('sAB',A,B),sg('sCD',Cc,D),sg('sAC',A,Cc),sg('sDB',D,B),tk(A,O,1),tk(O,B,1),tk(Cc,O,2),tk(O,D,2),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(O,'O')],
+ [CHO('c3d','③として書くのは？','対頂角は等しいので ∠AOC＝∠BOD …③',[['錯角は等しいので ∠OAC＝∠OBD …③','錯角が等しいのは AC ∥ DB だから。それはこれから示すこと（結論）なので使えないよ。'],['AC＝BD …③','AC＝BD の根拠は、まだないよ。']],
+   ['sAB','sCD'],'①②は辺。その2辺のあいだの角は、点 O の角。','∠AOC と ∠BOD は対頂角。','③ 対頂角 ∠AOC＝∠BOD'),
+  CHO('c3d','合同が言えたあと、AC ∥ DB までの書き方は？','合同な図形の対応する角は等しいので ∠OAC＝∠OBD。錯角が等しいので AC ∥ DB',
+   [['合同なので AC ∥ DB','合同から直接は平行が言えない。対応する角（錯角）が等しいことをはさもう。'],['AC＝BD なので AC ∥ DB','長さが等しくても平行とは言えないよ。']],
+   [],'平行を言う根拠は「錯角が等しい」。','対応する角 ∠OAC＝∠OBD（錯角）→ AC ∥ DB。','対応する角（錯角）が等しい → 平行')],
+ FCH('③として書くのは？','対頂角は等しいので ∠AOC＝∠BOD',['錯角は等しいので ∠OAC＝∠OBD','AC＝BD']),{chk:()=>Math.abs(angAt(A,O,Cc)-angAt(B,O,D))<1e-9});})(),
+
+(()=>{const T=tri3([40,230],10,5,3.6,4.2,32),U=tri3([210,240],-15,5,3.6,4.2,32);
+ return Q('w3','c3d',2,'△ABC ≡ △DEF が示せました。続けて「AC＝DF」と書くときの理由は？',
+ [sg('s1',T.A,T.B),sg('s2',T.B,T.C),sg('s3',T.C,T.A),sg('t1',U.A,U.B),sg('t2',U.B,U.C),sg('t3',U.C,U.A),pt(T.A,'A'),pt(T.B,'B'),pt(T.C,'C'),pt(U.A,'D'),pt(U.B,'E'),pt(U.C,'F'),
+  tk(T.A,T.C,1,{hidden:1,id:'k1'}),tk(U.A,U.C,1,{hidden:1,id:'k2'})],
+ [CHO('c3d','AC＝DF の理由は？','合同な図形の対応する辺は等しい',[['仮定より','AC＝DF は仮定には書かれていない。合同から導くことだよ。'],['二等辺三角形の2辺は等しい','△ABC は二等辺三角形とは限らないよ。']],
+   ['s3','t3'],'△ABC ≡ △DEF。A↔D、C↔F。','AC と DF は対応する辺。合同な図形の対応する辺は等しい。','合同な図形の対応する辺は等しい',{show:['k1','k2']})],
+ FCH('AC＝DF の理由は？','合同な図形の対応する辺は等しい',['仮定より','二等辺三角形の2辺は等しい']),{chk:()=>Math.abs(D2(T.A,T.C)-D2(U.A,U.C))<1e-9});})(),
+
+(()=>{const A=[95,60],B=[45,235],C=[300,235],D=[A[0]+C[0]-B[0],A[1]];
+ return Q('w4','c3d',3,'AB ∥ DC、AB＝DC の四角形 ABCD で、AD ∥ BC を証明します。証明の順番として正しいのは？',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sDA',D,A),sg('sAC',A,C,{dash:1}),tk(A,B,1),tk(D,C,1),{t:'par',p:mid(A,B),d:dirTo(A,B)},{t:'par',p:mid(D,C),d:dirTo(D,C)},pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcS('m1',A,C,B,'○',{hidden:1,r:34}),arcS('m2',C,A,D,'○',{hidden:1,r:34}),arcS('n1',A,C,D,'●',{hidden:1,r:26}),arcS('n2',C,A,B,'●',{hidden:1,r:26})],
+ [CHO('c3d','△ABC と △CDA で、①AB＝CD（仮定）、②AC 共通のあと、③に書くのは？','AB ∥ DC より錯角が等しいので ∠BAC＝∠DCA',[['AD ∥ BC より錯角が等しいので ∠ACB＝∠CAD','AD ∥ BC は結論。まだ使えないよ。'],['∠B＝∠D','この角が等しい根拠は、まだないよ。']],
+   ['sAB','sCD','sAC'],'使える平行は、仮定の AB ∥ DC だけ。','AB ∥ DC と対角線 AC でできる錯角 ∠BAC＝∠DCA。','③ AB ∥ DC の錯角 ∠BAC＝∠DCA',{show:['m1','m2'],match:['m1','m2']}),
+  CHO('c3d','合同のあと、結論までの流れは？','対応する角 ∠ACB＝∠CAD → 錯角が等しいので AD ∥ BC',[['対応する辺 AD＝CB → AD ∥ BC','長さが等しくても平行は言えないよ。'],['対応する角 ∠B＝∠D → AD ∥ BC','∠B と ∠D は錯角の位置ではないよ。']],
+   [],'平行の根拠は、錯角が等しいこと。','△ABC ≡ △CDA より ∠ACB＝∠CAD。これは AD・BC と AC の錯角なので AD ∥ BC。','対応する角（錯角）→ AD ∥ BC',{show:['n1','n2'],match:['n1','n2']})],
+ FCH('証明の順番として正しいのは？','①AB＝CD ②AC共通 ③錯角∠BAC＝∠DCA → 2辺と間の角で合同 → ∠ACB＝∠CAD → AD∥BC',['①AB＝CD ②AC共通 ③錯角∠ACB＝∠CAD → 合同 → AD∥BC','①AB＝CD ②AD＝CB ③AC共通 → 3辺で合同 → AD∥BC']),{chk:()=>Math.abs(angAt(C,A,B)-angAt(A,C,D))<1e-9});})(),
+
+(()=>{const SC=26,A=[150,32],B=from(A,250,8*SC),C=from(A,305,6*SC),D=lerp(A,B,3/8),E=lerp(A,C,4/6);
+ return Q('w5','c3d',3,'● の2つの角は等しい角です。△ADE ∽ △ACB を証明します。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sDE',D,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),arcS('m1',D,A,E,'●'),arcS('m2',C,B,A,'●'),arcS('a1',A,D,E,'○',{hidden:1,r:30})],
+ [CHO('c3d','仮定の ∠ADE＝∠ACB …① のあと、②に書くのは？','∠A は共通 …②',[['DE ∥ BC …②','DE ∥ BC とは書いていないし、根拠もないよ。'],['AD:AC ＝ AE:AB …②','比が等しいことは、相似を示したあとで言えること。まだ使えないよ。']],
+   ['sAB','sAC'],'2つの三角形の両方にふくまれる角は？','∠DAE と ∠CAB は同じ角（共通）。','② ∠A は共通',{show:['a1']}),
+  CHO('c3d','①②のあとに書く相似条件は？','2組の角がそれぞれ等しいので △ADE ∽ △ACB',[['3組の辺の比がすべて等しいので','辺の比は、まだわかっていないよ。'],['2組の辺の比とその間の角がそれぞれ等しいので','辺の比は使っていないよ。①②は2つとも角。']],
+   [],'①②はどちらも角。','2組の角がそれぞれ等しい → 相似。','2組の角 → △ADE ∽ △ACB')],
+ FCH('△ADE ∽ △ACB の相似条件は？','2組の角がそれぞれ等しい',['3組の辺の比がすべて等しい','2組の辺の比とその間の角がそれぞれ等しい']),{chk:()=>Math.abs(angAt(D,A,E)-angAt(C,B,A))<1e-9});})(),
+
+/* ---- 図形の性質の証明 ---- */
+(()=>{const A=[200,35],B=[75,245],C=[325,245],D=mid(B,C);
+ return Q('v1','c3e',1,'AB＝AC の二等辺三角形で、「底角 ∠B と ∠C は等しい」ことを証明します。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D,{dash:1,hidden:1}),tk(A,B,1),tk(A,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),{t:'pt',p:D,s:'D',hidden:1,id:'pD'},
+  arcS('m1',A,B,D,'●',{r:34,hidden:1}),arcS('m2',A,D,C,'●',{r:40,hidden:1}),arcS('b1',B,C,A,'',{r:22}),arcS('b2',C,A,B,'',{r:22})],
+ [CHO('c3e','∠B と ∠C を別々の三角形の角にするための補助線は？','∠A の二等分線 AD',[['辺 BC に平行な線','平行線を引いても、∠B と ∠C を対応する角にする三角形ができないよ。'],['点 B から AC に垂線','△ABC が1つの三角形のままで、∠B と ∠C を比べられないよ。']],
+   ['sAB','sAC'],'∠B をふくむ三角形と ∠C をふくむ三角形に分けたい。A から線を引くと？','∠A の二等分線 AD を引くと、△ABD と △ACD に分かれる。','∠A の二等分線 AD を引く',{show:['sAD','pD','m1','m2']}),
+  CHO('c3b','△ABD と △ACD の合同条件は？',CONG[1],[[CONG[0],'BD＝CD はまだわからないよ。'],[CONG[2],'等しい角は ∠BAD＝∠CAD の1組だけだよ。']],
+   [],'AB＝AC、∠BAD＝∠CAD、AD 共通。','2組の辺とその間の角 → △ABD ≡ △ACD → ∠B＝∠C。','2辺と間の角 → ∠B＝∠C')],
+ FCH('底角が等しいことを証明するための補助線は？','∠A の二等分線',['辺 BC に平行な線','点 B から AC への垂線']),{chk:()=>Math.abs(angAt(B,C,A)-angAt(C,A,B))<1e-9});})(),
+
+(()=>{const u=30,B=[50,232],C=[50+8*u,232],A=from(B,65,5*u),D=[A[0]+C[0]-B[0],A[1]+C[1]-B[1]],O=mid(A,C),sc=u;
+ return Q('v2','c3e',2,'四角形 ABCD の対角線は、それぞれの中点 O で交わっています。AB＝5、BC＝8 のとき、四角形 ABCD のまわりの長さを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('dAC',A,C),sg('dBD',B,D),tk(A,O,1),tk(O,C,1),tk(B,O,2),tk(O,D,2),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(O,'O'),
+  LEN('l1',A,B,'5',5,1),LEN('l2',B,C,'8',8,1)],
+ [CHO('c3e','四角形 ABCD はどんな四角形？','平行四辺形（対角線がそれぞれの中点で交わる）',[['長方形','対角線の長さが等しいとは書いていないよ。'],['ひし形','対角線が垂直に交わるとは書いていないよ。']],
+   ['dAC','dBD'],'「対角線がそれぞれの中点で交わる」は、どの四角形になる条件？','対角線がそれぞれの中点で交わる四角形は、平行四辺形。','対角線が中点で交わる → 平行四辺形'),
+  INP('まわりの長さは？',26,{look:['l1','l2'],hint:'平行四辺形の向かい合う辺は等しい。CD＝AB、DA＝BC',ans:'(5 ＋ 8) × 2 ＝ 26',sum:'(5 ＋ 8) × 2 ＝ 26'})],
+ FIN('まわりの長さは？',26),{scale:sc,chk:()=>Math.abs(D2(B,C)/sc-8)<1e-6&&Math.abs(D2(C,D)-D2(A,B))<1e-9});})(),
+
+(()=>{const A=[100,55],B=[40,240],C=[300,240],D=[A[0]+C[0]-B[0],A[1]],E=lerp(B,D,0.25),F=lerp(B,D,0.75),O=mid(B,D);
+ return Q('v3','c3e',2,'平行四辺形 ABCD の対角線 BD 上に、BE＝DF となる点 E、F をとります。四角形 AECF はどんな四角形ですか。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sBD',B,D),sg('sAC',A,C,{dash:1,hidden:1}),sg('q1',A,E),sg('q2',E,C),sg('q3',C,F),sg('q4',F,A),tk(B,E,1),tk(F,D,1),
+  pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),{t:'pt',p:O,s:'O',hidden:1,id:'pO'},tk(E,O,2,{hidden:1,id:'k1'}),tk(O,F,2,{hidden:1,id:'k2'})],
+ [CHO('c3e','四角形 AECF の対角線を考えるための補助線は？','対角線 AC を引き、BD との交点 O を考える',[['AE と CF をのばす','のばしても、平行や長さの関係は出てこないよ。'],['補助線はいらない','AECF の対角線は AC と EF。AC はまだ引かれていないよ。']],
+   ['q1','q2','q3','q4'],'AECF の対角線は AC と EF。','平行四辺形 ABCD の対角線は中点 O で交わる：OA＝OC、OB＝OD。','対角線 AC を引き、交点 O を使う',{show:['sAC','pO']}),
+  CHO('c3e','OE と OF について言えることは？','OE ＝ OB − BE ＝ OD − DF ＝ OF',[['OE と OF の長さはわからない','OB＝OD、BE＝DF なので、引き算で比べられるよ。'],['OE ＝ OA','OE と OA が等しい理由はないよ。']],
+   ['sBD'],'OB＝OD から、等しい長さ BE＝DF を引くと？','OE＝OF。さらに OA＝OC なので、AECF の対角線はそれぞれの中点 O で交わる。','OE＝OF、OA＝OC',{show:['k1','k2']})],
+ FCH('四角形 AECF はどんな四角形？','平行四辺形（対角線がそれぞれの中点で交わる）',['ひし形（4つの辺が等しい）','長方形（対角線の長さが等しい）']),{chk:()=>Math.abs(D2(O,E)-D2(O,F))<1e-9});})(),
+
+(()=>{const B=[60,245],C=[340,245],A=[200,245-3*140*Math.tan(20*RAD)],E=mid(A,B),D=mid(A,C),Pp=lnX(B,D,C,E);
+ return Q('v4','c3e',3,'AB＝AC の二等辺三角形で、D、E は辺 AC、AB の中点、BD と CE の交点を P とします。∠BPC＝140° のとき、∠PBC の大きさを求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sBD',B,D),sg('sCE',C,E),tk(A,E,1),tk(E,B,1),tk(A,D,1),tk(D,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(Pp,'P'),
+  arcV('aP',Pp,C,B,'140°',140,{r:16}),arcS('m1',B,C,Pp,'●',{hidden:1,r:42}),arcS('m2',C,Pp,B,'●',{hidden:1,r:42}),arcV('ax',B,C,Pp,'x',20,{x:1,r:44,lr:16})],
+ [CHO('c3e','△PBC はどんな三角形？','PB＝PC の二等辺三角形（△EBC ≡ △DCB より ∠ECB＝∠DBC）',[['正三角形','∠BPC ＝ 140° なので正三角形ではないよ。'],['直角三角形','直角になる理由はないよ。']],
+   ['sBD','sCE','sBC'],'△EBC と △DCB をくらべよう。EB＝DC（AB＝AC の半分）、BC 共通、∠EBC＝∠DCB（底角）。','2辺と間の角で △EBC ≡ △DCB。対応する角 ∠ECB＝∠DBC なので、△PBC は二等辺三角形。','△EBC ≡ △DCB → ∠PCB＝∠PBC',{show:['m1','m2'],match:['m1','m2']}),
+  INP('x は何度？',20,{unit:'°',look:['aP','ax'],hint:'(180 − 140) ÷ 2',ans:'x ＝ (180 − 140) ÷ 2 ＝ 20°',sum:'x ＝ 20°',after:{label:{ax:'20°'}}})],
+ FIN('∠PBC は何度？',20,{unit:'°'}));})(),
+
+(()=>{const A=[100,55],B=[40,240],C=[300,240],D=[A[0]+C[0]-B[0],A[1]],foot=(P)=>{const t=((P[0]-B[0])*(D[0]-B[0])+(P[1]-B[1])*(D[1]-B[1]))/Math.pow(D2(B,D),2);return lerp(B,D,t);},E=foot(A),F=foot(C);
+ return Q('v5','c3e',3,'平行四辺形 ABCD の頂点 A、C から対角線 BD に垂線 AE、CF をひきます。AE＝CF を証明するときの、△ABE と △CDF の合同条件は？',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sBD',B,D),sg('sAE',A,E),sg('sCF',C,F),rt(E,A,D),rt(F,C,B),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),
+  arcS('m1',B,A,D,'●',{hidden:1,r:34}),arcS('m2',D,C,B,'●',{hidden:1,r:34}),tk(A,B,1,{hidden:1,id:'k1'}),tk(C,D,1,{hidden:1,id:'k2'})],
+ [CHO('c3c','△ABE と △CDF で、等しい辺と角は？','AB＝CD（平行四辺形の対辺）、∠ABE＝∠CDF（AB ∥ DC の錯角）',[['AE＝CF、∠ABE＝∠CDF','AE＝CF は結論。まだ使えないよ。'],['BE＝DF、∠AEB＝∠CFD','BE＝DF の根拠はまだないよ。']],
+   ['s1','s3','sBD'],'平行四辺形の性質（対辺が等しい、対辺が平行）を使う。','AB＝CD、AB ∥ DC より錯角 ∠ABE＝∠CDF。','AB＝CD、∠ABE＝∠CDF（錯角）',{show:['m1','m2','k1','k2'],match:['m1','m2']}),
+  CHO('c3b','合同条件は？','直角三角形の斜辺と1つの鋭角がそれぞれ等しい',[[CONG[1],'等しい辺は AB＝CD の1組だけだよ。'],['直角三角形の斜辺と他の1辺がそれぞれ等しい','斜辺 AB＝CD のほかに等しい辺は、まだわかっていないよ。']],
+   [],'∠AEB＝∠CFD＝90°。斜辺 AB＝CD、鋭角 ∠ABE＝∠CDF。','直角三角形の斜辺と1つの鋭角がそれぞれ等しいので合同。','斜辺と1鋭角 → △ABE ≡ △CDF')],
+ FCH('△ABE と △CDF の合同条件は？','直角三角形の斜辺と1つの鋭角がそれぞれ等しい',[CONG[1],'直角三角形の斜辺と他の1辺がそれぞれ等しい']),{chk:()=>Math.abs(D2(A,E)-D2(C,F))<1e-9});})()
+);
+STAGE.push(
+(()=>{const A=[150,150],B=from(A,180,85),D=from(A,270,85),C=from(B,270,85),E=from(A,340,105),G=from(A,70,105),F=from(E,70,105),H=lnX(B,E,D,G);
+ return Q('g31','stage',4,'四角形 ABCD と AEFG は正方形です。BE と DG の交点を H とするとき、∠BHD の大きさを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('t1',A,E),sg('t2',E,F),sg('t3',F,G),sg('t4',G,A),sg('sBE',B,E),sg('sDG',D,G),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),pt(G,'G'),pt(H,'H'),
+  arcS('m1',B,A,E,'●',{hidden:1,r:30}),arcS('m2',D,A,G,'●',{hidden:1,r:30}),arcV('ax',H,B,D,'x',90,{x:1,r:14})],
+ [CHO('c3a','最初の一手は？','△ABE ≡ △ADG（2辺と間の角）を示す',[['BE ∥ DG を示す','BE と DG は交わっているので平行ではないよ。'],['△ABH ≡ △ADH','この2つは合同にならないよ。']],['sBE','sDG'],'正方形の辺 AB＝AD、AE＝AG と、その間の角。','∠BAE ＝ 90° ＋ ∠DAE ＝ ∠DAG。△ABE ≡ △ADG。','△ABE ≡ △ADG'),
+  CHO('c3c','合同から x を出すには？','∠ABE＝∠ADG。BE と AD の交点のまわりで、角の和を比べる',[['x ＝ ∠BAD','x と ∠BAD が等しい理由は、まだ示していないよ。'],['x ＝ 180° − ∠BAE','x と ∠BAE には直接の関係はないよ。']],['m1','m2'],'△ABE ≡ △ADG の対応する角 ∠ABE ＝ ∠ADG。BE と AD の交点 I で、△ABI と △HDI を比べる。','∠ABI ＝ ∠HDI、∠AIB ＝ ∠HID（対頂角）なので、残りの角 ∠BAI ＝ 90° ＝ ∠IHD。','∠ABE ＝ ∠ADG → x ＝ ∠BAD ＝ 90°',{show:['m1','m2'],match:['m1','m2'],label:{ax:'90°'}})],
+ FIN('∠BHD は何度？',90,{unit:'°'}),{ch:3,types:['c3a','c3c']});})(),
+
+(()=>{const SC=26,B=[45,235],A=from(B,70,6*SC),C=[B[0]+10*SC,B[1]],D=[A[0]+10*SC,A[1]],AB=D2(A,B)/SC,E=[B[0]+AB*SC,B[1]];
+ return Q('g32','stage',4,'平行四辺形 ABCD で、∠A の二等分線が辺 BC と交わる点を E とします。AB＝6、AD＝10 のとき、EC の長さを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sAE',A,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),arcS('m1',A,B,E,'●',{r:30}),arcS('m2',A,E,D,'●',{r:36}),arcS('m3',E,A,B,'●',{r:30,hidden:1}),
+  LEN('l1',A,B,'6',6,1),LEN('l2',A,D,'10',10,1)],
+ [CHO('c3c','∠BEA と等しい角は？','∠DAE（AD ∥ BC の錯角）',[['∠ABE','∠ABE と ∠BEA が等しい理由はないよ。'],['∠ECD','∠ECD と ∠BEA は錯角の位置ではないよ。']],['s4','s2','sAE'],'AD ∥ BC で、AE と交わる角。','錯角で ∠BEA ＝ ∠DAE ＝ ∠BAE。','∠BEA ＝ ∠DAE ＝ ∠BAE',{show:['m3'],match:['m1','m2','m3']}),
+  CHO('c3e','△ABE はどんな三角形？','BA＝BE の二等辺三角形',[['正三角形','∠B が 60° とは限らないよ。'],['AB＝AE の二等辺三角形','等しい角は ∠BAE と ∠BEA。その向かいの辺 BE と BA が等しいよ。']],['sAE'],'2つの角が等しい三角形は二等辺三角形。','∠BAE ＝ ∠BEA なので BA ＝ BE ＝ 6。','BE ＝ BA ＝ 6'),
+  INP('EC の長さは？',4,{hint:'BC ＝ AD ＝ 10',ans:'EC ＝ 10 − 6 ＝ 4',sum:'EC ＝ 10 − 6 ＝ 4'})],
+ FIN('EC の長さは？',4),{ch:3,types:['c3c','c3e'],chk:()=>Math.abs(angAt(A,B,E)-angAt(A,E,D))<1e-9&&Math.abs(D2(E,C)/SC-4)<1e-6&&Math.abs(AB-6)<1e-9});})(),
+
+(()=>{const SC=22,C=[60,240],A=[60,240-6*SC],B=[60+8*SC,240],bis=(dirTo(A,C)+dirTo(A,B))/2,D=inter(A,bis,C,0),E=(()=>{const t=((D[0]-A[0])*(B[0]-A[0])+(D[1]-A[1])*(B[1]-A[1]))/Math.pow(D2(A,B),2);return lerp(A,B,t);})();
+ return Q('g33','stage',4,'∠C＝90°、AC＝6、AB＝10 の直角三角形で、∠A の二等分線が BC と交わる点を D、D から AB にひいた垂線を DE とします。EB の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),sg('sDE',D,E),rt(C,A,B),rt(E,D,B),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),arcS('m1',A,C,D,'●',{r:34}),arcS('m2',A,D,B,'●',{r:40}),
+  LEN('l1',A,C,'6',6,-1),LEN('l2',A,B,'10',10,1)],
+ [CHO('c3b','△ACD と △AED の合同条件は？','直角三角形の斜辺と1つの鋭角がそれぞれ等しい（AD 共通）',[[CONG[1],'等しい辺は AD（共通）の1組しかわかっていないよ。'],['合同とは言えない','どちらも直角三角形で、斜辺 AD 共通、鋭角 ● が等しいよ。']],['sAD','m1','m2'],'AD はどちらの直角三角形でも斜辺。','斜辺と1鋭角で △ACD ≡ △AED。','△ACD ≡ △AED'),
+  INP('EB の長さは？',4,{hint:'AE ＝ AC ＝ 6（対応する辺）',ans:'EB ＝ 10 − 6 ＝ 4',sum:'AE ＝ 6 → EB ＝ 4'})],
+ FIN('EB の長さは？',4),{ch:3,types:['c3b','c3c'],chk:()=>Math.abs(D2(E,B)/SC-4)<1e-6&&Math.abs(D2(B,C)/SC-8)<1e-6});})(),
+
+(()=>{const A=[95,60],B=[45,235],C=[300,235],D=[A[0]+C[0]-B[0],A[1]];
+ return Q('g34','stage',4,'四角形 ABCD で AB ∥ DC、AB＝DC です。この四角形が平行四辺形であることを言うのに使う条件は？',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sDA',D,A),tk(A,B,1),tk(D,C,1),{t:'par',p:mid(A,B),d:dirTo(A,B)},{t:'par',p:mid(D,C),d:dirTo(D,C)},pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D')],
+ [CHO('c3e','この四角形がもつ性質は？','1組の向かい合う辺が、平行で長さも等しい',[['2組の向かい合う辺が、それぞれ平行','AD ∥ BC は書かれていないよ。わかっているのは AB と DC の1組だけ。'],['対角線がそれぞれの中点で交わる','対角線については何も書かれていないよ。']],['sAB','sCD'],'わかっているのは AB と DC について、平行と長さ。','AB ∥ DC、AB＝DC：1組の対辺が平行で等しい。','1組の対辺が平行で等しい')],
+ FCH('平行四辺形になる条件は？','1組の向かい合う辺が、平行で長さが等しい',['2組の向かい合う辺がそれぞれ平行','2組の向かい合う角がそれぞれ等しい']),{ch:3,types:['c3e','c3d'],chk:()=>Math.abs(D2(A,B)-D2(D,C))<1e-9});})()
+);
+/*CH3-END*/
 /*DATA-END*/
 
 /* ===== 章の情報 ===== */
@@ -1583,7 +1881,7 @@ function drawFig(p,st){
     else if(e.t==='ell'){L+=`<ellipse class="fl${c}" cx="${f(e.c[0])}" cy="${f(e.c[1])}" rx="${f(e.rx)}" ry="${f(e.ry)}" fill="none"/>`;}
     else if(e.t==='circle'){L+=`<circle class="fl${e.dash?' aux':''}${c}" cx="${f(e.c[0])}" cy="${f(e.c[1])}" r="${f(e.r)}" fill="none"/>`;}
     else if(e.t==='poly'){A=`<path class="pf${e.cls?' '+e.cls:''}${c}" d="M${e.pts.map(q=>f(q[0])+' '+f(q[1])).join(' L')} Z"/>`+A;}
-    else if(e.t==='len'){const m=[(e.a[0]+e.b[0])/2,(e.a[1]+e.b[1])/2],d=Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),n=[Math.sin(d),-Math.cos(d)],o=(e.off||16)*(e.side||1);
+    else if(e.t==='len'){const at=e.at||0.5,m=[e.a[0]+(e.b[0]-e.a[0])*at,e.a[1]+(e.b[1]-e.a[1])*at],d=Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),n=[Math.sin(d),-Math.cos(d)],o=(e.off||16)*(e.side||1);
       const lab=st.labels[e.id]!=null?st.labels[e.id]:e.label;if(lab)T+=`<text class="lab ln${e.x?' x':''}${c}" x="${f(m[0]+n[0]*o)}" y="${f(m[1]+n[1]*o)}">${esc(lab)}</text>`;}
     else if(e.t==='txt'){T+=`<text class="lab${e.x?' x':''}${c}" x="${f(e.p[0])}" y="${f(e.p[1])}">${esc(st.labels[e.id]!=null?st.labels[e.id]:e.s)}</text>`;}
     else if(e.t==='axes'){const[ox,oy]=e.o,u=e.u,x0=ox+e.xr[0]*u,x1=ox+e.xr[1]*u,y0=oy-e.yr[0]*u,y1=oy-e.yr[1]*u;
