@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<title>図形の一手</title>
+<style>
+:root{--ink:#1d2433;--sub:#5b6475;--grid:#e3ebf5;--paper:#f7f9fc;--look:#e8590c;--match:#1c6dd0;--ok:#2b8a3e;--ng:#c92a2a;--line:#cfd8e4;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;color:var(--ink);background:var(--paper);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+.grid{background-color:#fff;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen.on{display:flex}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--line);background:#fff;flex:0 0 auto}
+.bar h1{font-size:20px;letter-spacing:.06em}
+.bar .subt{font-size:12px;color:var(--sub)}
+.bar .sp{flex:1}
+.btn{padding:9px 16px;border-radius:10px;border:1.5px solid var(--ink);background:#fff;font-weight:600;font-size:14px}
+.btn.pri{background:var(--ink);color:#fff}
+.btn.ghost{border-color:var(--line);color:var(--sub);font-weight:500}
+.btn:disabled{opacity:.35;cursor:default}
+.icon{font-size:20px;padding:4px 8px;color:var(--sub)}
+
+/* ホーム */
+#home main{flex:1;display:flex;gap:18px;padding:16px 18px;overflow:hidden}
+.col{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.col.l{flex:1.6}
+.col.r{flex:1;display:flex;flex-direction:column;gap:14px}
+.ch-h{display:flex;align-items:baseline;gap:10px;margin:2px 0 10px}
+.ch-h b{font-size:17px}
+.ch-h span{font-size:12px;color:var(--sub)}
+.tree{position:relative;padding-left:4px}
+.node{position:relative;display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px}
+.node .num{flex:0 0 30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;background:#fff}
+.node .bd{flex:1;min-width:0}
+.node .nm{font-weight:700;font-size:15px}
+.node .ds{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.5}
+.node .meta{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;border:1.5px solid}
+.chip.s0{color:var(--look);border-color:var(--look)}
+.chip.s1{color:var(--match);border-color:var(--match);background:#eaf2fd}
+.chip.s2{color:var(--ok);border-color:var(--ok);background:#ebf7ee}
+.chip.lock{color:#9aa3b2;border-color:#c5ccd6}
+.chip.due{color:#fff;background:var(--look);border-color:var(--look)}
+.dots{display:flex;gap:4px}
+.dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--match)}
+.dots i.f{background:var(--match)}
+.node .act{display:flex;flex-direction:column;gap:6px;align-self:center}
+.node.locked{opacity:.55}
+.node.locked .num{border-color:#9aa3b2;color:#9aa3b2}
+.node.s1 .num{border-color:var(--match);color:var(--match)}
+.node.s2 .num{border-color:var(--ok);background:var(--ok);color:#fff}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px}
+.card h3{font-size:14px;margin-bottom:6px}
+.card p{font-size:12px;color:var(--sub);line-height:1.6}
+.road li{list-style:none;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;color:#8a93a3}
+.road li.cur{color:var(--ink);font-weight:700}
+.road li em{font-style:normal;font-size:11px;color:var(--sub);margin-left:auto;font-weight:400}
+
+/* 問題画面 */
+#play main{flex:1;display:flex;overflow:hidden}
+.figp{flex:1.15;display:flex;flex-direction:column;border-right:1px solid var(--line);min-width:0}
+.ptext{padding:12px 18px;font-size:15px;line-height:1.6;background:#fff;border-bottom:1px solid var(--line)}
+.ptext .tag.lv2{background:var(--match)}.ptext .tag.lv3{background:var(--look)}.ptext .tag.lv4{background:var(--ok)}
+.ptext .tag{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--ink);border-radius:6px;padding:1px 7px;margin-right:8px;vertical-align:2px}
+.figwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;min-height:0}
+.figwrap svg{width:100%;height:100%;max-height:100%}
+.stp{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--paper)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 8px}
+.log{margin-bottom:10px}
+.log div{font-size:13px;padding:5px 10px;border-left:3px solid var(--match);background:#fff;margin-bottom:5px;border-radius:0 8px 8px 0}
+.log div b{color:var(--match);margin-right:6px}
+.qcard{background:#fff;border:1.5px solid var(--ink);border-radius:14px;padding:13px 14px}
+.qcard .sn{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.05em}
+.qcard .q{font-size:16px;font-weight:700;margin:4px 0 10px;line-height:1.5}
+.ch{display:block;width:100%;text-align:left;padding:11px 13px;margin-bottom:7px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-size:14px;line-height:1.45}
+.ch:active{background:#f1f4f8}
+.ch.ng{border-color:var(--ng);color:var(--ng);background:#fff5f5}
+.ch.ok{border-color:var(--ok);color:var(--ok);background:#ebf7ee;font-weight:700}
+.ch:disabled{cursor:default}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.5px;line-height:1.6;display:none}
+.fb.on{display:block}
+.fb.ng{background:#fff5f5;border:1px solid #f3c4c4;color:#8f1d1d}
+.fb.ok{background:#ebf7ee;border:1px solid #b6dfc0;color:#1f5f2c}
+.fb.hint{background:#fff4e8;border:1px solid #f6c9a3;color:#8a3a07}
+.hints{display:flex;gap:6px;margin-top:10px}
+.hints button{flex:1;font-size:12px;font-weight:600;padding:8px 4px;border-radius:9px;border:1.5px dashed var(--look);color:var(--look);background:#fff}
+.hints button:disabled{opacity:.3;cursor:default}
+.hints button.used{background:#fff4e8;border-style:solid;opacity:1}
+.kp+.hints,.hints+.kp{margin-top:8px}
+.kp{margin-top:8px}
+.kd{display:flex;align-items:center;justify-content:flex-end;gap:4px;height:46px;border:1.5px solid var(--ink);border-radius:10px;background:#fff;padding:0 14px;font-size:26px;font-weight:700;margin-bottom:7px;font-variant-numeric:tabular-nums}
+.kd .ph{color:#b8c0cc;font-weight:400;font-size:16px}
+.kd .u{font-size:20px;color:var(--sub)}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.kg button{height:42px;border-radius:9px;background:#fff;border:1.5px solid var(--line);font-size:19px;font-weight:600}
+.kg button:active{background:#eef2f7}
+.kg .go{background:var(--ink);color:#fff;border-color:var(--ink);font-size:15px}
+.nextbar{padding:10px 16px;border-top:1px solid var(--line);background:#fff;display:flex;gap:8px;justify-content:flex-end;flex:0 0 auto}
+.nextbar:empty{display:none}
+.sum{background:#fff;border:1.5px solid var(--ok);border-radius:14px;padding:14px}
+.sum h3{color:var(--ok);font-size:16px;margin-bottom:8px}
+.sum ol{padding-left:20px;font-size:14px;line-height:1.8}
+
+/* 図 */
+svg .fl{stroke:var(--ink);stroke-width:2;fill:none}
+svg .fa{stroke:var(--ink);stroke-width:1.6;fill:none}
+svg .lab{font-size:16px;fill:var(--ink);font-weight:600;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+svg .lab.x{font-family:"Times New Roman",Times,serif;font-style:italic;font-size:19px;font-weight:400}
+svg .nm{font-family:"Times New Roman",Times,serif;font-style:italic;font-size:19px;fill:var(--ink);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+svg .pt{fill:var(--ink)}
+svg .par{stroke:var(--ink);stroke-width:1.8;fill:none}
+svg .fl.aux{stroke:var(--match);stroke-dasharray:7 5;stroke-width:2}
+svg .fl.ghost{stroke:#b9c3d1;stroke-dasharray:3 4;stroke-width:1.6}
+svg .tick{stroke:var(--ink);stroke-width:1.8}
+svg .band{fill:rgba(28,109,208,.07);stroke:none}
+svg .lab.mk{font-size:12px}
+svg .look.fl,svg .look.fa{stroke:var(--look);stroke-width:4}
+svg .look.lab{fill:var(--look)}
+svg .match.fa{stroke:var(--match);stroke-width:3.2}
+svg .match.lab{fill:var(--match)}
+svg .wedge{stroke:none;fill:transparent}
+svg .wedge.look{fill:rgba(232,89,12,.16)}
+svg .wedge.match{fill:rgba(28,109,208,.13)}
+
+/* その他 */
+#toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-220%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:12px;font-weight:700;font-size:14px;transition:transform .35s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.18);text-align:center}
+#toast.on{transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(20,26,38,.4);display:none;align-items:center;justify-content:center;z-index:40}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:16px;padding:20px;width:min(420px,90vw)}
+.modal h3{margin-bottom:10px}
+.modal .row{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.modal p{font-size:12px;color:var(--sub);line-height:1.6}
+#rotate{position:fixed;inset:0;background:#fff;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px}
+#rotate .ph{width:70px;height:44px;border:3px solid var(--ink);border-radius:8px;animation:rot 2s infinite}
+@keyframes rot{0%,30%{transform:rotate(90deg)}60%,100%{transform:rotate(0)}}
+@media (orientation:portrait) and (max-width:1000px){#rotate{display:flex}}
+@media (max-height:500px){
+  .bar{padding:6px 14px}.bar h1{font-size:16px}
+  .ptext{padding:7px 14px;font-size:13.5px}
+  .scroll{padding:8px 12px 6px}
+  .qcard{padding:9px 11px}.qcard .q{font-size:14.5px;margin:2px 0 7px}
+  .ch{padding:8px 11px;font-size:13px;margin-bottom:5px}
+  .kd{height:32px;font-size:19px;margin-bottom:5px}
+  .kg{gap:5px}.kg button{height:30px;font-size:16px}
+  .bar .btn{padding:6px 12px}
+  .hints button{padding:6px 2px;font-size:11px}
+  .nextbar{padding:6px 12px}
+  .node{padding:8px 12px;margin-bottom:7px}
+}
+</style>
+</head>
+<body>
+
+<!-- ホーム -->
+<section id="home" class="screen on">
+  <div class="bar">
+    <div><h1>図形の一手</h1><div class="subt">角度から大学入試まで</div></div>
+    <div class="sp"></div>
+    <button class="icon" id="gear" aria-label="設定">⚙︎</button>
+  </div>
+  <main>
+    <div class="col l">
+      <div class="ch-h"><b>第1章　角度</b><span>図の中の「等しい角」と「決まった角の和」に気づく</span></div>
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="col r">
+      <div class="card">
+        <h3>仕上げテスト</h3>
+        <p>ステップなしで、図だけを見て答えを出します。まちがえたら、その問題のステップがそのまま開きます。</p>
+        <div style="margin-top:10px"><button class="btn pri" id="testBtn">仕上げテストを始める</button></div>
+      </div>
+      <div class="card">
+        <h3>習得のしくみ</h3>
+        <p><b>Lv1</b> その型だけで解ける ／ <b>Lv2</b> 見つけにくい図 ／ <b>Lv3</b> 前の型と組み合わせる</p>
+        <p style="margin-top:6px"><b style="color:var(--look)">練習中</b>：Lv1〜2の、その型のステップを、ヒントなし・ミスなしで3回連続で正解すると <b style="color:var(--match)">習得</b>（次の型とLv3が開く）→ 3日後の復習で、Lv3の問題をステップなしで正解すると <b style="color:var(--ok)">定着</b>。</p>
+      </div>
+      <div class="card">
+        <h3>全体の道すじ</h3>
+        <ul class="road" id="road"></ul>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- 問題 -->
+<section id="play" class="screen">
+  <div class="bar">
+    <button class="btn ghost" id="backBtn">← ホーム</button>
+    <div><b id="pTitle"></b> <span class="subt" id="pSub"></span></div>
+    <div class="sp"></div>
+    <div class="dots" id="pDots"></div>
+  </div>
+  <main>
+    <div class="figp">
+      <div class="ptext" id="pText"></div>
+      <div class="figwrap grid" id="fig"></div>
+    </div>
+    <div class="stp">
+      <div class="scroll" id="scroll">
+        <div class="log" id="log"></div>
+        <div id="cur"></div>
+      </div>
+      <div class="nextbar" id="nextbar"></div>
+    </div>
+  </main>
+</section>
+
+<div class="modal" id="modal"><div class="box">
+  <h3>設定</h3>
+  <p>学習の記録はこの端末の中だけに保存されます（iPadとiPhoneの記録は別々です）。</p>
+  <div class="row">
+    <button class="btn" id="resetAsk" style="border-color:var(--ng);color:var(--ng)">記録をすべてリセット</button>
+    <button class="btn ghost" id="closeM">閉じる</button>
+  </div>
+</div></div>
+
+<div id="toast"></div>
+<div id="rotate"><div class="ph"></div><b>横向きにしてください</b><span style="font-size:13px;color:#5b6475">図形の一手は、左に図・右にステップの横向き画面で使います。</span></div>
+
+<script>
+/*DATA-START*/
+const SKILLS=[
+ {id:'taicho',name:'対頂角',desc:'2本の直線が交わったら、向かい合う角は等しい',ready:true},
+ {id:'heiko',name:'平行線の同位角・錯角',desc:'平行の記号を見たら、等しい角に印をつける',ready:true},
+ {id:'sankaku',name:'三角形の内角と外角',desc:'内角の和は180°、外角は隣り合わない2つの内角の和',ready:true},
+ {id:'nitohen',name:'二等辺三角形の底角',desc:'等しい辺の印を見たら、底角が等しいと考える',ready:true},
+ {id:'takakkei',name:'多角形の内角・外角の和',desc:'内角の和は180°×(n−2)、外角の和はいつも360°',ready:true},
+ {id:'kunoji',name:'補助線① くの字',desc:'折れ曲がった点を通る平行線を自分で引く',ready:true},
+ {id:'boomerang',name:'補助線② ブーメラン形・星形',desc:'外角の性質を組み合わせて一気に求める',ready:true}
+];
+const CHAPTERS=['角度','相似と比','合同と証明','三平方の定理','円','三角比と図形の計量','図形の性質','座標とベクトル'];
+
+const O=[200,150];
+const LY=100, MY=210; // 平行線 ℓ, m の y座標
+function onM(A,d){return [A[0]-(MY-LY)/Math.tan(d*Math.PI/180),MY];}
+function parBase(A,d){return [
+ {t:'line',id:'Ll',p:[0,LY],d:0},{t:'line',id:'Lm',p:[0,MY],d:0},{t:'line',id:'Lt',p:A,d:d},
+ {t:'par',p:[340,LY]},{t:'par',p:[340,MY]},
+ {t:'nm',p:[26,LY-12],s:'ℓ'},{t:'nm',p:[26,MY-12],s:'m'}];}
+const A4=[170,LY],B4=onM(A4,65);
+const A5=[230,LY],B5=onM(A5,72);
+const A6=[230,LY],B6=onM(A6,70);
+const RAD=Math.PI/180;
+function inter(p1,d1,p2,d2){const u=[Math.cos(d1*RAD),-Math.sin(d1*RAD)],v=[Math.cos(d2*RAD),-Math.sin(d2*RAD)];const det=-u[0]*v[1]+u[1]*v[0];const t=((p2[0]-p1[0])*(-v[1])-(p2[1]-p1[1])*(-v[0]))/det;return [p1[0]+t*u[0],p1[1]+t*u[1]];}
+function atX(p,d,x){const t=(x-p[0])/Math.cos(d*RAD);return [x,p[1]-t*Math.sin(d*RAD)];}
+function dirTo(P,Q){return ((Math.atan2(-(Q[1]-P[1]),Q[0]-P[0])*180/Math.PI)%360+360)%360;}
+function from(P,d,len){return [P[0]+len*Math.cos(d*RAD),P[1]-len*Math.sin(d*RAD)];}
+const T5k=150,T5A=from(O,150,T5k*Math.sin(48*RAD)),T5C=from(O,212,T5k*Math.sin(70*RAD)),T5B=from(O,330,112),T5D=from(O,32,100);
+const A_h4=[150,LY],B_h4=onM(A_h4,60),C_h4=[290,LY];
+const L_h5=[200,95],M_h5=[200,215],B_h5=inter(L_h5,80,M_h5,345);
+const A_h6=[220,LY],B_h6=onM(A_h6,50);
+const A_h7=[170,LY],B_h7=onM(A_h7,65);
+
+const PROBS=[
+/* ---------- 対頂角 ---------- */
+{id:'t1',lv:1,skill:'taicho',text:'2本の直線が点Oで交わっています。∠x の大きさを求めなさい。',
+ fig:[{t:'line',id:'L1',p:O,d:20},{t:'line',id:'L2',p:O,d:70},{t:'pt',p:O,s:'O',off:[14,16]},
+  {t:'arc',id:'a50',c:O,a1:20,a2:70,r:38,label:'50°',val:50},
+  {t:'arc',id:'ax',c:O,a1:200,a2:250,r:38,label:'x',val:50,x:1}],
+ steps:[
+  {kind:'choice',skill:'taicho',q:'x と 50° は、どんな関係の角？',
+   choices:[
+    {t:'対頂角なので、等しい',ok:1},
+    {t:'同位角なので、等しい',why:'同位角は、平行線があるときに使う角の名前。この図には平行線がないよ。'},
+    {t:'となり合う角なので、足すと180°',why:'足して180°になるのは、一直線の上でとなり合う角。x と 50° は向かい合っているよ。'},
+    {t:'足すと90°',why:'直角の印はどこにもないね。90°になる理由がないよ。'}],
+   look:['L1','L2','a50','ax'],hint:'2本の直線が交わってできる「向かい合う角」に注目。対頂角の型が使えそう。',
+   ans:'x と 50° は、2本の直線が交わってできる向かい合う角＝対頂角。対頂角は等しい。',
+   sum:'x と 50° は対頂角 → 等しい（x ＝ 50°）',after:{label:{ax:'50°'},match:['a50','ax']}}],
+ final:{q:'∠x は何度？',answer:50,unit:'°'}},
+
+{id:'t2',lv:1,skill:'taicho',text:'3本の直線が点Oで交わっています。∠x の大きさを求めなさい。',
+ fig:[{t:'line',id:'La',p:O,d:0},{t:'line',id:'Lb',p:O,d:40},{t:'line',id:'Lc',p:O,d:115},{t:'pt',p:O,s:'O',off:[-6,20]},
+  {t:'arc',id:'a40',c:O,a1:0,a2:40,r:44,label:'40°',val:40},
+  {t:'arc',id:'ax',c:O,a1:40,a2:115,r:36,label:'x',val:75,x:1},
+  {t:'arc',id:'a65',c:O,a1:295,a2:360,r:40,label:'65°',val:65},
+  {t:'arc',id:'a65b',c:O,a1:115,a2:180,r:40,label:'65°',val:65,hidden:1}],
+ steps:[
+  {kind:'choice',skill:'taicho',q:'右下の 65° の角を、上側へ移すとしたら、どこに移せる？',
+   choices:[
+    {t:'x の左どなりの角（対頂角なので 65°）',ok:1},
+    {t:'x の右どなりの角',why:'x の右どなりは、もう大きさがわかっている 40° の角。65° の向かい側ではないよ。'},
+    {t:'x の角そのもの',why:'x の向かい側は真下の角。65° の角とは向かい合っていないよ。'},
+    {t:'移せる場所はない',why:'2本の直線が交わってできた角なら、必ず向かい側に対頂角がある。65° の向かい側を探そう。'}],
+   look:['La','Lc','a65'],hint:'65° の角をつくっている2本の直線に注目。その2本が交わってできる「向かい側の角」が対頂角。',
+   ans:'65° の角は、横の直線とななめの直線が交わってできた角。その向かい側（x の左どなり）が対頂角なので 65°。',
+   sum:'右下の 65° を、対頂角で x の左どなりへ移す',after:{show:['a65b'],match:['a65','a65b']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:75,unit:'°',look:['La','a40','ax','a65b'],
+   hint:'横の直線の上側は一直線（180°）。そこに 40°・x・65° が並んでいる。',ans:'x ＝ 180 − 40 − 65 ＝ 75°',sum:'x ＝ 180 − 40 − 65 ＝ 75°',after:{label:{ax:'75°'}}}],
+ final:{q:'∠x は何度？',answer:75,unit:'°'}},
+
+/* ---------- 平行線 ---------- */
+{id:'h1',lv:1,skill:'heiko',text:'直線 ℓ と m は平行です。∠x の大きさを求めなさい。',
+ fig:[...parBase(A4,65),
+  {t:'arc',id:'a65',c:A4,a1:0,a2:65,r:32,label:'65°',val:65},
+  {t:'arc',id:'ax',c:B4,a1:0,a2:65,r:32,label:'x',val:65,x:1}],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'x と 65° は、どんな関係の角？',
+   choices:[
+    {t:'同位角なので、等しい（ℓ ∥ m）',ok:1},
+    {t:'錯角なので、等しい',why:'錯角は、平行線の内側で Z の字の位置にある角。65° も x も「交点の右上」で、同じ位置にあるよ。'},
+    {t:'対頂角なので、等しい',why:'対頂角は、同じ交点で向かい合う角。65° と x は別々の交点にあるよ。'},
+    {t:'足すと180°',why:'同じ位置にある角どうしなので、足すのではなく「等しい」。'}],
+   look:['Ll','Lm','Lt','a65','ax'],hint:'平行線 ℓ と m に、ななめの直線が交わっている。2つの交点で「同じ位置」にある角は同位角。',
+   ans:'65° も x も、それぞれの交点の右上＝同じ位置。ℓ ∥ m なので同位角は等しい。',
+   sum:'x と 65° は同位角（ℓ ∥ m）→ 等しい（x ＝ 65°）',after:{label:{ax:'65°'},match:['a65','ax']}}],
+ final:{q:'∠x は何度？',answer:65,unit:'°'}},
+
+{id:'h2',lv:1,skill:'heiko',text:'直線 ℓ と m は平行です。∠x の大きさを求めなさい。',
+ fig:[...parBase(A5,72),
+  {t:'arc',id:'a72',c:A5,a1:180,a2:252,r:32,label:'72°',val:72},
+  {t:'arc',id:'ax',c:B5,a1:0,a2:72,r:32,label:'x',val:72,x:1}],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'x と 72° は、どんな関係の角？',
+   choices:[
+    {t:'錯角なので、等しい（ℓ ∥ m）',ok:1},
+    {t:'同位角なので、等しい',why:'同位角は、2つの交点で「同じ位置」にある角。72° は左下、x は右上で、位置がちがうよ。'},
+    {t:'対頂角なので、等しい',why:'対頂角は、同じ交点で向かい合う角。72° と x は別々の交点にあるよ。'},
+    {t:'足すと180°',why:'足して180°になるのは、平行線の内側で「同じ側」にある2つの角。72° と x は反対側（Z の字の位置）にあるよ。'}],
+   look:['Ll','Lm','Lt','a72','ax'],hint:'ℓ と m のあいだ（内側）で、Z の字の形になっている2つの角は錯角。',
+   ans:'72° と x は、平行線の内側で Z の字の位置＝錯角。ℓ ∥ m なので錯角は等しい。',
+   sum:'x と 72° は錯角（ℓ ∥ m）→ 等しい（x ＝ 72°）',after:{label:{ax:'72°'},match:['a72','ax']}}],
+ final:{q:'∠x は何度？',answer:72,unit:'°'}},
+
+{id:'h3',lv:2,skill:'heiko',text:'直線 ℓ と m は平行です。∠x の大きさを求めなさい。',
+ fig:[...parBase(A6,70),
+  {t:'arc',id:'a110',c:A6,a1:70,a2:180,r:30,label:'110°',val:110,lr:26},
+  {t:'arc',id:'ax',c:B6,a1:0,a2:70,r:32,label:'x',val:70,x:1},
+  {t:'arc',id:'a70',c:A6,a1:0,a2:70,r:32,label:'70°',val:70,hidden:1}],
+ steps:[
+  {kind:'choice',skill:null,q:'x を求めるために、まず何を考える？',
+   choices:[
+    {t:'110° のとなりの角を求める（一直線は 180°）',ok:1},
+    {t:'x と 110° は同位角なので、等しい',why:'同位角は2つの交点で「同じ位置」の角。110° は左上、x は右上で、位置がちがうよ。'},
+    {t:'x と 110° は錯角なので、等しい',why:'錯角は平行線の内側（ℓ と m のあいだ）にある角。110° は ℓ の上側にあるので錯角ではないよ。'}],
+   look:['Ll','a110'],hint:'110° の角は直線 ℓ の上にある。x と同じ位置（右上）にある角を、一直線を使って求めよう。',
+   ans:'110° のとなりの角は、一直線なので 180° − 110° ＝ 70°。',
+   sum:'110° のとなりは 180 − 110 ＝ 70°（一直線）',after:{show:['a70']}},
+  {kind:'choice',skill:'heiko',q:'求めた 70° と x は、どんな関係の角？',
+   choices:[
+    {t:'同位角なので、等しい（ℓ ∥ m）',ok:1},
+    {t:'錯角なので、等しい',why:'70° も x も、それぞれの交点の右上＝同じ位置。Z の字ではないので錯角ではないよ。'},
+    {t:'足すと180°',why:'同じ位置にある角どうしなので、足すのではなく「等しい」。'}],
+   look:['Ll','Lm','Lt','a70','ax'],hint:'2つの交点で、どちらも右上にある角。同じ位置にある角の名前は？',
+   ans:'70° と x はどちらも交点の右上＝同位角。ℓ ∥ m なので等しい。',
+   sum:'70° と x は同位角（ℓ ∥ m）→ 等しい（x ＝ 70°）',after:{label:{ax:'70°'},match:['a70','ax']}}],
+ final:{q:'∠x は何度？',answer:70,unit:'°'}},
+/* ---------- 対頂角 Lv2 ---------- */
+{id:'t4',skill:'taicho',lv:2,text:'3本の直線が点Oで交わっています。∠x の大きさを求めなさい。',
+ fig:[{t:'line',id:'La',p:O,d:10},{t:'line',id:'Lb',p:O,d:75},{t:'line',id:'Lc',p:O,d:130},{t:'pt',p:O,s:'O',off:[16,6]},
+  {t:'arc',id:'a65',c:O,a1:10,a2:75,r:40,label:'65°',val:65},
+  {t:'arc',id:'a55',c:O,a1:75,a2:130,r:40,label:'55°',val:55},
+  {t:'arc',id:'ax',c:O,a1:255,a2:310,r:40,label:'x',val:55,x:1}],
+ steps:[
+  {kind:'choice',skill:'taicho',q:'x と向かい合っている角（対頂角）はどれ？',
+   choices:[
+    {t:'55° の角',ok:1},
+    {t:'65° の角',why:'65° の角は x と向かい合っていないよ。x をつくっている2本の直線を、点Oの反対側までたどってみよう。'},
+    {t:'左側の、大きさが書いていない角',why:'その角をつくる直線のうち1本は、x をつくる直線とちがうよ。x の2本の辺をそのままのばした先を見よう。'}],
+   look:['Lb','Lc','ax'],hint:'直線が3本あっても、x をつくっているのはそのうち2本だけ。その2本を点Oの反対側へのばした先が対頂角。',
+   ans:'x の2本の辺を点Oの反対側へのばすと、55° の角になる。55° と x は対頂角なので等しい。',
+   sum:'x の辺をのばした先の 55° が対頂角 → 等しい（x ＝ 55°）',after:{label:{ax:'55°'},match:['a55','ax']}}],
+ final:{q:'∠x は何度？',answer:55,unit:'°'}},
+
+{id:'t5',skill:'taicho',lv:2,text:'線分 AB と CD は点Oで交わっています。∠x の大きさを求めなさい。',
+ fig:[{t:'seg',id:'sAB',a:T5A,b:T5B},{t:'seg',id:'sCD',a:T5C,b:T5D},{t:'seg',id:'sAC',a:T5A,b:T5C},{t:'seg',id:'sBD',a:T5B,b:T5D},
+  {t:'pt',p:O,s:'O'},{t:'pt',p:T5A,s:'A'},{t:'pt',p:T5B,s:'B'},{t:'pt',p:T5C,s:'C'},{t:'pt',p:T5D,s:'D'},
+  {t:'arc',id:'a62',c:O,a1:150,a2:212,r:26,label:'62°',val:62,lr:22},
+  {t:'arc',id:'aA',c:T5A,a1:dirTo(T5A,T5C),a2:dirTo(T5A,O),r:22,label:'70°',val:70,lr:18},
+  {t:'arc',id:'aC',c:T5C,a1:dirTo(T5C,O),a2:dirTo(T5C,T5A),r:22,label:'48°',val:48,lr:18},
+  {t:'arc',id:'ax',c:O,a1:330,a2:32,r:26,label:'x',val:62,x:1}],
+ steps:[
+  {kind:'choice',skill:'taicho',q:'x と等しい角はどれ？',
+   choices:[
+    {t:'∠AOC（62°）',ok:1},
+    {t:'∠OAC（70°）',why:'∠OAC は点Aにある三角形の角。x は点Oにある角だよ。三角形の形が似ていても、位置が向かい合っているとは限らないよ。'},
+    {t:'∠OCA（48°）',why:'∠OCA は点Cにある三角形の角。x の頂点は点O。点Oで x と向かい合う角を探そう。'},
+    {t:'等しい角はない',why:'x をつくる線分 OB と OD をのばすと、OA と OC になる。点Oで向かい合う角があるよ。'}],
+   look:['sAB','sCD','a62','ax'],hint:'x は三角形 BOD の角に見えるけれど、頂点は2本の線分 AB と CD の交点O。線分をまっすぐたどると、向かい側に何がある？',
+   ans:'x は線分 AB と CD が点Oで交わってできた角。向かい側の ∠AOC（62°）と対頂角なので等しい。70° と 48° は使わない。',
+   sum:'x の頂点は交点O → 向かい側の ∠AOC と対頂角 → x ＝ 62°（70°・48° は使わない）',after:{label:{ax:'62°'},match:['a62','ax']}}],
+ final:{q:'∠x は何度？',answer:62,unit:'°'}},
+
+/* ---------- 対頂角 Lv3 ---------- */
+{id:'t6',skill:'taicho',lv:3,text:'3本の直線が点Oで交わっています。x の値を求めなさい。',
+ fig:[{t:'line',id:'La',p:O,d:0},{t:'line',id:'Lb',p:O,d:40},{t:'line',id:'Lc',p:O,d:100},{t:'pt',p:O,s:'O',off:[12,-14]},
+  {t:'arc',id:'a80',c:O,a1:100,a2:180,r:34,label:'80°',val:80},
+  {t:'arc',id:'ax',c:O,a1:180,a2:220,r:44,label:'x',val:40,x:1},
+  {t:'arc',id:'axp',c:O,a1:220,a2:280,r:34,label:'(x+20)°',val:60,lr:36},
+  {t:'arc',id:'ax2',c:O,a1:0,a2:40,r:44,label:'x',val:40,x:1,hidden:1},
+  {t:'arc',id:'axp2',c:O,a1:40,a2:100,r:34,label:'(x+20)°',val:60,lr:36,hidden:1}],
+ steps:[
+  {kind:'choice',skill:'taicho',q:'下にある x と (x＋20)° を、横の直線の上側へ移せる？',
+   choices:[
+    {t:'どちらも、向かい側（対頂角）へ移せる',ok:1},
+    {t:'x だけ移せる',why:'(x＋20)° も、2本の直線が交わってできた角。向かい側に対頂角があるよ。'},
+    {t:'文字が入っているので移せない',why:'文字の式で書かれていても角は角。対頂角なら等しいので、そのまま向かい側へ移せるよ。'}],
+   look:['La','Lb','Lc','ax','axp'],hint:'x も (x＋20)° も、2本の直線が交わってできた角。それぞれの向かい側を探そう。',
+   ans:'x と (x＋20)° は、それぞれ向かい側の角と対頂角。上側へそのまま移せる。',
+   sum:'x と (x＋20)° を対頂角で上側へ移す',after:{show:['ax2','axp2'],match:['ax','ax2','axp','axp2']}},
+  {kind:'input',skill:null,q:'x の値は？',answer:40,unit:'',look:['La','ax2','axp2','a80'],
+   hint:'横の直線の上側に x・(x＋20)°・80° が並んでいる。一直線なので合わせて 180°。',ans:'2x ＝ 80 なので、x ＝ 40',sum:'x ＋ (x＋20) ＋ 80 ＝ 180（一直線）→ x ＝ 40'}],
+ final:{q:'x の値は？',answer:40,unit:''}},
+
+{id:'t7',skill:'taicho',lv:3,text:'2本の直線が点Oで交わっています。∠y の大きさを求めなさい。',
+ fig:[{t:'line',id:'L1',p:O,d:30},{t:'line',id:'L2',p:O,d:110},{t:'pt',p:O,s:'O',off:[16,4]},
+  {t:'arc',id:'a2x',c:O,a1:110,a2:210,r:34,label:'2x°',val:100},
+  {t:'arc',id:'axp',c:O,a1:30,a2:110,r:34,label:'(x+30)°',val:80,lr:38},
+  {t:'arc',id:'ax',c:O,a1:210,a2:290,r:34,label:'y',val:80,x:1}],
+ steps:[
+  {kind:'choice',skill:null,q:'まず x を求めたい。2x° と (x＋30)° について言えることは？',
+   choices:[
+    {t:'一直線の上でとなり合う → 足すと 180°',ok:1},
+    {t:'対頂角 → 等しい',why:'2x° と (x＋30)° はとなり合っている角。向かい合っていないので対頂角ではないよ。'},
+    {t:'足すと 360°',why:'360° は1点のまわり1周のとき。となり合う2つの角が一直線をつくっているので 180°。'}],
+   look:['L1','a2x','axp'],hint:'2x° と (x＋30)° は、ななめの直線の同じ側に並んでいる。一直線は何度？',
+   ans:'2x ＋ (x＋30) ＝ 180（一直線）',sum:'式：2x ＋ (x＋30) ＝ 180（一直線）'},
+  {kind:'input',skill:null,q:'x の値は？',answer:50,unit:'',look:['a2x','axp'],
+   hint:'3x ＋ 30 ＝ 180 → 3x ＝ 150 → x ＝ ？',ans:'3x ＝ 150 なので、x ＝ 50。(x＋30)° ＝ 80°、2x° ＝ 100°',
+   sum:'3x ＝ 150 → x ＝ 50、(x＋30)° ＝ 80°',after:{label:{a2x:'100°',axp:'80°'}}},
+  {kind:'choice',skill:'taicho',q:'y と 80°（(x＋30)°）の関係は？',
+   choices:[
+    {t:'対頂角なので、等しい',ok:1},
+    {t:'となり合う角なので、足すと 180°',why:'y ととなり合っているのは 100° の角。80° の角とは向かい合っているよ。'},
+    {t:'y は 100° と等しい',why:'y と 100° はとなり合う角。等しくなるのは向かい合う角だよ。'}],
+   look:['L1','L2','axp','ax'],hint:'y の向かい側にある角はどれ？',
+   ans:'y と 80° は対頂角。等しい。',sum:'y と 80° は対頂角 → 等しい（y ＝ 80°）',after:{label:{ax:'80°'},match:['axp','ax']}}],
+ final:{q:'∠y は何度？',answer:80,unit:'°'}},
+
+/* ---------- 平行線 Lv2 ---------- */
+{id:'h4',skill:'heiko',lv:2,text:'直線 ℓ と m は平行です。∠x の大きさを求めなさい。',
+ fig:[...parBase(A_h4,60),{t:'line',id:'Lu',p:C_h4,d:115},
+  {t:'arc',id:'a60',c:A_h4,a1:180,a2:240,r:30,label:'60°',val:60},
+  {t:'arc',id:'a115',c:C_h4,a1:0,a2:115,r:26,label:'115°',val:115,lr:20},
+  {t:'arc',id:'ax',c:B_h4,a1:0,a2:60,r:32,label:'x',val:60,x:1}],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'x と等しい角は、図の中のどれ？',
+   choices:[
+    {t:'60° の角（錯角）',ok:1},
+    {t:'115° の角（同位角）',why:'115° は、右のななめの直線と ℓ がつくる角。x をつくっているのは左のななめの直線だよ。x の辺をたどってみよう。'},
+    {t:'どちらでもない',why:'x をつくっているななめの直線は、ℓ とも交わっている。そこに x と関係のある角があるよ。'}],
+   look:['Ll','Lm','Lt','a60','ax'],hint:'x をつくっている2本の直線は m と左のななめの線。そのななめの線が ℓ と交わるところで、x と Z の字になる角を探そう。',
+   ans:'x と 60° は、同じななめの直線がつくる錯角（Z の字）。ℓ ∥ m なので等しい。115° は別の直線の角なので関係ない。',
+   sum:'x の辺をたどる → 60° と錯角（ℓ ∥ m）（x ＝ 60°）',after:{label:{ax:'60°'},match:['a60','ax']}}],
+ final:{q:'∠x は何度？',answer:60,unit:'°'}},
+
+{id:'h5',skill:'heiko',lv:2,text:'直線 ℓ と m は平行です。∠x の大きさを求めなさい。',
+ fig:[{t:'line',id:'Ll',p:L_h5,d:345},{t:'line',id:'Lm',p:M_h5,d:345},{t:'line',id:'Lt',p:L_h5,d:80},
+  {t:'par',p:atX(L_h5,345,335),d:345},{t:'par',p:atX(M_h5,345,335),d:345},
+  {t:'nm',p:[atX(L_h5,345,28)[0],atX(L_h5,345,28)[1]-12],s:'ℓ'},{t:'nm',p:[atX(M_h5,345,28)[0],atX(M_h5,345,28)[1]-12],s:'m'},
+  {t:'arc',id:'a95',c:L_h5,a1:345,a2:80,r:30,label:'95°',val:95},
+  {t:'arc',id:'ax',c:B_h5,a1:345,a2:80,r:30,label:'x',val:95,x:1}],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'図がかたむいている。x と 95° は、どんな関係の角？',
+   choices:[
+    {t:'同位角なので、等しい（ℓ ∥ m）',ok:1},
+    {t:'錯角なので、等しい',why:'錯角は、平行線の内側で Z の字の位置にある角。95° は ℓ の上側（外側）にあるので錯角ではないよ。'},
+    {t:'足すと 180°',why:'2つの交点で「同じ位置」にある角どうしなので、足すのではなく等しい。'}],
+   look:['Ll','Lm','Lt','a95','ax'],hint:'図をかたむけて、ℓ と m が横になるように見てみよう。95° も x も、交点のどこにある？',
+   ans:'ℓ と m を横向きに見ると、95° も x も「交点の右上」＝同じ位置。同位角なので等しい。',
+   sum:'図を回して見る → 同じ位置＝同位角（ℓ ∥ m）（x ＝ 95°）',after:{label:{ax:'95°'},match:['a95','ax']}}],
+ final:{q:'∠x は何度？',answer:95,unit:'°'}},
+
+/* ---------- 平行線 Lv3 ---------- */
+{id:'h6',skill:'heiko',lv:3,text:'直線 ℓ と m は平行です。∠x の大きさを求めなさい。',
+ fig:[...parBase(A_h6,50),
+  {t:'arc',id:'a130',c:A_h6,a1:50,a2:180,r:28,label:'130°',val:130,lr:24},
+  {t:'arc',id:'ax',c:B_h6,a1:180,a2:230,r:32,label:'x',val:50,x:1},
+  {t:'arc',id:'a50A',c:A_h6,a1:0,a2:50,r:32,label:'50°',val:50,hidden:1},
+  {t:'arc',id:'a50B',c:B_h6,a1:0,a2:50,r:32,label:'50°',val:50,hidden:1}],
+ steps:[
+  {kind:'choice',skill:null,q:'まず、130° から何がわかる？',
+   choices:[
+    {t:'130° のとなり（右上）の角が 180° − 130° ＝ 50°',ok:1},
+    {t:'x は 130° と等しい',why:'130° は ℓ の上の左側、x は m の下の左側。位置がちがうので、すぐには等しいと言えないよ。'},
+    {t:'x は 180° − 130° ＝ 50° と、すぐにわかる',why:'答えの数は合っていても、理由がない。130° と x は直接つながっていないので、角を順に移していこう。'}],
+   look:['Ll','a130'],hint:'130° は直線 ℓ の上にある。一直線は 180°。',
+   ans:'一直線なので、130° のとなりの角は 50°。',sum:'130° のとなりは 180 − 130 ＝ 50°（一直線）',after:{show:['a50A']}},
+  {kind:'choice',skill:'heiko',q:'その 50° を、m との交点へ移すと？',
+   choices:[
+    {t:'同位角で、m との交点の右上へ移せる',ok:1},
+    {t:'錯角で、m との交点の右上へ移せる',why:'50° は ℓ の上側（外側）にある。同じ位置（右上）へ移すのは同位角だよ。'},
+    {t:'移せない',why:'ℓ ∥ m なので、同位角や錯角を使って角を移せるよ。'}],
+   look:['Ll','Lm','Lt','a50A'],hint:'ℓ ∥ m のとき、2つの交点で「同じ位置」の角は等しい。',
+   ans:'ℓ ∥ m なので、同位角で m との交点の右上も 50°。',sum:'同位角で m の交点の右上へ移す → 50°',after:{show:['a50B'],match:['a50A','a50B']}},
+  {kind:'choice',skill:'taicho',q:'右上の 50° と x の関係は？',
+   choices:[
+    {t:'対頂角なので、等しい',ok:1},
+    {t:'足すと 180°',why:'右上の 50° と x は向かい合っている角。足して 180° になるのはとなり合う角だよ。'},
+    {t:'錯角なので、等しい',why:'2つの角は同じ交点にある。同じ交点で向かい合う角の名前は？'}],
+   look:['Lm','Lt','a50B','ax'],hint:'同じ交点で、向かい合っている角。前に習った型が使える。',
+   ans:'同じ交点で向かい合う角＝対頂角。等しい。',sum:'右上の 50° と x は対頂角 → 等しい（x ＝ 50°）',after:{label:{ax:'50°'},match:['a50A','a50B','ax']}}],
+ final:{q:'∠x は何度？',answer:50,unit:'°'}},
+
+{id:'h7',skill:'heiko',lv:3,text:'直線 ℓ と m は平行です。x の値を求めなさい。',
+ fig:[...parBase(A_h7,65),
+  {t:'arc',id:'aL',c:A_h7,a1:180,a2:245,r:30,label:'(3x−10)°',val:65,lr:42},
+  {t:'arc',id:'ax',c:B_h7,a1:0,a2:65,r:30,label:'(2x+15)°',val:65,lr:42}],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'(3x−10)° と (2x＋15)° は、どんな関係の角？',
+   choices:[
+    {t:'錯角なので、等しい（ℓ ∥ m）',ok:1},
+    {t:'同位角なので、等しい',why:'同位角は2つの交点で同じ位置の角。この2つは左下と右上で位置がちがうよ。'},
+    {t:'足すと 180°',why:'足して 180° になるのは、平行線の内側で「同じ側」にある2つの角。この2つは反対側（Z の字）にあるよ。'}],
+   look:['Ll','Lm','Lt','aL','ax'],hint:'文字の式でも、まずは位置を見る。ℓ と m の内側で Z の字になっている？',
+   ans:'2つの角は平行線の内側で Z の字の位置＝錯角。ℓ ∥ m なので等しい。',
+   sum:'(3x−10)° と (2x＋15)° は錯角 → 等しい',after:{match:['aL','ax']}},
+  {kind:'input',skill:null,q:'x の値は？',answer:25,unit:'',look:['aL','ax'],
+   hint:'錯角は等しいので、3x − 10 ＝ 2x ＋ 15。',ans:'x ＝ 25（角はどちらも 65°）',sum:'3x − 10 ＝ 2x ＋ 15 → x ＝ 25'}],
+ final:{q:'x の値は？',answer:25,unit:''}}
+
+];
+
+/* ---------- 図づくりの道具 ---------- */
+function n360(a){return ((a%360)+360)%360;}
+function arcV(id,V,P1,P2,label,val,o){let a=dirTo(V,P1),b=dirTo(V,P2);if(n360(b-a)>180){const t=a;a=b;b=t;}return Object.assign({t:'arc',id,c:V,a1:a,a2:b,r:24,label,val},o||{});}
+function dp(V,d){return from(V,d,30);}
+function sg(id,a,b,o){return Object.assign({t:'seg',id,a,b},o||{});}
+function tk(a,b,n,o){return Object.assign({t:'tick',a,b,n:n||1},o||{});}
+function rt(c,p,q,o){return Object.assign({t:'right',c,p,q},o||{});}
+function pt(p,s){return {t:'pt',p,s};}
+function polyTurn(V0,h0,ext,lens){const n=ext.length,V=[V0];let h=h0;for(let i=0;i<n-2;i++){V.push(from(V[i],h,lens[i]));h+=ext[i+1];}V.push(inter(V[n-2],h,V0,h0-ext[0]));return V;}
+function onCircle(c,r,deg){return from(c,deg,r);}
+const PAR=(ly,my)=>[{t:'line',id:'Ll',p:[0,ly],d:0},{t:'line',id:'Lm',p:[0,my],d:0},{t:'par',p:[350,ly]},{t:'par',p:[350,my]},{t:'nm',p:[24,ly-11],s:'ℓ'},{t:'nm',p:[24,my-11],s:'m'}];
+
+const TYPE_PROBS=[
+/* ================= 3. 三角形の内角と外角 ================= */
+(()=>{const B=[70,230],C=[250,230],D=[365,230],A=inter(B,47,C,105);return {
+ id:'s1',skill:'sankaku',lv:1,text:'△ABC の辺 BC を、C の先へ延長しました。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBD',B,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aA',A,B,C,'58°',58),arcV('aB',B,C,A,'47°',47),arcV('ax',C,D,A,'x',105,{x:1,r:22})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'x を「1回の計算」で求めるのに使う関係は？',
+   choices:[
+    {t:'外角は、となりにない2つの内角の和',ok:1},
+    {t:'三角形の内角の和は 180°',why:'内角の和では、先に ∠ACB を出してから 180° から引く…と2回の計算になる。x は外角なので、外角の性質なら1回で出るよ。'},
+    {t:'x と 58° は錯角なので等しい',why:'この図に平行線はないので、錯角は使えないよ。'}],
+   look:['aA','aB','ax'],hint:'x は三角形の外側の角（外角）。外角と、となりにない2つの内角の関係は？',
+   ans:'x は △ABC の外角。外角は、となりにない2つの内角（58° と 47°）の和。',sum:'x は外角 → となりにない2つの内角の和'},
+  {kind:'input',skill:null,q:'x は何度？',answer:105,unit:'°',look:['aA','aB','ax'],hint:'58 ＋ 47',ans:'x ＝ 58 ＋ 47 ＝ 105°',sum:'x ＝ 58 ＋ 47 ＝ 105°',after:{label:{ax:'105°'}}}],
+ final:{q:'∠x は何度？',answer:105,unit:'°'}};})(),
+
+(()=>{const C=[140,220],B=[330,220],D=[30,220],A=inter(C,62,B,132);return {
+ id:'s2',skill:'sankaku',lv:1,text:'△ABC の辺 BC を、C の先へ延長しました。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBD',B,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aA',A,B,C,'70°',70),arcV('aE',C,A,D,'118°',118,{r:22,lr:24}),arcV('ax',B,A,C,'x',48,{x:1})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'118°・70°・x のあいだに成り立つ関係は？',
+   choices:[
+    {t:'118° ＝ 70° ＋ x',ok:1},
+    {t:'x ＋ 70° ＋ 118° ＝ 180°',why:'118° は三角形の外にある角（外角）。三角形の内角の和には入らないよ。'},
+    {t:'x ＝ 180° − 118°',why:'180° − 118° で出るのは ∠ACB（118° のとなりの内角）。x とは別の角だよ。'}],
+   look:['aE','aA','ax'],hint:'118° は C の外角。この外角と「となりにない2つの内角」は？',
+   ans:'118° は C の外角なので、となりにない2つの内角 70° と x の和。',sum:'外角 118° ＝ 70° ＋ x'},
+  {kind:'input',skill:null,q:'x は何度？',answer:48,unit:'°',look:['aE','aA','ax'],hint:'118 − 70',ans:'x ＝ 118 − 70 ＝ 48°',sum:'x ＝ 118 − 70 ＝ 48°',after:{label:{ax:'48°'}}}],
+ final:{q:'∠x は何度？',answer:48,unit:'°'}};})(),
+
+(()=>{const B=[50,235],C=[345,235],A=inter(B,40,C,130),D=inter(A,255,B,0);return {
+ id:'s3',skill:'sankaku',lv:2,text:'点Dは辺BC上の点です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aB',B,C,A,'40°',40,{r:28}),arcV('aBAD',A,B,D,'35°',35,{r:30,lr:20}),arcV('aC',C,A,B,'50°',50,{r:26}),arcV('ax',D,C,A,'x',75,{x:1,r:22})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'x を「外角」としてもつ三角形はどれ？',
+   choices:[
+    {t:'△ABD',ok:1},
+    {t:'△ADC',why:'x は △ADC の中にある角（内角）。△ADC では ∠DAC がわからないので進めないよ。'},
+    {t:'△ABC',why:'x の頂点Dは、△ABC の頂点ではないよ。'}],
+   look:['sAB','sAD','sBC','aB','aBAD','ax'],hint:'x の辺 DC を、D の反対側へのばすと DB。x は、どの三角形の外側の角になっている？',
+   ans:'x は △ABD の外角。となりにない2つの内角は 40° と 35°。50° は使わない。',sum:'x は △ABD の外角（50° は使わない）'},
+  {kind:'input',skill:null,q:'x は何度？',answer:75,unit:'°',look:['aB','aBAD','ax'],hint:'40 ＋ 35',ans:'x ＝ 40 ＋ 35 ＝ 75°',sum:'x ＝ 40 ＋ 35 ＝ 75°',after:{label:{ax:'75°'}}}],
+ final:{q:'∠x は何度？',answer:75,unit:'°'}};})(),
+
+(()=>{const A=[50,235],B=[350,235],C=inter(A,34,B,124),D=[C[0],235];return {
+ id:'s4',skill:'sankaku',lv:2,text:'∠ACB＝90°、CD は AB に垂直です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sCD',C,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  rt(C,A,B),rt(D,C,B),arcV('aA',A,B,C,'34°',34,{r:34}),arcV('ax',C,D,B,'x',34,{x:1,r:34})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'x と大きさが等しい角はどれ？',
+   choices:[
+    {t:'∠A（34°）',ok:1},
+    {t:'∠B',why:'∠B と x は △BCD の中で、足すと 90° になる関係。等しくはないよ。'},
+    {t:'∠ACD',why:'∠ACD と x を合わせると ∠ACB ＝ 90°。等しくはないよ。'}],
+   look:['aA','ax','sBC'],hint:'x も ∠A も、「90° − ∠B」になっていないかな？ △BCD と △ABC を見くらべよう。',
+   ans:'△BCD で x ＝ 90° − ∠B。△ABC でも ∠A ＝ 90° − ∠B。だから x ＝ ∠A ＝ 34°。',
+   sum:'x も ∠A も「90° − ∠B」→ x ＝ ∠A ＝ 34°',after:{match:['aA','ax'],label:{ax:'34°'}}}],
+ final:{q:'∠x は何度？',answer:34,unit:'°'}};})(),
+
+(()=>{const O=[200,150],A=from(O,140,110),C=from(O,40,100),B=inter(A,265,O,220),D=inter(C,280,O,320);return {
+ id:'s5',skill:'sankaku',lv:3,text:'線分 AD と BC は点Oで交わっています。∠x の大きさを求めなさい。',
+ fig:[sg('sAD',A,D),sg('sBC',B,C),sg('sAB',A,B),sg('sCD',C,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(O,'O'),
+  arcV('aA',A,O,B,'55°',55),arcV('aB',B,A,O,'45°',45),arcV('aC',C,O,D,'60°',60),arcV('ax',D,C,O,'x',40,{x:1}),
+  arcV('aO1',O,A,B,'',80,{hidden:1,r:16}),arcV('aO2',O,D,C,'',80,{hidden:1,r:16})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'左右の2つの三角形をくらべると、どんな式が成り立つ？',
+   choices:[
+    {t:'55° ＋ 45° ＝ 60° ＋ x',ok:1},
+    {t:'55° ＋ 45° ＋ 60° ＋ x ＝ 180°',why:'この4つの角は、1つの三角形の角ではないよ。'},
+    {t:'x ＝ 55°（錯角）',why:'AB と CD が平行とは書いていないので、錯角は使えないよ。'}],
+   look:['aA','aB','aC','ax'],hint:'点Oの2つの角（対頂角）は等しい。どちらの三角形も「180° − 点Oの角」が、残り2つの角の和。',
+   ans:'点Oの角は対頂角で等しいので、残り2つの角の和も等しい。55 ＋ 45 ＝ 60 ＋ x。',
+   sum:'点Oの対頂角が等しい → 55 ＋ 45 ＝ 60 ＋ x',after:{show:['aO1','aO2'],match:['aO1','aO2']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:40,unit:'°',look:['aA','aB','aC','ax'],hint:'55 ＋ 45 − 60',ans:'x ＝ 55 ＋ 45 − 60 ＝ 40°',sum:'x ＝ 100 − 60 ＝ 40°',after:{label:{ax:'40°'}}}],
+ final:{q:'∠x は何度？',answer:40,unit:'°'}};})(),
+
+(()=>{const B=[60,240],C=[340,240],A=inter(B,70,C,134),I=inter(B,35,C,157);return {
+ id:'s6',skill:'sankaku',lv:3,text:'BI、CI は ∠B、∠C の二等分線です（● どうし、○ どうしは等しい角）。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sBI',B,I),sg('sCI',C,I),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(I,'I'),
+  arcV('aA',A,B,C,'64°',64,{r:26}),arcV('aB1',B,C,I,'●',35,{r:34,lr:12}),arcV('aB2',B,I,A,'●',35,{r:40,lr:12}),
+  arcV('aC1',C,I,B,'○',23,{r:46,lr:12}),arcV('aC2',C,A,I,'○',23,{r:54,lr:12}),arcV('ax',I,B,C,'x',122,{x:1,r:20})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'∠B も ∠C も書いていない。どう考える？',
+   choices:[
+    {t:'∠B ＋ ∠C を「まとめて」求める',ok:1},
+    {t:'∠B ＝ ∠C と考える',why:'等しい辺の印はないので、∠B ＝ ∠C とは言えないよ。'},
+    {t:'∠B と ∠C がわからないので求められない',why:'1つずつはわからなくても、2つの「和」ならわかるよ。'}],
+   look:['aA','aB1','aB2','aC1','aC2'],hint:'△ABC の内角の和から、∠B ＋ ∠C ＝ 180° − 64°。● ＋ ○ はその半分。',
+   ans:'∠B ＋ ∠C ＝ 180° − 64° ＝ 116°。● ＋ ○ はその半分の 58°。',sum:'∠B ＋ ∠C ＝ 116° → ● ＋ ○ ＝ 58°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:122,unit:'°',look:['aB1','aC1','ax'],hint:'△IBC で、x ＝ 180 − (● ＋ ○) ＝ 180 − 58',
+   ans:'x ＝ 180 − 58 ＝ 122°（∠A の半分に 90° をたした大きさになっている）',sum:'x ＝ 180 − 58 ＝ 122°',after:{label:{ax:'122°'}}}],
+ final:{q:'∠x は何度？',answer:122,unit:'°'}};})(),
+
+/* ================= 4. 二等辺三角形の底角 ================= */
+(()=>{const A=[200,40],B=from(A,250,215),C=from(A,290,215);return {
+ id:'n1',skill:'nitohen',lv:1,text:'△ABC は AB＝AC の二等辺三角形です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),tk(A,B,1),tk(A,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aA',A,B,C,'40°',40,{r:30}),arcV('ax',B,C,A,'x',70,{x:1})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'この三角形で、大きさが等しい2つの角は？',
+   choices:[
+    {t:'∠B と ∠C（底角）',ok:1},
+    {t:'∠A と ∠B',why:'∠A は、印のついた2辺 AB・AC にはさまれた角（頂角）。底角とは等しいとは限らないよ。'},
+    {t:'∠A と ∠C',why:'∠A は頂角。等しいのは、残りの2つの角（底角）だよ。'}],
+   look:['sAB','sAC'],hint:'印のついた2辺にはさまれた角が頂角。残りの2つが底角で、底角どうしは等しい。',
+   ans:'AB＝AC なので、底角 ∠B と ∠C が等しい。',sum:'∠B ＝ ∠C（底角）'},
+  {kind:'input',skill:null,q:'x は何度？',answer:70,unit:'°',look:['aA','ax'],hint:'(180 − 40) ÷ 2',ans:'x ＝ (180 − 40) ÷ 2 ＝ 70°',sum:'x ＝ (180 − 40) ÷ 2 ＝ 70°',after:{label:{ax:'70°'}}}],
+ final:{q:'∠x は何度？',answer:70,unit:'°'}};})(),
+
+(()=>{const B=[75,150],A=from(B,25,225),C=from(B,335,225);return {
+ id:'n2',skill:'nitohen',lv:1,text:'△ABC は BA＝BC の二等辺三角形です。∠x の大きさを求めなさい。',
+ fig:[sg('sBA',B,A),sg('sBC',B,C),sg('sAC',A,C),tk(B,A,1),tk(B,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aA',A,C,B,'65°',65,{r:28}),arcV('aC',C,B,A,'65°',65,{r:28,hidden:1}),arcV('ax',B,C,A,'x',50,{x:1,r:30})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'65° と大きさが等しい角はどれ？',
+   choices:[
+    {t:'∠C',ok:1},
+    {t:'∠B（x）',why:'x は、印のついた2辺 BA・BC にはさまれた角（頂角）。印のついた辺がどこかをよく見よう。'},
+    {t:'等しい角はない',why:'BA＝BC の二等辺三角形なので、底角どうしは等しいよ。'}],
+   look:['sBA','sBC'],hint:'印がついているのは BA と BC。この2辺にはさまれていない2つの角が底角。',
+   ans:'BA＝BC なので、底角は ∠A と ∠C。∠C ＝ 65°。',sum:'底角は ∠A と ∠C → ∠C ＝ 65°',after:{show:['aC'],match:['aA','aC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:50,unit:'°',look:['aA','aC','ax'],hint:'180 − 65 × 2',ans:'x ＝ 180 − 65 × 2 ＝ 50°',sum:'x ＝ 180 − 130 ＝ 50°',after:{label:{ax:'50°'}}}],
+ final:{q:'∠x は何度？',answer:50,unit:'°'}};})(),
+
+(()=>{const B=[40,240],C=[340,240],A=inter(B,30,C,110),D=inter(A,250,B,0);return {
+ id:'n3',skill:'nitohen',lv:2,text:'点Dは辺BC上の点で、AD＝AC です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),tk(A,D,1),tk(A,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aB',B,C,A,'30°',30,{r:40}),arcV('aC',C,A,B,'70°',70,{r:22}),arcV('ax',A,B,D,'x',40,{x:1,r:36}),
+  arcV('aD',D,C,A,'70°',70,{r:22,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'等しい辺の印から見つかる二等辺三角形と、わかることは？',
+   choices:[
+    {t:'△ADC（AD＝AC）→ ∠ADC ＝ ∠C ＝ 70°',ok:1},
+    {t:'△ABD（AB＝AD）→ ∠B ＝ ∠ADB',why:'印がついているのは AD と AC。AB には印がないよ。'},
+    {t:'△ABC（AB＝AC）→ ∠B ＝ ∠C',why:'AB には印がないし、30° と 70° で ∠B と ∠C は等しくないよ。'}],
+   look:['sAD','sAC'],hint:'印のついた AD と AC は、どの三角形の2辺？ その三角形の底角は？',
+   ans:'AD＝AC なので △ADC は二等辺三角形。底角 ∠ADC ＝ ∠C ＝ 70°。',sum:'△ADC が二等辺 → ∠ADC ＝ 70°',after:{show:['aD'],match:['aC','aD']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:40,unit:'°',look:['aB','ax','aD'],hint:'∠ADC は △ABD の外角。30° ＋ x ＝ 70°',
+   ans:'∠ADC は △ABD の外角なので 30 ＋ x ＝ 70、x ＝ 40°',sum:'外角：30 ＋ x ＝ 70 → x ＝ 40°',after:{label:{ax:'40°'}}}],
+ final:{q:'∠x は何度？',answer:40,unit:'°'}};})(),
+
+(()=>{const A=[95,40],B=[95,165],C=[220,165],D=[220,40],E=from(B,300,125);return {
+ id:'n4',skill:'nitohen',lv:2,text:'四角形 ABCD は正方形、△EBC は正三角形です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sDA',D,A),sg('sBE',B,E),sg('sCE',C,E),sg('sAE',A,E),
+  pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  tk(A,B,1,{hidden:1,id:'k1'}),tk(B,E,1,{hidden:1,id:'k2'}),tk(B,C,1,{hidden:1,id:'k3'}),
+  arcV('ax',A,B,E,'x',15,{x:1,r:44,lr:14})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'x をふくむ △ABE は、どんな三角形？',
+   choices:[
+    {t:'AB＝BE の二等辺三角形',ok:1},
+    {t:'直角三角形',why:'∠ABE は 90° ではないよ（正方形の 90° に、正三角形の 60° が加わっている）。'},
+    {t:'正三角形',why:'AE は AB と同じ長さではないよ。'}],
+   look:['sAB','sBE','sAE'],hint:'AB は正方形の辺、BE は正三角形の辺。どちらも BC と同じ長さ。',
+   ans:'AB ＝ BC（正方形）、BE ＝ BC（正三角形）なので AB ＝ BE。△ABE は二等辺三角形。',sum:'AB ＝ BC ＝ BE → △ABE は二等辺三角形',after:{show:['k1','k2','k3']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:15,unit:'°',look:['sAB','sBE','ax'],hint:'∠ABE ＝ 90 ＋ 60 ＝ 150。底角は (180 − 150) ÷ 2',
+   ans:'∠ABE ＝ 150° なので、x ＝ (180 − 150) ÷ 2 ＝ 15°',sum:'∠ABE ＝ 150° → x ＝ 15°',after:{label:{ax:'15°'}}}],
+ final:{q:'∠x は何度？',answer:15,unit:'°'}};})(),
+
+(()=>{const A=[40,240],C=[345,240],B=inter(A,32,C,116),D=inter(B,244,A,0);return {
+ id:'n5',skill:'nitohen',lv:3,text:'点Dは辺AC上の点で、AD＝DB＝BC です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sBD',B,D),tk(A,D,1),tk(D,B,1),tk(B,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aA',A,C,B,'32°',32,{r:36}),arcV('aABD',B,A,D,'32°',32,{r:44,hidden:1}),arcV('aBDC',D,C,B,'64°',64,{r:22,hidden:1}),
+  arcV('aC',C,B,A,'64°',64,{r:22,hidden:1}),arcV('ax',B,D,C,'x',52,{x:1,r:30})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'最初の一手は？',
+   choices:[
+    {t:'AD＝DB → △ABD は二等辺三角形 → ∠ABD ＝ 32°',ok:1},
+    {t:'AD＝BC → ∠A ＝ ∠C',why:'AD と BC は同じ三角形の辺ではないよ。二等辺三角形は、1つの三角形の中で2辺が等しいとき。'},
+    {t:'AB＝AC → ∠B ＝ ∠C',why:'AB と AC に印はないよ。'}],
+   look:['sAB','sBD'],hint:'印のついた3本のうち、同じ三角形に2本入っているのはどこ？',
+   ans:'AD＝DB なので △ABD は二等辺三角形。底角 ∠ABD ＝ ∠A ＝ 32°。',sum:'AD＝DB → ∠ABD ＝ 32°',after:{show:['aABD'],match:['aA','aABD']}},
+  {kind:'choice',skill:'sankaku',q:'次に、∠BDC は？',
+   choices:[
+    {t:'64°（△ABD の外角 ＝ 32° ＋ 32°）',ok:1},
+    {t:'32°',why:'∠BDC は △ABD の外側の角（外角）。となりにない2つの内角の和だよ。'},
+    {t:'116°',why:'116° は ∠ADB（三角形 ABD の中の角）。∠BDC はそのとなりの外角だよ。'}],
+   look:['aA','aABD','sBD'],hint:'∠BDC は △ABD の外角。',
+   ans:'∠BDC は △ABD の外角なので 32 ＋ 32 ＝ 64°。',sum:'∠BDC ＝ 32 ＋ 32 ＝ 64°（外角）',after:{show:['aBDC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:52,unit:'°',look:['aBDC','ax','sBC'],hint:'DB ＝ BC なので ∠C ＝ ∠BDC ＝ 64°。△DBC で x ＝ 180 − 64 − 64',
+   ans:'DB ＝ BC なので ∠C ＝ 64°。x ＝ 180 − 64 − 64 ＝ 52°',sum:'DB＝BC → ∠C ＝ 64° → x ＝ 52°',after:{show:['aC'],match:['aBDC','aC'],label:{ax:'52°'}}}],
+ final:{q:'∠x は何度？',answer:52,unit:'°'}};})(),
+
+(()=>{const O=[58,255],L=110,A=from(O,0,L),B=from(O,20,2*L*Math.cos(20*RAD)),C=from(O,0,L*(1+2*Math.cos(40*RAD))),R1=from(O,0,325),R2=from(O,20,340);return {
+ id:'n6',skill:'nitohen',lv:3,text:'2本の直線が点Oで交わっています。OA＝AB＝BC のとき、∠x の大きさを求めなさい。',
+ fig:[sg('sO1',O,R1),sg('sO2',O,R2),sg('sAB',A,B),sg('sBC',B,C),tk(O,A,1,{at:0.72}),tk(A,B,1),tk(B,C,1),pt(O,'O'),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aO',O,A,B,'20°',20,{r:26,lr:16}),arcV('aOBA',B,O,A,'20°',20,{r:30,hidden:1,lr:16}),arcV('aBAC',A,C,B,'40°',40,{r:24,hidden:1}),
+  arcV('aACB',C,B,A,'40°',40,{r:24,hidden:1}),arcV('ax',B,A,C,'x',100,{x:1,r:18})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'最初の一手は？',
+   choices:[
+    {t:'OA＝AB → △OAB は二等辺三角形 → ∠ABO ＝ 20°',ok:1},
+    {t:'OA＝BC → ∠O ＝ ∠C',why:'OA と BC は同じ三角形の辺ではないよ。'},
+    {t:'x ＝ 180° − 20° × 2',why:'それは △OAB の頂角 ∠OAB。x は B の角だよ。'}],
+   look:['sAB','aO'],hint:'印のついた辺のうち、点Oの角をふくむ三角形に2本入っているのは？',
+   ans:'OA＝AB なので △OAB は二等辺三角形。底角 ∠ABO ＝ ∠O ＝ 20°。',sum:'OA＝AB → ∠ABO ＝ 20°',after:{show:['aOBA'],match:['aO','aOBA']}},
+  {kind:'choice',skill:'sankaku',q:'次に、∠BAC（Aの外側の角）は？',
+   choices:[
+    {t:'40°（△OAB の外角 ＝ 20° ＋ 20°）',ok:1},
+    {t:'20°',why:'∠BAC は △OAB の外角。となりにない2つの内角の和だよ。'},
+    {t:'140°',why:'140° は ∠OAB（三角形の中の角）。∠BAC はその外側。'}],
+   look:['aO','aOBA'],hint:'∠BAC は △OAB の外角。',
+   ans:'∠BAC は △OAB の外角なので 20 ＋ 20 ＝ 40°。',sum:'∠BAC ＝ 20 ＋ 20 ＝ 40°（外角）',after:{show:['aBAC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:100,unit:'°',look:['aBAC','sBC','ax'],hint:'AB ＝ BC なので ∠BCA ＝ ∠BAC ＝ 40°。△ABC で x ＝ 180 − 40 − 40',
+   ans:'AB ＝ BC なので ∠BCA ＝ 40°。x ＝ 180 − 40 − 40 ＝ 100°',sum:'AB＝BC → ∠C ＝ 40° → x ＝ 100°',after:{show:['aACB'],match:['aBAC','aACB'],label:{ax:'100°'}}}],
+ final:{q:'∠x は何度？',answer:100,unit:'°'}};})(),
+
+/* ================= 5. 多角形の内角・外角の和 ================= */
+(()=>{const V=polyTurn([140,252],0,[65,80,70,85,60],[130,130,160]);const[A,B,C,D,E]=V;return {
+ id:'k1',skill:'takakkei',lv:1,text:'五角形 ABCDE の ∠x の大きさを求めなさい。',
+ fig:[sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,E),sg('s5',E,A),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  arcV('ax',A,B,E,'x',115,{x:1}),arcV('aB',B,C,A,'100°',100),arcV('aC',C,D,B,'110°',110),arcV('aD',D,E,C,'95°',95),arcV('aE',E,A,D,'120°',120)],
+ steps:[
+  {kind:'choice',skill:'takakkei',q:'五角形の内角の和は？',
+   choices:[
+    {t:'540°（三角形 3 つ分）',ok:1},
+    {t:'360°',why:'360° は四角形の内角の和、または外角の和だよ。'},
+    {t:'900°（180° × 5）',why:'五角形は、1つの頂点から対角線を引くと三角形 3 つに分けられる。180° × (5 − 2) だよ。'}],
+   look:['s1','s2','s3','s4','s5'],hint:'1つの頂点から対角線を引くと、三角形はいくつできる？',
+   ans:'180° × (5 − 2) ＝ 540°',sum:'五角形の内角の和 ＝ 540°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:115,unit:'°',look:['aB','aC','aD','aE','ax'],hint:'540 − (100 ＋ 110 ＋ 95 ＋ 120)',ans:'x ＝ 540 − 425 ＝ 115°',sum:'x ＝ 540 − 425 ＝ 115°',after:{label:{ax:'115°'}}}],
+ final:{q:'∠x は何度？',answer:115,unit:'°'}};})(),
+
+(()=>{const ext=[70,80,65,75,70],V=polyTurn([120,240],0,ext,[150,105,120]);const f=[];
+ const nm=['A','B','C','D','E'],lab=['x','80°','65°','75°','70°'];
+ for(let i=0;i<5;i++){const P=V[i],Q=V[(i+1)%5],Pr=V[(i+4)%5],e=from(P,dirTo(Pr,P),42);f.push(sg('s'+i,P,Q),sg('e'+i,P,e),pt(P,nm[i]),arcV(i?'a'+i:'ax',P,e,Q,lab[i],ext[i],{r:22,x:i?0:1}));}
+ return {
+ id:'k2',skill:'takakkei',lv:1,text:'五角形の各頂点で、辺を延長しました。∠x の大きさを求めなさい。',fig:f,
+ steps:[
+  {kind:'choice',skill:'takakkei',q:'五角形の外角の和は？',
+   choices:[
+    {t:'360°（何角形でも同じ）',ok:1},
+    {t:'540°',why:'540° は五角形の「内角」の和だよ。'},
+    {t:'900°',why:'内角と外角を合わせると 180° × 5 ＝ 900°。そこから内角の和 540° を引くと…？'}],
+   look:['ax','a1','a2','a3','a4'],hint:'多角形の外角の和は、何角形でも変わらない。',
+   ans:'外角の和は、何角形でもいつも 360°。',sum:'外角の和 ＝ 360°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:70,unit:'°',look:['ax','a1','a2','a3','a4'],hint:'360 − (80 ＋ 65 ＋ 75 ＋ 70)',ans:'x ＝ 360 − 290 ＝ 70°',sum:'x ＝ 360 − 290 ＝ 70°',after:{label:{ax:'70°'}}}],
+ final:{q:'∠x は何度？',answer:70,unit:'°'}};})(),
+
+(()=>{const V0=[55,235],V1=from(V0,0,115),V2=from(V1,40,115),V3=from(V2,80,115),E1=from(V1,0,55);return {
+ id:'k3',skill:'takakkei',lv:2,text:'1つの内角が 140° の正多角形の一部です。これは正何角形ですか。',
+ fig:[sg('s0',V0,V1),sg('s1',V1,V2),sg('s2',V2,V3),sg('e1',V1,E1,{dash:1,hidden:1}),
+  arcV('a1',V1,V2,V0,'140°',140,{r:24}),arcV('a2',V2,V3,V1,'140°',140,{r:24}),arcV('aE',V1,E1,V2,'40°',40,{r:34,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'takakkei',q:'暗算で一気に求めるには、どの角に注目する？',
+   choices:[
+    {t:'外角（1つ 180° − 140° ＝ 40°）',ok:1},
+    {t:'内角の和',why:'内角の和は「何角形か」がわからないと出せないよ。方程式 180×(n−2) ＝ 140×n を解けば出るけど遠回り。外角の和はいつも 360° なので、外角なら一発。'},
+    {t:'140° そのもので 360° を割る',why:'360° になるのは外角の和。内角ではなく、外角で割ろう。'}],
+   look:['a1','a2'],hint:'外角の和は、何角形でもいつも 360°。正多角形なら外角はみんな同じ大きさ。',
+   ans:'1つの外角は 40°。外角の和 360° を 40° ずつに分けると、頂点の数がわかる。',sum:'外角 ＝ 180 − 140 ＝ 40°',after:{show:['e1','aE']}},
+  {kind:'input',skill:null,q:'正何角形？（数字で）',answer:9,unit:'',look:['aE'],hint:'360 ÷ 40',ans:'360 ÷ 40 ＝ 9 なので、正九角形',sum:'360 ÷ 40 ＝ 9 → 正九角形'}],
+ final:{q:'正何角形？（数字で）',answer:9,unit:''}};})(),
+
+(()=>{const ext=[93,72,60,75,60],V=polyTurn([110,245],0,ext,[160,110,120]);const[A,B,C,D,E]=V;
+ const eA=from(A,dirTo(E,A),42),eD=from(D,dirTo(C,D),42),eE=from(E,dirTo(D,E),42);return {
+ id:'k4',skill:'takakkei',lv:2,text:'五角形 ABCDE で、内角と外角がまざって書かれています。∠x の大きさを求めなさい。',
+ fig:[sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,E),sg('s5',E,A),sg('eA',A,eA),sg('eD',D,eD),sg('eE',E,eE),
+  pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  arcV('ax',A,eA,B,'x',93,{x:1,r:22}),arcV('aB',B,C,A,'108°',108),arcV('aC',C,D,B,'120°',120),arcV('aD',D,eD,E,'75°',75,{r:22}),arcV('aE',E,eE,A,'60°',60,{r:22})],
+ steps:[
+  {kind:'choice',skill:'takakkei',q:'内角と外角がまざっている。どうそろえる？',
+   choices:[
+    {t:'すべて外角にそろえる（x が外角なので、外角の和 360° がそのまま使える）',ok:1},
+    {t:'すべて内角にそろえる',why:'これでも解けるけど、x をいったん内角に直して、最後にまた外角に戻す手間がかかるよ。x が外角なので、外角にそろえるのが近道。'},
+    {t:'書いてある角をそのまま全部たす',why:'内角と外角をまぜてたしても、意味のある和にはならないよ。'}],
+   look:['aB','aC'],hint:'x は外角。内角 108° と 120° を外角に直すと？',
+   ans:'108° の外角は 72°、120° の外角は 60°。外角の和 360° を使う。',sum:'外角にそろえる：72°・60°・75°・60°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:93,unit:'°',look:['aB','aC','aD','aE','ax'],hint:'360 − (72 ＋ 60 ＋ 75 ＋ 60)',ans:'x ＝ 360 − 267 ＝ 93°',sum:'x ＝ 360 − 267 ＝ 93°',after:{label:{ax:'93°'}}}],
+ final:{q:'∠x は何度？',answer:93,unit:'°'}};})(),
+
+(()=>{const V=polyTurn([70,235],0,[95,105,70,90],[260,140]);const[A,B,C,D]=V;
+ const bA=n360(dirTo(A,B)+42.5),bB=n360(dirTo(B,C)+37.5);const Pp=inter(A,bA,B,bB);return {
+ id:'k5',skill:'takakkei',lv:3,text:'四角形 ABCD で、AP、BP は ∠A、∠B の二等分線です（● どうし、○ どうしは等しい角）。∠x の大きさを求めなさい。',
+ fig:[sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,A),sg('sAP',A,Pp),sg('sBP',B,Pp),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(Pp,'P'),
+  arcV('aA1',A,B,Pp,'●',42.5,{r:32,lr:12}),arcV('aA2',A,Pp,D,'●',42.5,{r:38,lr:12}),arcV('aB1',B,Pp,A,'○',37.5,{r:32,lr:12}),arcV('aB2',B,C,Pp,'○',37.5,{r:38,lr:12}),
+  arcV('aC',C,D,B,'110°',110),rt(D,A,C),arcV('ax',Pp,A,B,'x',100,{x:1,r:20})],
+ steps:[
+  {kind:'choice',skill:'takakkei',q:'∠A も ∠B も書いていない。どう考える？',
+   choices:[
+    {t:'∠A ＋ ∠B を「まとめて」求める',ok:1},
+    {t:'∠A ＝ ∠B と考える',why:'∠A と ∠B が等しいという条件はないよ。'},
+    {t:'求められない',why:'1つずつはわからなくても、2つの「和」なら四角形の内角の和からわかるよ。'}],
+   look:['aC','aA1','aA2','aB1','aB2'],hint:'四角形の内角の和は 360°。∠A ＋ ∠B ＝ 360° − 110° − 90°。',
+   ans:'∠A ＋ ∠B ＝ 360 − 110 − 90 ＝ 160°。● ＋ ○ はその半分の 80°。',sum:'∠A ＋ ∠B ＝ 160° → ● ＋ ○ ＝ 80°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:100,unit:'°',look:['aA1','aB1','ax'],hint:'△ABP で、x ＝ 180 − (● ＋ ○) ＝ 180 − 80',ans:'x ＝ 180 − 80 ＝ 100°',sum:'x ＝ 180 − 80 ＝ 100°',after:{label:{ax:'100°'}}}],
+ final:{q:'∠x は何度？',answer:100,unit:'°'}};})(),
+
+(()=>{const O=[200,152],A=onCircle(O,128,90),B=onCircle(O,128,162),C=onCircle(O,128,234),D=onCircle(O,128,306),E=onCircle(O,128,18),Pp=inter(A,dirTo(A,C),B,dirTo(B,D));return {
+ id:'k6',skill:'takakkei',lv:3,text:'五角形 ABCDE は正五角形です。対角線 AC と BD の交点を P とするとき、∠x の大きさを求めなさい。',
+ fig:[sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,E),sg('s5',E,A),sg('sAC',A,C),sg('sBD',B,D),
+  pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(Pp,'P'),
+  arcV('aBAC',A,B,C,'36°',36,{r:40,hidden:1}),arcV('aCBD',B,C,D,'36°',36,{r:28,lr:16,hidden:1}),arcV('ax',Pp,A,B,'x',72,{x:1,r:20})],
+ steps:[
+  {kind:'choice',skill:'takakkei',q:'∠BAC を求めるには？',
+   choices:[
+    {t:'AB＝BC の二等辺三角形 △ABC を使う（∠B は正五角形の内角 108°）',ok:1},
+    {t:'AC は ∠A を二等分している',why:'∠BAC と ∠CAE は等しくないよ（AC は ∠A の二等分線ではない）。'},
+    {t:'△ABC は正三角形なので 60°',why:'AC は AB より長いので、正三角形ではないよ。'}],
+   look:['s1','s2','sAC'],hint:'正五角形の辺はみな等しい。△ABC で等しい2辺は？ 頂角 ∠B は何度？',
+   ans:'正五角形の内角は 108°。△ABC は AB＝BC の二等辺三角形なので、∠BAC ＝ (180 − 108) ÷ 2 ＝ 36°。',sum:'△ABC は二等辺 → ∠BAC ＝ 36°',after:{show:['aBAC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:72,unit:'°',look:['aBAC','sBD','ax'],hint:'同じように △BCD で ∠CBD ＝ 36°。∠ABD ＝ 108 − 36 ＝ 72。△ABP で x ＝ 180 − 36 − 72',
+   ans:'∠ABD ＝ 108 − 36 ＝ 72°。x ＝ 180 − 36 − 72 ＝ 72°',sum:'∠ABD ＝ 72° → x ＝ 180 − 36 − 72 ＝ 72°',after:{show:['aCBD'],label:{ax:'72°'}}}],
+ final:{q:'∠x は何度？',answer:72,unit:'°'}};})(),
+
+/* ================= 6. 補助線① くの字 ================= */
+(()=>{const A=[105,70],B=[105,230],Pp=inter(A,325,B,40),L1=[Pp[0]-120,Pp[1]],L2=[Pp[0]+90,Pp[1]];return {
+ id:'u1',skill:'kunoji',lv:1,text:'ℓ ∥ m です。∠x の大きさを求めなさい。',
+ fig:[...PAR(70,230),sg('sAP',A,Pp),sg('sBP',B,Pp),pt(Pp,'P'),sg('aux',L1,L2,{dash:1,hidden:1}),
+  arcV('aA',A,dp(A,0),Pp,'35°',35,{r:34}),arcV('aB',B,dp(B,0),Pp,'40°',40,{r:34}),arcV('ax',Pp,A,B,'x',75,{x:1,r:18}),
+  arcV('p1',Pp,A,dp(Pp,180),'35°',35,{r:34,hidden:1}),arcV('p2',Pp,dp(Pp,180),B,'40°',40,{r:34,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'kunoji',q:'どんな補助線を引く？',
+   choices:[
+    {t:'点Pを通り、ℓ に平行な直線',ok:1},
+    {t:'点Pから ℓ に垂直な線',why:'垂直な線では、35° や 40° を P に移せないよ。平行線なら錯角で移せる。'},
+    {t:'ℓ 上の点と m 上の点を結ぶ線',why:'三角形はできるけど、その三角形の角がわからないので進めないよ。'}],
+   look:['sAP','sBP','aA','aB'],hint:'35° と 40° を、P のところに集めたい。平行線があれば、錯角で角を移せる。',
+   ans:'P を通る平行線を引くと、x は錯角で 35° と 40° に分かれる。',sum:'P を通る平行線 → x を 35° と 40° に分ける',after:{show:['aux','p1','p2'],match:['aA','p1','aB','p2']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:75,unit:'°',look:['p1','p2'],hint:'35 ＋ 40',ans:'x ＝ 35 ＋ 40 ＝ 75°',sum:'x ＝ 35 ＋ 40 ＝ 75°',after:{label:{ax:'75°'}}}],
+ final:{q:'∠x は何度？',answer:75,unit:'°'}};})(),
+
+(()=>{const A=[95,70],B=[40,230],Pp=inter(A,295,B,45),L1=[Pp[0]-110,Pp[1]],L2=[Pp[0]+80,Pp[1]];return {
+ id:'u2',skill:'kunoji',lv:1,text:'ℓ ∥ m です。∠x の大きさを求めなさい。',
+ fig:[...PAR(70,230),sg('sAP',A,Pp),sg('sBP',B,Pp),pt(Pp,'P'),sg('aux',L1,L2,{dash:1,hidden:1}),
+  arcV('ax',A,dp(A,0),Pp,'x',65,{x:1,r:30}),arcV('aB',B,dp(B,0),Pp,'45°',45,{r:34}),arcV('aP',Pp,A,B,'110°',110,{r:18}),
+  arcV('p1',Pp,A,dp(Pp,180),'x',65,{x:1,r:34,hidden:1}),arcV('p2',Pp,dp(Pp,180),B,'45°',45,{r:34,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'kunoji',q:'110°・x・45° のあいだに成り立つ関係は？',
+   choices:[
+    {t:'110° ＝ x ＋ 45°',ok:1},
+    {t:'x ＋ 45° ＋ 110° ＝ 180°',why:'この3つの角は、1つの三角形の角ではないよ。'},
+    {t:'x ＝ 110°（錯角）',why:'110° と x は、同じ直線どうしの錯角ではないよ。'}],
+   look:['sAP','sBP','aP'],hint:'P を通り ℓ に平行な線を引くと、110° はどう分かれる？',
+   ans:'P を通る平行線を引くと、110° は x と 45° に分かれる（どちらも錯角）。',sum:'くの字：110° ＝ x ＋ 45°',after:{show:['aux','p1','p2'],match:['ax','p1','aB','p2']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:65,unit:'°',look:['aP','aB'],hint:'110 − 45',ans:'x ＝ 110 − 45 ＝ 65°',sum:'x ＝ 110 − 45 ＝ 65°',after:{label:{ax:'65°',p1:'65°'}}}],
+ final:{q:'∠x は何度？',answer:65,unit:'°'}};})(),
+
+(()=>{const A=[75,45],Pp=from(A,330,150),Q=from(Pp,200,140),B=inter(Q,310,[0,262],0);
+ const xP1=[Pp[0]-150,Pp[1]],xP2=[Pp[0]+70,Pp[1]],xQ1=[Q[0]-55,Q[1]],xQ2=[Q[0]+170,Q[1]];return {
+ id:'u3',skill:'kunoji',lv:2,text:'ℓ ∥ m で、折れ線が2回曲がっています。∠x の大きさを求めなさい。',
+ fig:[{t:'line',id:'Ll',p:[0,45],d:0},{t:'line',id:'Lm',p:[0,262],d:0},{t:'par',p:[350,45]},{t:'par',p:[350,262]},{t:'nm',p:[24,34],s:'ℓ'},{t:'nm',p:[24,251],s:'m'},
+  sg('sAP',A,Pp),sg('sPQ',Pp,Q),sg('sQB',Q,B),pt(Pp,'P'),pt(Q,'Q'),
+  sg('auxP',xP1,xP2,{dash:1,hidden:1}),sg('auxQ',xQ1,xQ2,{dash:1,hidden:1}),
+  arcV('aA',A,dp(A,0),Pp,'30°',30,{r:40}),arcV('aP',Pp,A,Q,'50°',50,{r:20}),arcV('ax',Q,B,Pp,'x',70,{x:1,r:18}),arcV('aB',B,Q,dp(B,180),'50°',50,{r:32}),
+  arcV('p1',Pp,A,dp(Pp,180),'30°',30,{r:38,hidden:1}),arcV('p2',Pp,dp(Pp,180),Q,'',20,{r:38,hidden:1}),
+  arcV('q1',Q,dp(Q,0),Pp,'',20,{r:38,hidden:1}),arcV('q2',Q,B,dp(Q,0),'50°',50,{r:38,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'kunoji',q:'補助線はどう引く？',
+   choices:[
+    {t:'P と Q のそれぞれを通る、ℓ に平行な直線を 2 本',ok:1},
+    {t:'P だけを通る、ℓ に平行な直線を 1 本',why:'それだと Q の角を分けられないよ。折れ曲がる点ごとに1本ずつ引こう。'},
+    {t:'ℓ 上の点と m 上の点を結ぶ',why:'それでは P や Q の角を分けられないよ。'}],
+   look:['sAP','sPQ','sQB'],hint:'くの字では、曲がる点に平行線を1本引いた。曲がる点が2つあるなら？',
+   ans:'P と Q に平行線を引くと、P の 50° は 30° と残り、Q の x は残りと 50° に分かれる（錯角）。',sum:'曲がる点ごとに平行線を引く（2 本）',after:{show:['auxP','auxQ','p1','p2','q1','q2'],match:['aA','p1','aB','q2','p2','q1']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:70,unit:'°',look:['p2','q1','q2'],hint:'P の下の部分は 50 − 30 ＝ 20°。それが Q の上の部分（錯角）。Q の下の部分は 50°（錯角）。',
+   ans:'P の下の部分 ＝ 50 − 30 ＝ 20°。x ＝ 20 ＋ 50 ＝ 70°',sum:'x ＝ (50 − 30) ＋ 50 ＝ 70°',after:{label:{ax:'70°',p2:'20°',q1:'20°'}}}],
+ final:{q:'∠x は何度？',answer:70,unit:'°'}};})(),
+
+(()=>{const Pp=[275,32],A=inter(Pp,205,[0,115],0),B=inter(Pp,250,[0,245],0),E=inter(Pp,250,[0,115],0);return {
+ id:'u4',skill:'kunoji',lv:2,text:'ℓ ∥ m で、点Pは2本の平行線の外側にあります。∠x の大きさを求めなさい。',
+ fig:[{t:'line',id:'Ll',p:[0,115],d:0},{t:'line',id:'Lm',p:[0,245],d:0},{t:'par',p:[350,115]},{t:'par',p:[350,245]},{t:'nm',p:[24,104],s:'ℓ'},{t:'nm',p:[24,234],s:'m'},
+  sg('sPA',Pp,A),sg('sPB',Pp,B),pt(Pp,'P'),
+  arcV('aA',A,dp(A,0),Pp,'25°',25,{r:44}),arcV('aB',B,dp(B,0),Pp,'70°',70,{r:28}),arcV('ax',Pp,A,B,'x',45,{x:1,r:34}),
+  arcV('aE',E,dp(E,0),Pp,'70°',70,{r:22,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'kunoji',q:'いつものくの字（x ＝ 25° ＋ 70°）は使える？',
+   choices:[
+    {t:'使えない。PB と ℓ の交点に同位角 70° を移して、三角形の外角を使う',ok:1},
+    {t:'使える。x ＝ 25° ＋ 70° ＝ 95°',why:'くの字の「足し算」は、P が2本の平行線のあいだにあるときだけ。今回は外にあるよ。'},
+    {t:'x ＝ 180° − 25° − 70°',why:'25° と 70° と x は、1つの三角形の内角ではないよ。'}],
+   look:['sPB','Ll','aB'],hint:'PB は ℓ とも交わっている。そこにできる角は、m のところの 70° と同位角。',
+   ans:'PB と ℓ の交点にも 70°（同位角）。その 70° は、P と A をふくむ三角形の外角になる。',sum:'同位角で 70° を ℓ へ移す → 三角形の外角',after:{show:['aE'],match:['aB','aE']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:45,unit:'°',look:['aA','aE','ax'],hint:'外角の性質：x ＋ 25 ＝ 70',ans:'x ＋ 25 ＝ 70 なので、x ＝ 45°（大きいほうから小さいほうを引く形）',sum:'x ＋ 25 ＝ 70 → x ＝ 45°',after:{label:{ax:'45°'}}}],
+ final:{q:'∠x は何度？',answer:45,unit:'°'}};})(),
+
+(()=>{const A=[150,70],B=inter(A,250,[0,230],0),Pp=inter(A,305,B,35);return {
+ id:'u5',skill:'kunoji',lv:3,text:'ℓ ∥ m です。AP、BP は ∠A、∠B の二等分線です（● どうし、○ どうしは等しい角）。∠x の大きさを求めなさい。',
+ fig:[...PAR(70,230),{t:'line',id:'Lt',p:A,d:250},sg('sAP',A,Pp),sg('sBP',B,Pp),pt(A,'A'),pt(B,'B'),pt(Pp,'P'),
+  arcV('aA1',A,Pp,dp(A,0),'●',55,{r:30,lr:12}),arcV('aA2',A,B,Pp,'●',55,{r:36,lr:12}),
+  arcV('aB1',B,dp(B,0),Pp,'○',35,{r:34,lr:12}),arcV('aB2',B,Pp,A,'○',35,{r:40,lr:12}),arcV('ax',Pp,A,B,'x',90,{x:1,r:18})],
+ steps:[
+  {kind:'choice',skill:'kunoji',q:'●● ＋ ○○（∠A ＋ ∠B）は何度？',
+   choices:[
+    {t:'180°（平行線の「同じ側の内側の角」）',ok:1},
+    {t:'360°',why:'360° になるのは1点のまわり。∠A と ∠B は平行線の同じ側の内側の角だよ。'},
+    {t:'数字がないので、わからない',why:'数字がなくても、平行線の性質で ∠A ＋ ∠B の和がわかるよ。'}],
+   look:['Lt','aA1','aA2','aB1','aB2'],hint:'ℓ ∥ m のとき、ななめの線の同じ側で、平行線の内側にある2つの角の和は？',
+   ans:'平行線の同じ側の内側の角なので、∠A ＋ ∠B ＝ 180°。● ＋ ○ はその半分の 90°。',sum:'∠A ＋ ∠B ＝ 180° → ● ＋ ○ ＝ 90°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:90,unit:'°',look:['aA1','aB1','ax'],hint:'くの字：x ＝ ● ＋ ○。または △ABP で x ＝ 180 − (● ＋ ○)',ans:'x ＝ ● ＋ ○ ＝ 90°',sum:'x ＝ ● ＋ ○ ＝ 90°',after:{label:{ax:'90°'}}}],
+ final:{q:'∠x は何度？',answer:90,unit:'°'}};})(),
+
+(()=>{const A=[60,60],s=180/(Math.sin(22*RAD)+Math.sin(38*RAD)),C=from(A,338,s),B=from(C,218,s);return {
+ id:'u6',skill:'kunoji',lv:3,text:'ℓ ∥ m で、△ABC は正三角形です。∠x の大きさを求めなさい。',
+ fig:[...PAR(60,240),sg('sAC',A,C),sg('sCB',C,B),sg('sAB',A,B),tk(A,C,1),tk(C,B,1),tk(A,B,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aA',A,dp(A,0),C,'22°',22,{r:50,lr:18}),arcV('ax',B,dp(B,0),C,'x',38,{x:1,r:40}),arcV('aC',C,A,B,'60°',60,{r:20,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'kunoji',q:'最初の一手は？',
+   choices:[
+    {t:'C は「くの字」の頂点。∠C ＝ 60°（正三角形）なので、60° ＝ 22° ＋ x',ok:1},
+    {t:'x ＝ 22°（錯角）',why:'22° と x は、同じ直線がつくる錯角ではないよ。AC と BC は別の直線。'},
+    {t:'x ＝ 60°（正三角形の角）',why:'x は ℓ・m と辺のあいだの角で、正三角形の角そのものではないよ。'}],
+   look:['sAC','sCB','aA','ax'],hint:'ℓ から C へ、C から m へ。折れ線 A–C–B は、くの字の形になっている。',
+   ans:'A–C–B はくの字。へこんだ C の角 60° は、両側の角 22° と x の和。',sum:'くの字：60° ＝ 22° ＋ x',after:{show:['aC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:38,unit:'°',look:['aC','aA','ax'],hint:'60 − 22',ans:'x ＝ 60 − 22 ＝ 38°',sum:'x ＝ 60 − 22 ＝ 38°',after:{label:{ax:'38°'}}}],
+ final:{q:'∠x は何度？',answer:38,unit:'°'}};})(),
+
+/* ================= 7. 補助線② ブーメラン形・星形 ================= */
+(()=>{const B=[70,250],C=[330,250],A=inter(B,65,C,125),D=inter(B,40,C,160);return {
+ id:'b1',skill:'boomerang',lv:1,text:'∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sDB',D,B),sg('sDC',D,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aA',A,B,C,'60°',60,{r:30}),arcV('aB',B,D,A,'25°',25,{r:44}),arcV('aC',C,A,D,'35°',35,{r:40}),arcV('ax',D,B,C,'x',120,{x:1,r:22})],
+ steps:[
+  {kind:'choice',skill:'boomerang',q:'この形で、x を一気に求めるには？',
+   choices:[
+    {t:'ブーメラン形：へこんだ角 x は、ほかの3つの角の和',ok:1},
+    {t:'x ＝ 180° − 25° − 35°',why:'180° を使うには三角形が必要。この図形は、へこんだ四角形だよ。'},
+    {t:'x ＝ 360° − 60° − 25° − 35°',why:'四角形の内角の和を使うなら、D の角は x ではなく、内側の大きな角（360° − x）になるよ。'}],
+   look:['sAB','sAC','sDB','sDC'],hint:'BD を D の先までのばすと、三角形が2つできる。外角を2回使うと…？',
+   ans:'BD をのばして AC と交わる点を E とすると、△ABE の外角で ∠BEC ＝ 60 ＋ 25、△DEC の外角で x ＝ ∠BEC ＋ 35。',sum:'ブーメラン形：x ＝ 60 ＋ 25 ＋ 35'},
+  {kind:'input',skill:null,q:'x は何度？',answer:120,unit:'°',look:['aA','aB','aC','ax'],hint:'60 ＋ 25 ＋ 35',ans:'x ＝ 60 ＋ 25 ＋ 35 ＝ 120°',sum:'x ＝ 120°',after:{label:{ax:'120°'}}}],
+ final:{q:'∠x は何度？',answer:120,unit:'°'}};})(),
+
+(()=>{const O=[200,158],th=[90,40,-60,-120,160],V=th.map(t=>onCircle(O,132,t)),tip=[30,40,35,25,50],lab=['30°','40°','35°','25°','x'],f=[];
+ for(let k=0;k<5;k++)f.push(sg('s'+k,V[k],V[(k+2)%5]));
+ for(let k=0;k<5;k++)f.push(arcV(k===4?'ax':'a'+k,V[k],V[(k+2)%5],V[(k+3)%5],lab[k],tip[k],{r:26,lr:18,x:k===4?1:0}));
+ return {
+ id:'b2',skill:'boomerang',lv:1,text:'星形の先の角のうち4つがわかっています。∠x の大きさを求めなさい。',fig:f,
+ steps:[
+  {kind:'choice',skill:'boomerang',q:'星形の、5つの先の角の和は？',
+   choices:[
+    {t:'180°',ok:1},
+    {t:'360°',why:'星形の先の角5つを集めると、三角形1つ分になるよ。'},
+    {t:'540°',why:'540° は五角形の内角の和。星形の先の角はずっと小さいよ。'}],
+   look:['a0','a1','a2','a3','ax'],hint:'ブーメラン形や外角を使うと、5つの角が1つの三角形に集まる。',
+   ans:'星形の5つの先の角の和は 180°（1つの三角形に集められる）。',sum:'星形の先の角の和 ＝ 180°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:50,unit:'°',look:['a0','a1','a2','a3','ax'],hint:'180 − (30 ＋ 40 ＋ 35 ＋ 25)',ans:'x ＝ 180 − 130 ＝ 50°',sum:'x ＝ 180 − 130 ＝ 50°',after:{label:{ax:'50°'}}}],
+ final:{q:'∠x は何度？',answer:50,unit:'°'}};})(),
+
+(()=>{const B=[95,268],C=[305,268],A=inter(B,70,C,120),D=inter(B,50,C,150);return {
+ id:'b3',skill:'boomerang',lv:2,text:'点Dは △ABC の内部の点です。∠x の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sDB',D,B),sg('sDC',D,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aA',A,B,C,'50°',50,{r:30}),arcV('aABD',B,D,A,'20°',20,{r:56,lr:16}),arcV('aDBC',B,C,D,'50°',50,{r:30}),
+  arcV('aACD',C,A,D,'30°',30,{r:46,lr:18}),arcV('ax',D,B,C,'x',100,{x:1,r:20})],
+ steps:[
+  {kind:'choice',skill:'boomerang',q:'どの形に注目する？',
+   choices:[
+    {t:'A・B・D・C のブーメラン形',ok:1},
+    {t:'△DBC',why:'△DBC では ∠DCB がわからないので進めないよ。50° はつい使いたくなるけど、ここでは使わない。'},
+    {t:'△ABC',why:'△ABC の角だけでは、点Dの角は出ないよ。'}],
+   look:['sAB','sAC','sDB','sDC'],hint:'辺 BC を消して見てみよう。A・B・D・C で、へこんだ形が見えない？',
+   ans:'BC を無視すると、A・B・D・C はブーメラン形。x ＝ 50 ＋ 20 ＋ 30。∠DBC の 50° は使わない。',sum:'ブーメラン形 ABDC を見つける（50° の ∠DBC は使わない）'},
+  {kind:'input',skill:null,q:'x は何度？',answer:100,unit:'°',look:['aA','aABD','aACD','ax'],hint:'50 ＋ 20 ＋ 30',ans:'x ＝ 50 ＋ 20 ＋ 30 ＝ 100°',sum:'x ＝ 100°',after:{label:{ax:'100°'}}}],
+ final:{q:'∠x は何度？',answer:100,unit:'°'}};})(),
+
+(()=>{const L1=[110,225],R1=[290,225],T1=inter(L1,62,R1,112),L2=[85,80],R2=[315,80],T2=inter(L2,302,R2,237);return {
+ id:'b4',skill:'boomerang',lv:2,text:'6つの先をもつ星形です。∠x の大きさを求めなさい。',
+ fig:[sg('t1a',L1,R1),sg('t1b',R1,T1),sg('t1c',T1,L1),sg('t2a',L2,R2),sg('t2b',R2,T2),sg('t2c',T2,L2),
+  arcV('a1',T1,L1,R1,'50°',50,{r:26}),arcV('a2',L1,R1,T1,'62°',62,{r:26}),arcV('a3',R1,T1,L1,'68°',68,{r:26}),
+  arcV('a4',L2,T2,R2,'58°',58,{r:26}),arcV('a5',R2,L2,T2,'57°',57,{r:26}),arcV('ax',T2,R2,L2,'x',65,{x:1,r:26})],
+ steps:[
+  {kind:'choice',skill:'boomerang',q:'x を求めるのに、どの角を使う？',
+   choices:[
+    {t:'58° と 57° だけ（x と同じ三角形の頂点の角）',ok:1},
+    {t:'5つの角すべて（6つの先の角の和 360° から引く）',why:'それでも答えは出るけど遠回り。この星は、2つの三角形が重なった形。x と同じ三角形の2つの角だけで決まるよ。'},
+    {t:'62° と 68°',why:'62° と 68° は、もう1つの三角形（上向き）の角だよ。'}],
+   look:['t2a','t2b','t2c'],hint:'6つの先を1つおきに結んでみよう。三角形が2つ見えてくる。',
+   ans:'この星は、上向きと下向きの2つの三角形が重なった形。x は下向きの三角形の頂点なので、58° と 57° だけで決まる。',sum:'2つの三角形に分けて見る → x と同じ三角形の 58°・57° を使う'},
+  {kind:'input',skill:null,q:'x は何度？',answer:65,unit:'°',look:['a4','a5','ax'],hint:'180 − 58 − 57',ans:'x ＝ 180 − 58 − 57 ＝ 65°',sum:'x ＝ 180 − 58 − 57 ＝ 65°',after:{label:{ax:'65°'}}}],
+ final:{q:'∠x は何度？',answer:65,unit:'°'}};})(),
+
+(()=>{const A=[200,40],B=from(A,245,210),C=from(A,295,210),D=inter(B,25,[200,0],270);return {
+ id:'b5',skill:'boomerang',lv:3,text:'AB＝AC、DB＝DC です。∠x（∠ABD）の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sDB',D,B),sg('sDC',D,C),tk(A,B,1),tk(A,C,1),tk(D,B,2),tk(D,C,2),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aA',A,B,C,'50°',50,{r:30}),arcV('aD',D,B,C,'130°',130,{r:20}),arcV('ax',B,D,A,'x',40,{x:1,r:36}),arcV('aCx',C,A,D,'x',40,{x:1,r:36,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'boomerang',q:'最初の一手は？',
+   choices:[
+    {t:'ブーメラン形：130° ＝ 50° ＋ ∠ABD ＋ ∠ACD',ok:1},
+    {t:'∠ABD ＝ 130° ÷ 2',why:'130° を半分にした角は、△DBC の中の角とは関係があっても、∠ABD ではないよ。'},
+    {t:'∠ABD ＝ 50°',why:'∠ABD と ∠A は、等しいという理由がないよ。'}],
+   look:['sAB','sAC','sDB','sDC'],hint:'A・B・D・C はブーメラン形。へこんだ角は 130°。',
+   ans:'ブーメラン形なので、130 ＝ 50 ＋ ∠ABD ＋ ∠ACD。∠ABD ＋ ∠ACD ＝ 80°。',sum:'ブーメラン形：∠ABD ＋ ∠ACD ＝ 130 − 50 ＝ 80°'},
+  {kind:'choice',skill:'nitohen',q:'∠ABD と ∠ACD の関係は？',
+   choices:[
+    {t:'等しい（図形が左右対称）',ok:1},
+    {t:'足すと 90°',why:'2つの和は 80°。90° ではないよ。'},
+    {t:'わからない',why:'AB＝AC、DB＝DC、AD は共通なので △ABD と △ACD は合同。だから ∠ABD ＝ ∠ACD。'}],
+   look:['sAB','sAC','sDB','sDC'],hint:'印を見よう。AB＝AC、DB＝DC。この図形は直線 AD について左右対称。',
+   ans:'AB＝AC、DB＝DC で、図形は直線 AD について左右対称。∠ABD ＝ ∠ACD。',sum:'左右対称 → ∠ABD ＝ ∠ACD',after:{show:['aCx'],match:['ax','aCx']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:40,unit:'°',look:['ax','aCx'],hint:'2 つの和が 80° で、等しいので半分',ans:'x ＝ 80 ÷ 2 ＝ 40°',sum:'x ＝ 80 ÷ 2 ＝ 40°',after:{label:{ax:'40°',aCx:'40°'}}}],
+ final:{q:'∠x は何度？',answer:40,unit:'°'}};})(),
+
+(()=>{const O=[200,155],th=[90,10,-50,-120,180],V=th.map(t=>onCircle(O,130,t)),[A,B,C,D,E]=V,Pp=inter(A,dirTo(A,C),B,dirTo(B,D));return {
+ id:'b6',skill:'boomerang',lv:3,text:'星形 ABCDE で、AC と BD の交点を P とします。∠x の大きさを求めなさい。',
+ fig:[sg('sAC',A,C),sg('sCE',C,E),sg('sEB',E,B),sg('sBD',B,D),sg('sDA',D,A),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(Pp,'P'),
+  arcV('aA',A,C,D,'35°',35,{r:34,lr:18}),arcV('aD',D,A,B,'40°',40,{r:30,lr:18}),arcV('aC',C,E,A,'45°',45,{r:28,lr:18}),arcV('ax',Pp,A,B,'x',75,{x:1,r:16})],
+ steps:[
+  {kind:'choice',skill:'boomerang',q:'x を「外角」としてもつ三角形はどれ？',
+   choices:[
+    {t:'△APD（A の 35° と D の 40° をふくむ）',ok:1},
+    {t:'△BPC',why:'△BPC の角は、1つもわかっていないよ。'},
+    {t:'三角形ではなく、星形の先の角の和 180° を使う',why:'x は先の角ではないので、和の 180° はそのまま使えないよ。'}],
+   look:['sAC','sBD','sDA','aA','aD'],hint:'x の辺 PB を、P の反対側（D のほう）へのばしてみよう。',
+   ans:'P は AC と BD の交点。x は △APD の外角なので、となりにない内角 35° と 40° の和。45° は使わない。',sum:'x は △APD の外角（45° は使わない）'},
+  {kind:'input',skill:null,q:'x は何度？',answer:75,unit:'°',look:['aA','aD','ax'],hint:'35 ＋ 40',ans:'x ＝ 35 ＋ 40 ＝ 75°',sum:'x ＝ 35 ＋ 40 ＝ 75°',after:{label:{ax:'75°'}}}],
+ final:{q:'∠x は何度？',answer:75,unit:'°'}};})()
+];
+
+/* ================= 総合ステージ（後半） ================= */
+const STAGE=[
+(()=>{const C=[330,230],A=inter(C,148,[0,70],0),B=inter(A,296,[0,230],0);return {
+ id:'g1',skill:'stage',lv:4,types:['heiko','nitohen','sankaku'],text:'ℓ ∥ m、BA＝BC です。∠x の大きさを求めなさい。',
+ fig:[...PAR(70,230),sg('sAB',A,B),sg('sAC',A,C),tk(B,A,1),tk(B,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),
+  arcV('aA',A,dp(A,0),C,'32°',32,{r:44}),arcV('ax',B,C,A,'x',116,{x:1,r:20}),
+  arcV('aC',C,A,B,'32°',32,{r:40,hidden:1}),arcV('aBAC',A,B,C,'32°',32,{r:30,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'最初の一手は？',choices:[{t:'錯角で ∠ACB ＝ 32°',ok:1},{t:'同位角で x ＝ 32°',why:'x と 32° は同位角の位置ではないよ。'},{t:'△ABC は正三角形',why:'辺の印は BA と BC の2本だけ。正三角形とは言えないよ。'}],
+   look:['Ll','Lm','sAC','aA'],hint:'AC は ℓ と m の両方と交わっている。',ans:'ℓ ∥ m なので、錯角で ∠ACB ＝ 32°。',sum:'錯角 → ∠ACB ＝ 32°',after:{show:['aC'],match:['aA','aC']}},
+  {kind:'choice',skill:'nitohen',q:'次は？',choices:[{t:'BA＝BC → ∠BAC ＝ ∠BCA ＝ 32°',ok:1},{t:'BA＝BC → x ＝ ∠BCA',why:'x は等しい2辺にはさまれた頂角。底角は ∠BAC と ∠BCA。'},{t:'x ＝ 180° − 32°',why:'それは C での外角。x とは別の角だよ。'}],
+   look:['sAB','aC'],hint:'印のついた2辺にはさまれていない2つの角が底角。',ans:'BA＝BC なので、底角 ∠BAC ＝ ∠BCA ＝ 32°。',sum:'二等辺 → ∠BAC ＝ 32°',after:{show:['aBAC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:116,unit:'°',look:['aC','aBAC','ax'],hint:'180 − 32 − 32',ans:'x ＝ 180 − 64 ＝ 116°',sum:'x ＝ 180 − 32 − 32 ＝ 116°',after:{label:{ax:'116°'}}}],
+ final:{q:'∠x は何度？',answer:116,unit:'°'}};})(),
+
+(()=>{const A=[200,32],B=from(A,250,228),C=from(A,290,228),D=inter(B,40,A,290);return {
+ id:'g2',skill:'stage',lv:4,types:['nitohen','sankaku'],text:'AB＝AC、BD＝BC です。∠x（∠ABD）の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sBD',B,D),tk(A,B,1),tk(A,C,1),tk(B,D,2),tk(B,C,2),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcV('aA',A,B,C,'40°',40,{r:34}),arcV('ax',B,D,A,'x',30,{x:1,r:44,lr:14}),
+  arcV('aC',C,A,B,'70°',70,{r:24,hidden:1}),arcV('aBDC',D,C,B,'70°',70,{r:22,hidden:1}),arcV('aDBC',B,C,D,'40°',40,{r:30,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'最初の一手は？',choices:[{t:'AB＝AC → 底角 ∠ABC ＝ ∠C ＝ 70°',ok:1},{t:'BD＝BC → x ＝ ∠C',why:'BD＝BC の二等辺三角形は △BCD。底角は ∠BDC と ∠BCD で、x はその中にないよ。'},{t:'x ＝ ∠A ＝ 40°',why:'x と ∠A が等しい理由はないよ。'}],
+   look:['sAB','sAC'],hint:'まず大きな △ABC から。',ans:'AB＝AC なので底角は (180 − 40) ÷ 2 ＝ 70°。',sum:'△ABC：底角 70°',after:{show:['aC']}},
+  {kind:'choice',skill:'nitohen',q:'次は △BCD。わかることは？',choices:[{t:'BD＝BC → ∠BDC ＝ ∠C ＝ 70° → ∠DBC ＝ 40°',ok:1},{t:'∠DBC ＝ 70°',why:'70° になるのは底角の ∠BDC と ∠BCD。∠DBC は頂角だよ。'},{t:'∠DBC ＝ x',why:'∠DBC と x が等しい理由はないよ。'}],
+   look:['sBD','sBC','aC'],hint:'△BCD の等しい2辺は BD と BC。底角は？',ans:'BD＝BC なので ∠BDC ＝ ∠C ＝ 70°。∠DBC ＝ 180 − 140 ＝ 40°。',sum:'△BCD：∠DBC ＝ 40°',after:{show:['aBDC','aDBC'],match:['aC','aBDC']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:30,unit:'°',look:['aDBC','ax'],hint:'∠ABC ＝ 70°。x ＝ 70 − 40',ans:'x ＝ 70 − 40 ＝ 30°',sum:'x ＝ 70 − 40 ＝ 30°',after:{label:{ax:'30°'}}}],
+ final:{q:'∠x は何度？',answer:30,unit:'°'}};})(),
+
+(()=>{const B=[40,240],C=[215,240],Dx=[380,240],A=inter(B,70,C,120),E=inter(B,35,C,60);return {
+ id:'g3',skill:'stage',lv:4,types:['sankaku'],text:'BE は ∠B の二等分線、CE は C の外角の二等分線です。∠x（∠BEC）の大きさを求めなさい。',
+ fig:[sg('sAB',A,B),sg('sAC',A,C),sg('sBD',B,Dx),sg('sBE',B,E),sg('sCE',C,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(E,'E'),
+  arcV('aA',A,B,C,'50°',50,{r:24}),arcV('aB1',B,C,E,'●',35,{r:40,lr:12}),arcV('aB2',B,E,A,'●',35,{r:46,lr:12}),
+  arcV('aC1',C,Dx,E,'○',60,{r:30,lr:12}),arcV('aC2',C,E,A,'○',60,{r:36,lr:12}),arcV('ax',E,B,C,'x',25,{x:1,r:44,lr:14})],
+ steps:[
+  {kind:'choice',skill:'sankaku',q:'△EBC で、外角 ○ について成り立つ式は？',choices:[{t:'○ ＝ ● ＋ x',ok:1},{t:'○ ＋ ● ＋ x ＝ 180°',why:'○ は △EBC の内角ではなく外角だよ。'},{t:'x ＝ ●',why:'x と ● が等しい理由はないよ。'}],
+   look:['sBE','sCE','aB1','aC1','ax'],hint:'○ は △EBC の C における外角。',ans:'外角の性質から ○ ＝ ● ＋ x。',sum:'△EBC：○ ＝ ● ＋ x'},
+  {kind:'choice',skill:'sankaku',q:'△ABC で、外角 ○○ について成り立つ式は？',choices:[{t:'○○ ＝ ●● ＋ 50°',ok:1},{t:'○○ ＋ ●● ＋ 50° ＝ 180°',why:'○○ は △ABC の外角。内角の和には入らないよ。'},{t:'○○ ＝ ●●',why:'∠A の 50° が抜けているよ。'}],
+   look:['aA','aB1','aB2','aC1','aC2'],hint:'○○ は △ABC の C における外角。',ans:'外角の性質から ○○ ＝ ●● ＋ 50°。',sum:'△ABC：○○ ＝ ●● ＋ 50°'},
+  {kind:'input',skill:null,q:'x は何度？',answer:25,unit:'°',look:['ax','aA'],hint:'2つ目の式を半分にすると ○ ＝ ● ＋ 25。1つ目とくらべると…',ans:'○ ＝ ● ＋ 25 と ○ ＝ ● ＋ x をくらべて、x ＝ 25°（∠A のちょうど半分）',sum:'○ ＝ ● ＋ 25 → x ＝ 25°',after:{label:{ax:'25°'}}}],
+ final:{q:'∠x は何度？',answer:25,unit:'°'}};})(),
+
+(()=>{const Q=[205,222],Pp=inter(Q,65,[0,80],0),R=inter(Q,130,[0,80],0),Qe=from(Q,130,250),u=[Math.cos(130*RAD),-Math.sin(130*RAD)],
+ PQ=[Pp[0]-Q[0],Pp[1]-Q[1]],dd=PQ[0]*u[0]+PQ[1]*u[1],Pe=[Qe[0]+PQ[0]-dd*u[0],Qe[1]+PQ[1]-dd*u[1]];return {
+ id:'g4',skill:'stage',lv:4,types:['heiko','nitohen','sankaku'],text:'平行な辺 ℓ・m をもつ紙テープを、PQ で折り返しました。∠x の大きさを求めなさい。',
+ fig:[{t:'band',pts:[Pp,Q,Qe,Pe]},sg('Ll',[10,80],Pp),sg('Lm',[10,222],Q),sg('gl',Pp,[390,80],{ghost:1}),sg('gm',Q,[390,222],{ghost:1}),
+  sg('crease',Pp,Q,{dash:1}),sg('fq',Q,Qe),sg('fp',Pp,Pe),{t:'par',p:[60,80]},{t:'par',p:[60,222]},{t:'nm',p:[24,69],s:'ℓ'},{t:'nm',p:[24,211],s:'m'},
+  pt(Pp,'P'),pt(Q,'Q'),pt(R,'R'),
+  arcV('aP',Pp,dp(Pp,180),Q,'65°',65,{r:30}),arcV('ax',R,Pp,Q,'x',50,{x:1,r:26}),
+  arcV('aQ0',Q,dp(Q,0),Pp,'65°',65,{r:30,hidden:1}),arcV('aQR',Q,Pp,R,'65°',65,{r:30,hidden:1})],
+ steps:[
+  {kind:'choice',skill:'heiko',q:'折り返す前の、点Qの角（PQ と m の右側）は？',choices:[{t:'65°（ℓ ∥ m の錯角）',ok:1},{t:'115°',why:'115° は PQ と m の左側の角。右側は？'},{t:'わからない',why:'P の 65° と、Q の右側の角は錯角だよ。'}],
+   look:['Ll','Lm','crease','aP'],hint:'うすい線が、折り返す前の m。P の 65° と錯角になる角は？',ans:'ℓ ∥ m なので、錯角で 65°。',sum:'錯角 → 元の ∠Q ＝ 65°',after:{show:['aQ0'],match:['aP','aQ0']}},
+  {kind:'choice',skill:'nitohen',q:'折り返したあとの ∠PQR は？',choices:[{t:'65°（折り返した角は、元の角と等しい）',ok:1},{t:'130°',why:'130° は、折り返す前と後の角を合わせた大きさ。'},{t:'50°',why:'折り返しても、角の大きさは変わらないよ。'}],
+   look:['crease','fq','aQ0'],hint:'折り返すと、元の角とぴったり重なる。',ans:'折り返した角は元の角と等しいので ∠PQR ＝ 65°。△PQR は ∠P ＝ ∠Q の二等辺三角形。',sum:'折り返し → ∠PQR ＝ 65°',after:{show:['aQR'],match:['aQ0','aQR','aP']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:50,unit:'°',look:['aP','aQR','ax'],hint:'△PQR で x ＝ 180 − 65 − 65',ans:'x ＝ 180 − 65 − 65 ＝ 50°',sum:'x ＝ 180 − 130 ＝ 50°',after:{label:{ax:'50°'}}}],
+ final:{q:'∠x は何度？',answer:50,unit:'°'}};})(),
+
+(()=>{const O=[200,165],A=onCircle(O,120,234),B=onCircle(O,120,306),C=onCircle(O,120,18),D=onCircle(O,120,90),E=onCircle(O,120,162),F=from(A,dirTo(A,B)+60,Math.hypot(B[0]-A[0],B[1]-A[1]));return {
+ id:'g5',skill:'stage',lv:4,types:['takakkei','nitohen'],text:'五角形 ABCDE は正五角形、△ABF は正三角形です。∠x（∠BCF）の大きさを求めなさい。',
+ fig:[sg('s1',A,B),sg('s2',B,C),sg('s3',C,D),sg('s4',D,E),sg('s5',E,A),sg('sAF',A,F),sg('sBF',B,F),sg('sCF',C,F),
+  pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),
+  tk(B,A,1,{hidden:1,id:'k1'}),tk(B,F,1,{hidden:1,id:'k2'}),tk(B,C,1,{hidden:1,id:'k3'}),arcV('ax',C,F,B,'x',66,{x:1,r:24})],
+ steps:[
+  {kind:'choice',skill:'nitohen',q:'x をふくむ △BCF は、どんな三角形？',choices:[{t:'BF＝BC の二等辺三角形（BF ＝ BA ＝ BC）',ok:1},{t:'正三角形',why:'∠FBC は 60° ではないので、正三角形ではないよ。'},{t:'直角三角形',why:'直角になる理由はないよ。'}],
+   look:['s1','s2','sBF'],hint:'BF は正三角形の辺、BC は正五角形の辺。どちらも AB と同じ長さ。',ans:'BF ＝ AB（正三角形）、BC ＝ AB（正五角形）なので BF ＝ BC。',sum:'BF ＝ BA ＝ BC → △BCF は二等辺',after:{show:['k1','k2','k3']}},
+  {kind:'input',skill:null,q:'x は何度？',answer:66,unit:'°',look:['sBF','s2','ax'],hint:'∠FBC ＝ 108 − 60 ＝ 48。底角は (180 − 48) ÷ 2',ans:'∠FBC ＝ 48° なので x ＝ (180 − 48) ÷ 2 ＝ 66°',sum:'∠FBC ＝ 48° → x ＝ 66°',after:{label:{ax:'66°'}}}],
+ final:{q:'∠x は何度？',answer:66,unit:'°'}};})()
+];
+
+PROBS.push(...TYPE_PROBS);
+/*DATA-END*/
+
+/* ===== 保存 ===== */
+const KEY='zukei-itte-v1';
+function blank(){const s={sk:{},idx:{},stage:{clear:false,best:null,tries:0}};SKILLS.forEach(k=>{s.sk[k.id]={st:0,streak:0,due:null};s.idx[k.id]=0});return s;}
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.sk){const b=blank();SKILLS.forEach(k=>{if(v.sk[k.id])b.sk[k.id]=v.sk[k.id];if(v.idx&&v.idx[k.id]!=null)b.idx[k.id]=v.idx[k.id]});if(v.stage)b.stage=v.stage;return b;}}catch(e){}return blank();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load();
+const ST=['練習中','習得','定着'];
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const CHECK=(()=>{try{return location.hash==='#check'}catch(e){return false}})(); // 確認用：URLの末尾に #check をつけると全部開く（記録は変えない）
+function unlocked(i){const k=SKILLS[i];if(!k.ready)return false;if(i===0||CHECK)return true;return S.sk[SKILLS[i-1].id].st>=1;}
+function stageOpen(){return CHECK||SKILLS.every(k=>S.sk[k.id].st>=1);}
+function isDue(id){const s=S.sk[id];return s.st===1&&s.due&&today()>=s.due;}
+
+/* ===== 小物 ===== */
+const $=q=>document.querySelector(q);
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
+function toast(t){const e=$('#toast');e.innerHTML=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+/* ===== ホーム ===== */
+function renderHome(){
+  let h='';
+  SKILLS.forEach((k,i)=>{
+    const s=S.sk[k.id],un=unlocked(i);
+    let chip,cls='';
+    if(!k.ready){chip='<span class="chip lock">準備中</span>';cls='locked';}
+    else if(!un){chip='<span class="chip lock">🔒 前の型を習得すると開く</span>';cls='locked';}
+    else{chip=`<span class="chip s${s.st}">${ST[s.st]}</span>`;cls='s'+s.st;if(isDue(k.id))chip+=' <span class="chip due">復習の日</span>';}
+    let dots='';
+    if(k.ready&&un&&s.st===0){dots='<span class="dots">'+[0,1,2].map(j=>`<i class="${j<s.streak?'f':''}"></i>`).join('')+'</span>';}
+    if(k.ready&&un&&s.st===1&&!isDue(k.id)&&s.due){dots=`<span style="font-size:11px;color:var(--sub)">復習：${s.due.slice(5).replace('-','/')}〜</span>`;}
+    let act='';
+    if(k.ready&&un){
+      act=`<button class="btn pri" onclick="startSkill('${k.id}')">練習する</button>`;
+      if(isDue(k.id))act=`<button class="btn" style="border-color:var(--look);color:var(--look)" onclick="startReview('${k.id}')">復習する</button>`+act;
+    }
+    h+=`<div class="node ${cls}"><div class="num">${s.st===2?'✓':i+1}</div><div class="bd"><div class="nm">${k.name}</div><div class="ds">${k.desc}</div><div class="meta">${chip}${dots}</div></div>${act?`<div class="act">${act}</div>`:''}</div>`;
+  });
+  const op=stageOpen(),sg0=S.stage;
+  const best=sg0.best?`<span style="font-size:11px;color:var(--sub)">ベスト：前半 ${sg0.best.a}/10・${fmt(sg0.best.ta)}　後半 ${sg0.best.b}/5・${fmt(sg0.best.tb)}</span>`:'';
+  h+=`<div class="node ${op?(sg0.clear?'s2':''):'locked'}" style="border-style:${op?'solid':'dashed'}"><div class="num">${sg0.clear?'✓':'★'}</div><div class="bd"><div class="nm">総合ステージ</div><div class="ds">前半：最初の一手を選ぶ10問（8問以上で合格）／後半：ステップなしで最後まで解く5問（4問以上で合格）。時間制限はなく、かかった時間を記録します。両方合格で第1章クリア。</div><div class="meta">${op?(sg0.clear?'<span class="chip s2">第1章クリア</span>':'<span class="chip s0">挑戦できます</span>'):'<span class="chip lock">🔒 7つの型がすべて習得になると開く</span>'}${best}</div></div>${op?`<div class="act"><button class="btn pri" onclick="startStage()">挑戦する</button></div>`:''}</div>`;
+  $('#tree').innerHTML=h;
+  $('#road').innerHTML=CHAPTERS.map((c,i)=>`<li class="${i===0?'cur':''}">第${i+1}章　${c}${i===5?'<em>ここから高校</em>':''}</li>`).join('');
+  $('#testBtn').disabled=!PROBS.some(p=>unlocked(SKILLS.findIndex(k=>k.id===p.skill)));
+}
+
+/* ===== 図 ===== */
+function P(c,r,a){const t=a*Math.PI/180;return [c[0]+r*Math.cos(t),c[1]-r*Math.sin(t)];}
+function f(n){return Math.round(n*100)/100;}
+const N360=a=>((a%360)+360)%360;
+function raysAtPt(p,c){const r=[];p.fig.forEach(e=>{
+  if(e.t==='line'){const t=e.d*Math.PI/180,dx=c[0]-e.p[0],dy=-(c[1]-e.p[1]);if(Math.abs(Math.cos(t)*dy-Math.sin(t)*dx)<0.5)r.push(N360(e.d),N360(e.d+180));}
+  if(e.t==='seg'){const ea=Math.hypot(c[0]-e.a[0],c[1]-e.a[1]),eb=Math.hypot(c[0]-e.b[0],c[1]-e.b[1]),L=Math.hypot(e.a[0]-e.b[0],e.a[1]-e.b[1]);
+    if(ea<0.5)r.push(dirTo(c,e.b));else if(eb<0.5)r.push(dirTo(c,e.a));else if(Math.abs(ea+eb-L)<0.01){r.push(dirTo(c,e.a),dirTo(c,e.b));}}});
+  return [...new Set(r.map(x=>Math.round(x*1000)/1000))].sort((a,b)=>a-b);}
+// 点の名前は、角の印（隠れている印も含む）がない、いちばん広いすき間の真ん中に置く
+function freeDir(p,c){const r=raysAtPt(p,c);if(!r.length)return 315;
+  const arcs=p.fig.filter(e=>e.t==='arc'&&Math.hypot(e.c[0]-c[0],e.c[1]-c[1])<0.5);
+  let best=null;
+  for(let i=0;i<r.length;i++){const a=r[i],b=i+1<r.length?r[i+1]:r[0]+360,w=b-a,mid=N360(a+w/2);
+    const used=arcs.some(e=>{const s=N360(e.a1),sp=N360(e.a2-e.a1);return N360(mid-s)<sp;});
+    const sc=(used?0:1000)+w;if(!best||sc>best.sc)best={sc,mid};}
+  return best.mid;}
+function drawFig(p,st){
+  let L='',A='',T='';
+  p.fig.forEach(e=>{
+    if(e.hidden&&!st.shown.has(e.id))return;
+    const c=(st.look.has(e.id)?' look':'')+(st.match.has(e.id)?' match':'');
+    if(e.t==='line'){const a=P(e.p,-700,e.d),b=P(e.p,700,e.d);L+=`<line class="fl${c}" x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}"/>`;}
+    else if(e.t==='arc'){
+      const s=P(e.c,e.r,e.a1),t=P(e.c,e.r,e.a2),span=((e.a2-e.a1)%360+360)%360,lg=span>180?1:0;
+      A+=`<path class="wedge${c}" d="M${f(e.c[0])} ${f(e.c[1])} L${f(s[0])} ${f(s[1])} A${e.r} ${e.r} 0 ${lg} 0 ${f(t[0])} ${f(t[1])} Z"/>`;
+      A+=`<path class="fa${c}" d="M${f(s[0])} ${f(s[1])} A${e.r} ${e.r} 0 ${lg} 0 ${f(t[0])} ${f(t[1])}"/>`;
+      const lab=st.labels[e.id]||e.label,isx=e.x&&!st.labels[e.id];
+      const m=P(e.c,e.r+(e.lr||(isx?14:22)),e.a1+span/2);
+      if(lab)T+=`<text class="lab${isx?' x':''}${lab==='●'||lab==='○'?' mk':''}${c}" x="${f(m[0])}" y="${f(m[1])}">${esc(lab)}</text>`;
+    }
+    else if(e.t==='seg'){L+=`<line class="fl${e.dash?' aux':''}${e.ghost?' ghost':''}${c}" x1="${f(e.a[0])}" y1="${f(e.a[1])}" x2="${f(e.b[0])}" y2="${f(e.b[1])}"/>`;}
+    else if(e.t==='tick'){const at=e.at||0.5,m=[e.a[0]+(e.b[0]-e.a[0])*at,e.a[1]+(e.b[1]-e.a[1])*at],d=Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),u=[Math.cos(d),Math.sin(d)],n=[-u[1],u[0]];
+      for(let k=0;k<e.n;k++){const o=(k-(e.n-1)/2)*4.5,cx=m[0]+u[0]*o,cy=m[1]+u[1]*o;L+=`<line class="tick" x1="${f(cx-n[0]*6)}" y1="${f(cy-n[1]*6)}" x2="${f(cx+n[0]*6)}" y2="${f(cy+n[1]*6)}"/>`;}}
+    else if(e.t==='right'){const g=(q)=>{const L0=Math.hypot(q[0]-e.c[0],q[1]-e.c[1]);return [(q[0]-e.c[0])/L0*11,(q[1]-e.c[1])/L0*11];},a=g(e.p),b=g(e.q);
+      L+=`<path class="fa" d="M${f(e.c[0]+a[0])} ${f(e.c[1]+a[1])} L${f(e.c[0]+a[0]+b[0])} ${f(e.c[1]+a[1]+b[1])} L${f(e.c[0]+b[0])} ${f(e.c[1]+b[1])}"/>`;}
+    else if(e.t==='band'){A=`<path class="band" d="M${e.pts.map(q=>f(q[0])+' '+f(q[1])).join(' L')} Z"/>`+A;}
+    else if(e.t==='pt'){const d=freeDir(p,e.p),q=P(e.p,e.s==='O'?17:15,d);T+=`<circle class="pt" cx="${f(e.p[0])}" cy="${f(e.p[1])}" r="3.2"/><text class="nm" x="${f(q[0])}" y="${f(q[1])}" text-anchor="middle" dominant-baseline="central" style="font-style:normal;font-size:16px">${e.s}</text>`;}
+    else if(e.t==='par'){const d=(e.d||0)*Math.PI/180,u=[Math.cos(d),-Math.sin(d)],n=[Math.sin(d),Math.cos(d)],[x,y]=e.p;
+      const q=(a,b)=>f(x+a*u[0]+b*n[0])+' '+f(y+a*u[1]+b*n[1]);L+=`<path class="par" d="M${q(-6,-6)} L${q(2,0)} L${q(-6,6)}"/>`;}
+    else if(e.t==='nm'){T+=`<text class="nm" x="${e.p[0]}" y="${e.p[1]}" text-anchor="middle">${e.s}</text>`;}
+  });
+  $('#fig').innerHTML=`<svg viewBox="10 10 380 280" preserveAspectRatio="xMidYMid meet" overflow="hidden">${A}${L}${T}</svg>`;
+}
+
+/* ===== 問題の進行 ===== */
+let C=null; // 現在の問題の状態
+function skillOf(id){return SKILLS.find(k=>k.id===id);}
+function probsOf(id){return PROBS.filter(p=>p.skill===id);}
+function practiceList(id){const all=probsOf(id).sort((a,b)=>a.lv-b.lv);return S.sk[id].st===0?all.filter(p=>p.lv<=2):all;}
+
+function startSkill(id){
+  const list=practiceList(id);const p=list[S.idx[id]%list.length];
+  S.idx[id]=(S.idx[id]+1)%list.length;save();
+  begin(p,'step');
+}
+function startReview(id){const list=probsOf(id).filter(p=>p.lv===3);begin(list[Math.floor(Math.random()*list.length)],'review');}
+function startTest(){
+  const pool=PROBS.filter(p=>unlocked(SKILLS.findIndex(k=>k.id===p.skill))&&(p.lv<3||S.sk[p.skill].st>=1));
+  let p=pool[Math.floor(Math.random()*pool.length)];
+  if(C&&C.mode==='test'&&pool.length>1)while(p.id===C.p.id)p=pool[Math.floor(Math.random()*pool.length)];
+  begin(p,'test');
+}
+function begin(p,mode){
+  C={p,mode,si:0,miss:0,hint:0,clean:true,done:false,val:'',shown:new Set(),match:new Set(),look:new Set(),labels:{},log:[],order:null,picked:new Set()};
+  show('play');
+  const k=skillOf(p.skill)||{name:'総合ステージ'};
+  $('#pTitle').textContent=mode.startsWith('stage')?'総合ステージ':(mode==='step'?k.name:(mode==='review'?'復習：'+k.name:'仕上げテスト'));
+  $('#pSub').textContent=mode==='stageA'?'前半：最初の一手':(mode==='stageB'?'後半：ステップなしで解く':(mode==='step'?'ステップで考える':'図だけを見て答えよう'));
+  $('#pText').innerHTML=`<span class="tag lv${p.lv}">Lv${p.lv}　${['','その型だけ','見つけにくい図','組み合わせ','総合'][p.lv]}</span>${esc(p.text)}`;
+  $('#log').innerHTML='';
+  renderDots();
+  drawFig(p,C);
+  if(mode==='step')renderStep();else if(mode==='stageA')renderStageA();else renderTest();
+}
+function renderDots(){
+  if(C.mode.startsWith('stage')){tickText();return;}
+  if(!S.sk[C.p.skill]){$('#pDots').innerHTML='';return;}
+  const s=S.sk[C.p.skill];
+  $('#pDots').innerHTML=(C.mode==='step'&&s.st===0)?'<span style="font-size:11px;color:var(--sub);margin-right:4px">習得まで</span>'+[0,1,2].map(j=>`<i class="${j<s.streak?'f':''}"></i>`).join(''):(C.mode==='step'?`<span class="chip s${s.st}">${ST[s.st]}</span>`:'');
+}
+
+function stepHeader(){return `<div class="sn">ステップ ${C.si+1} / ${C.p.steps.length}</div>`;}
+function renderStep(){
+  const st=C.p.steps[C.si];
+  C.miss=0;C.hint=0;C.clean=true;C.done=false;C.val='';C.look.clear();C.picked=new Set();
+  drawFig(C.p,C);
+  let h=`<div class="qcard">${stepHeader()}<div class="q">${esc(st.q)}</div>`;
+  if(st.kind==='choice'){
+    C.order=shuffle(st.choices.map((c,i)=>i));
+    h+=C.order.map(i=>`<button class="ch" data-i="${i}" onclick="pick(${i})">${esc(st.choices[i].t)}</button>`).join('');
+  }
+  const hints=`<div class="hints"><button id="h1" onclick="useHint(1)">① どこを見る？</button><button id="h2" onclick="useHint(2)" disabled>② どの型？</button><button id="h3" onclick="useHint(3)" disabled>③ 答え</button></div>`;
+  h+=st.kind==='choice'?hints:hints+keypad(st.unit);
+  h+=`<div class="fb" id="fb"></div></div>`;
+  $('#cur').innerHTML=h;$('#nextbar').innerHTML='';
+  $('#scroll').scrollTop=0;
+}
+function keypad(unit){
+  C.unit=unit;
+  return `<div class="kp"><div class="kd" id="kd"><span class="ph">数字を入力</span></div><div class="kg">
+  ${[7,8,9].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')}<button onclick="key('bs')">⌫</button>
+  ${[4,5,6].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')}<button onclick="key('c')" style="font-size:14px">クリア</button>
+  ${[1,2,3].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')}<button class="go" onclick="key('go')" style="grid-row:span 2;height:auto">決定</button>
+  <button onclick="key(0)" style="grid-column:span 3">0</button></div></div>`;
+}
+function key(k){
+  if(C.done)return;
+  if(k==='bs')C.val=C.val.slice(0,-1);
+  else if(k==='c')C.val='';
+  else if(k==='go'){if(C.val!=='')submit();return;}
+  else if(C.val.length<4)C.val=(C.val==='0'?'':C.val)+k;
+  $('#kd').innerHTML=C.val===''?'<span class="ph">数字を入力</span>':`${C.val}<span class="u">${C.unit}</span>`;
+}
+function fb(cls,html){const e=$('#fb');e.className='fb on '+cls;e.innerHTML=html;}
+
+function pick(i){
+  if(C.done)return;
+  const st=C.p.steps[C.si],c=st.choices[i],b=document.querySelector(`.ch[data-i="${i}"]`);
+  if(c.ok){b.classList.add('ok');stepDone(false);return;}
+  if(C.picked.has(i))return;C.picked.add(i);
+  b.classList.add('ng');b.disabled=true;C.miss++;C.clean=false;
+  if(C.miss>=2){fb('ng','<b>✕ '+esc(c.why)+'</b>');setTimeout(()=>reveal(),900);}
+  else fb('ng','<b>✕ その一手ではないよ。</b><br>'+esc(c.why)+'<br>もう一度選んでみよう。');
+}
+function submit(){
+  if(C.mode!=='step'){testSubmit();return;}
+  const st=C.p.steps[C.si];
+  if(Number(C.val)===st.answer){stepDone(false);return;}
+  C.miss++;C.clean=false;
+  if(C.miss>=2){fb('ng','<b>✕ もう一度ちがったね。答えを確認しよう。</b>');setTimeout(()=>reveal(),800);}
+  else{fb('ng','<b>✕ 計算をもう一度見直そう。</b><br>'+esc(st.hint));C.val='';$('#kd').innerHTML='<span class="ph">数字を入力</span>';}
+}
+function useHint(n){
+  if(C.done||n!==C.hint+1)return;
+  const st=C.p.steps[C.si];C.hint=n;C.clean=false;
+  $('#h'+n).classList.add('used');$('#h'+n).disabled=true;
+  if(n<3)$('#h'+(n+1)).disabled=false;
+  if(n===1){C.look=new Set(st.look);drawFig(C.p,C);fb('hint','<b>ヒント①</b>　図の<span style="color:var(--look);font-weight:700">オレンジ色</span>の部分に注目しよう。');}
+  if(n===2){fb('hint','<b>ヒント②</b>　'+esc(st.hint));}
+  if(n===3){reveal();}
+}
+function reveal(){
+  const st=C.p.steps[C.si];C.clean=false;
+  if(st.kind==='choice'){const i=st.choices.findIndex(c=>c.ok);document.querySelector(`.ch[data-i="${i}"]`).classList.add('ok');}
+  else{C.val=String(st.answer);$('#kd').innerHTML=`${C.val}<span class="u">${st.unit}</span>`;}
+  stepDone(true);
+}
+function stepDone(revealed){
+  C.done=true;
+  const st=C.p.steps[C.si];
+  document.querySelectorAll('.ch').forEach(b=>b.disabled=true);
+  document.querySelectorAll('.hints button').forEach(b=>b.disabled=true);
+  C.look.clear();
+  const a=st.after||{};
+  (a.show||[]).forEach(id=>C.shown.add(id));
+  (a.match||[]).forEach(id=>C.match.add(id));
+  Object.assign(C.labels,a.label||{});
+  drawFig(C.p,C);
+  fb(revealed?'hint':'ok',(revealed?'<b>答え</b>　':'<b>◯ 正解！</b>　')+esc(st.ans));
+  // 習得判定
+  let msg='';
+  if(st.skill&&C.mode==='step'&&C.p.lv<=2){
+    const s=S.sk[st.skill];
+    if(s.st===0){
+      s.streak=C.clean?s.streak+1:0;
+      if(s.streak>=3){s.st=1;s.due=addDays(3);s.streak=0;
+        const i=SKILLS.findIndex(k=>k.id===st.skill),nx=SKILLS[i+1];
+        msg=`「${skillOf(st.skill).name}」を習得！`+(nx&&nx.ready?`<br><span style="font-weight:400;font-size:12px">次の型「${nx.name}」が開きました</span>`:'');
+      }
+      save();renderDots();
+    }
+  }
+  if(msg)toast(msg);
+  C.log.push(st.sum);
+  const last=C.si===C.p.steps.length-1;
+  $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'finish()':'nextStep()'}">${last?'まとめを見る ▶':'次のステップ ▶'}</button>`;
+}
+function nextStep(){
+  $('#log').innerHTML=C.log.map((s,i)=>`<div><b>${['①','②','③','④','⑤'][i]}</b>${esc(s)}</div>`).join('');
+  C.si++;renderStep();
+}
+function finish(){
+  $('#log').innerHTML='';
+  $('#cur').innerHTML=`<div class="sum"><h3>この問題の筋道</h3><ol>${C.log.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+  ${C.log.length>1?`<p style="font-size:12px;color:var(--sub);margin-top:10px">最初の一手：<b style="color:var(--ink)">${esc(C.log[0])}</b></p>`:''}</div>`;
+  $('#nextbar').innerHTML=C.p.skill==='stage'?`<button class="btn pri" onclick="goHome()">ホームへ</button>`:`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startSkill('${C.p.skill}')">次の問題 ▶</button>`;
+}
+
+/* ===== 仕上げテスト・復習 ===== */
+function renderTest(){
+  C.done=false;C.val='';
+  const fq=C.p.final;
+  $('#cur').innerHTML=`<div class="qcard"><div class="sn">${C.mode==='review'?'復習（ステップなし）':(C.mode==='stageB'?`後半 ${G.j+1} / 5（ステップなし）`:'仕上げテスト（ステップなし）')}</div><div class="q">${esc(fq.q)}</div>${keypad(fq.unit)}<div class="fb" id="fb"></div></div>`;
+  $('#nextbar').innerHTML='';
+}
+function testSubmit(){
+  if(C.mode==='stageB'){stageBSubmit();return;}
+  C.done=true;
+  const fq=C.p.final,ok=Number(C.val)===fq.answer,k=C.p.skill;
+  if(ok){
+    const last=C.p.steps[C.p.steps.length-1];Object.assign(C.labels,(last.after||{}).label||{});
+    C.p.steps.forEach(s=>{const a=s.after||{};(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));});
+    drawFig(C.p,C);
+    let extra='';
+    if(C.mode==='review'){S.sk[k].st=2;S.sk[k].due=null;save();extra=`<br>「${skillOf(k).name}」が<b>定着</b>しました。`;toast(`「${skillOf(k).name}」が定着！`);}
+    fb('ok','<b>◯ 正解！</b>　ステップなしで最初の一手が出せました。'+extra);
+    $('#nextbar').innerHTML=C.mode==='review'?`<button class="btn pri" onclick="goHome()">ホームへ</button>`:`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startTest()">次の問題 ▶</button>`;
+  }else{
+    if(C.mode==='review'){S.sk[k].st=1;S.sk[k].due=addDays(3);save();}
+    fb('ng','<b>✕ ちがったね。</b>　この問題をステップで確かめよう。'+(C.mode==='review'?'<br>（3日後にもう一度復習します）':''));
+    $('#nextbar').innerHTML=`<button class="btn pri" onclick="toSteps()">ステップで確かめる ▶</button>`;
+  }
+}
+function toSteps(){const p=C.p;begin(p,'step');}
+function goHome(){G=null;clearInterval(tick.h);renderHome();show('home');}
+
+
+/* ===== 総合ステージ ===== */
+let G=null;
+function fmt(ms){const t=Math.round(ms/1000);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+function tickText(){if(!G)return;const ph=G.phase==='a'?`前半 ${G.i+1}/10`:`後半 ${Math.min(G.j+1,5)}/5`;
+  $('#pDots').innerHTML=`<span style="font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums">${ph}　⏱ ${fmt(Date.now()-G.t0)}</span>`;}
+function tick(){clearInterval(tick.h);tick.h=setInterval(tickText,400);}
+function startStage(){
+  const pool=PROBS.filter(p=>p.lv>=2&&p.steps[0].kind==='choice');
+  let pick=SKILLS.map(k=>{const l=pool.filter(p=>p.skill===k.id);return l[Math.floor(Math.random()*l.length)];}).filter(Boolean);
+  pick=shuffle(pick.concat(shuffle(pool.filter(p=>!pick.includes(p))).slice(0,10-pick.length)));
+  G={phase:'a',qs:pick,i:0,a:0,ta:0,j:0,b:0,tb:0,bqs:shuffle(STAGE),missA:[],missB:[],t0:Date.now()};
+  S.stage.tries=(S.stage.tries||0)+1;save();
+  tick();begin(G.qs[0],'stageA');
+}
+function renderStageA(){
+  const st=C.p.steps[0];C.done=false;
+  C.order=shuffle(st.choices.map((c,i)=>i));
+  $('#cur').innerHTML=`<div class="qcard"><div class="sn">前半 ${G.i+1} / 10　最初の一手（ヒントなし・1回勝負）</div><div class="q">${esc(st.q)}</div>`+
+    C.order.map(i=>`<button class="ch" data-i="${i}" onclick="pickA(${i})">${esc(st.choices[i].t)}</button>`).join('')+`<div class="fb" id="fb"></div></div>`;
+  $('#nextbar').innerHTML='';$('#scroll').scrollTop=0;
+}
+function pickA(i){
+  if(C.done)return;C.done=true;
+  const st=C.p.steps[0],c=st.choices[i],k=st.choices.findIndex(x=>x.ok);
+  document.querySelectorAll('.ch').forEach(b=>b.disabled=true);
+  document.querySelector(`.ch[data-i="${k}"]`).classList.add('ok');
+  if(c.ok){G.a++;fb('ok','<b>◯ 正解！</b>　'+esc(st.ans));}
+  else{document.querySelector(`.ch[data-i="${i}"]`).classList.add('ng');G.missA.push(C.p.skill);fb('ng','<b>✕ '+esc(c.why)+'</b><br>'+esc(st.ans));}
+  const a=st.after||{};(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));drawFig(C.p,C);
+  const last=G.i===9;
+  $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'toStageB()':'nextA()'}">${last?'後半へ ▶':'次へ ▶'}</button>`;
+}
+function nextA(){G.i++;begin(G.qs[G.i],'stageA');}
+function toStageB(){G.ta=Date.now()-G.t0;G.phase='b';G.t0=Date.now();
+  $('#log').innerHTML='';
+  $('#cur').innerHTML=`<div class="sum"><h3>前半おわり：${G.a} / 10　（${fmt(G.ta)}）</h3><p style="font-size:14px;line-height:1.7">${G.a>=8?'合格ラインの 8 問をこえました。':'合格ラインは 8 問です。'}後半は、ステップなしで最後まで解く 5 問です。入試と同じように、図だけを見て答えを出しましょう。</p></div>`;
+  $('#nextbar').innerHTML=`<button class="btn pri" onclick="startB()">後半を始める ▶</button>`;}
+function startB(){G.t0=Date.now();begin(G.bqs[0],'stageB');}
+function stageBSubmit(){
+  C.done=true;const p=C.p,ok=Number(C.val)===p.final.answer;
+  if(ok){G.b++;const L=p.steps[p.steps.length-1];Object.assign(C.labels,(L.after||{}).label||{});
+    p.steps.forEach(s=>{const a=s.after||{};(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));});drawFig(p,C);
+    fb('ok','<b>◯ 正解！</b>');}
+  else{G.missB.push(p);fb('ng',`<b>✕ 正解は ${p.final.answer}${p.final.unit}</b>　解き方は、最後の結果画面から見られます。`);}
+  const last=G.j===4;
+  $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'stageEnd()':'nextB()'}">${last?'結果を見る ▶':'次へ ▶'}</button>`;
+}
+function nextB(){G.j++;begin(G.bqs[G.j],'stageB');}
+function stageEnd(){
+  G.tb=Date.now()-G.t0;clearInterval(tick.h);
+  const pa=G.a>=8,pb=G.b>=4,clear=pa&&pb;
+  const b=S.stage.best,score=G.a+G.b,time=G.ta+G.tb;
+  if(!b||score>b.a+b.b||(score===b.a+b.b&&time<b.ta+b.tb))S.stage.best={a:G.a,b:G.b,ta:G.ta,tb:G.tb};
+  if(clear)S.stage.clear=true;save();
+  const weak=[...new Set(G.missA.concat(G.missB.flatMap(p=>p.types)))].filter(id=>skillOf(id));
+  const R=G;
+  $('#pDots').innerHTML='';$('#log').innerHTML='';
+  let h=`<div class="sum" style="border-color:${clear?'var(--ok)':'var(--look)'}"><h3 style="color:${clear?'var(--ok)':'var(--look)'}">${clear?'第1章 クリア！':'もう一歩！'}</h3>
+  <p style="font-size:14px;line-height:1.9">前半（最初の一手）：<b>${R.a} / 10</b>　${pa?'◯ 合格':'✕ 8問以上で合格'}　⏱ ${fmt(R.ta)}<br>後半（ステップなし）：<b>${R.b} / 5</b>　${pb?'◯ 合格':'✕ 4問以上で合格'}　⏱ ${fmt(R.tb)}</p>`;
+  if(weak.length)h+=`<p style="font-size:13px;margin-top:8px;color:var(--sub)">まちがえた問題で使う型：</p><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${weak.map(id=>`<button class="btn" onclick="startSkill('${id}')">${skillOf(id).name} を練習</button>`).join('')}</div>`;
+  if(R.missB.length)h+=`<p style="font-size:13px;margin-top:10px;color:var(--sub)">後半でまちがえた問題の解き方：</p><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${R.missB.map(p=>`<button class="btn" onclick="begin(STAGE.find(q=>q.id==='${p.id}'),'step')">${esc(p.text.slice(0,14))}… の解き方</button>`).join('')}</div>`;
+  h+=`</div>`;
+  G=null;$('#cur').innerHTML=h;
+  $('#nextbar').innerHTML=`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startStage()">もう一度挑戦</button>`;
+}
+
+/* ===== 設定 ===== */
+$('#backBtn').onclick=goHome;
+$('#testBtn').onclick=startTest;
+$('#gear').onclick=()=>{$('#resetAsk').textContent='記録をすべてリセット';$('#resetAsk').dataset.armed='';$('#modal').classList.add('on');};
+$('#closeM').onclick=()=>$('#modal').classList.remove('on');
+$('#resetAsk').onclick=e=>{const b=e.currentTarget;if(!b.dataset.armed){b.dataset.armed='1';b.textContent='もう一度押すとリセットします';return;}S=blank();save();renderHome();$('#modal').classList.remove('on');toast('記録をリセットしました');};
+
+renderHome();
+</script>
+</body>
+</html>
