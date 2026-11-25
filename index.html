@@ -442,7 +442,7 @@ const PROBS=[
   {kind:'input',skill:null,q:'x の値は？',answer:50,unit:'',look:['a2x','axp'],
    hint:'3x ＋ 30 ＝ 180 → 3x ＝ 150 → x ＝ ？',ans:'3x ＝ 150 なので、x ＝ 50。(x＋30)° ＝ 80°、2x° ＝ 100°',
    sum:'3x ＝ 150 → x ＝ 50、(x＋30)° ＝ 80°',after:{label:{a2x:'100°',axp:'80°'}}},
-  {kind:'choice',skill:'taicho',q:'y と 80°（(x＋30)°）の関係は？',
+  {kind:'choice',skill:'taicho',q:'y と、右上の 80° の角の関係は？',
    choices:[
     {t:'対頂角なので、等しい',ok:1},
     {t:'となり合う角なので、足すと 180°',why:'y ととなり合っているのは 100° の角。80° の角とは向かい合っているよ。'},
@@ -2980,7 +2980,7 @@ function isDue(id){const s=S.sk[id];return s.st===1&&s.due&&today()>=s.due;}
 /* ===== 小物 ===== */
 const $=q=>document.querySelector(q);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
-function toast(t){const e=$('#toast');e.innerHTML=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600);}
+function toast(t,ms){const e=$('#toast');e.innerHTML=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),ms||2600);}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
 function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function normAns(v){return String(v).replace(/\s/g,'').replace(/－|−/g,'-').replace(/：/g,':');}
@@ -3082,7 +3082,8 @@ function drawFig(p,st){
 let C=null;
 function skillOf(id){return SKILLS.find(k=>k.id===id)||{name:'総合ステージ',ch:0};}
 function probsOf(id){return PROBS.filter(p=>p.skill===id);}
-function practiceList(id){const all=probsOf(id).sort((a,b)=>a.lv-b.lv);return S.sk[id].st===0?all.filter(p=>p.lv<=2):all;}
+// 習得前は Lv1〜2 を Lv の低い順に。習得後は Lv3 を先に出す
+function practiceList(id){const all=probsOf(id).sort((a,b)=>a.lv-b.lv);if(S.sk[id].st===0)return all.filter(p=>p.lv<=2);return all.filter(p=>p.lv===3).concat(all.filter(p=>p.lv<3));}
 function startSkill(id){const list=practiceList(id);const p=list[S.idx[id]%list.length];S.idx[id]=(S.idx[id]+1)%list.length;save();begin(p,'step');}
 function startReview(id){const list=probsOf(id).filter(p=>p.lv===3);begin(list[Math.floor(Math.random()*list.length)],'review');}
 function startTest(){
@@ -3183,15 +3184,17 @@ function stepDone(revealed){
   if(st.skill&&C.mode==='step'&&C.p.lv<=2&&S.sk[st.skill]){
     const s=S.sk[st.skill];
     if(s.st===0){
+      const before=s.streak;
       s.streak=C.clean?s.streak+1:0;
-      if(s.streak>=3){s.st=1;s.due=addDays(3);s.streak=0;
+      if(!C.clean&&before>0)msg=(C.hint>0?'ヒントを使った':'まちがえた')+'ので、習得までの連続が 0 に戻りました<br><span style="font-weight:400;font-size:12px">ヒントなし・ミスなしで3回続けると習得です</span>';
+      if(s.streak>=3){s.st=1;s.due=addDays(3);s.streak=0;S.idx[st.skill]=0;
         const k=skillOf(st.skill),list=chSkills(k.ch),nx=list[list.indexOf(k)+1];
         msg=`「${k.name}」を習得！`+(nx?`<br><span style="font-weight:400;font-size:12px">次の型「${nx.name}」が開きました</span>`:'<br><span style="font-weight:400;font-size:12px">この章の総合ステージに挑戦できるか、ホームで確かめよう</span>');
       }
       save();renderDots();
     }
   }
-  if(msg)toast(msg);
+  if(msg)toast(msg,4500);
   C.log.push(st.sum);
   const last=C.si===C.p.steps.length-1;
   $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'finish()':'nextStep()'}">${last?'まとめを見る ▶':'次のステップ ▶'}</button>`;
