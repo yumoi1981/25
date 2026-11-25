@@ -57,8 +57,14 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px}
 .card h3{font-size:14px;margin-bottom:6px}
 .card p{font-size:12px;color:var(--sub);line-height:1.6}
-.road li{list-style:none;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;color:#8a93a3}
-.road li.cur{color:var(--ink);font-weight:700}
+.road li{list-style:none;font-size:13px;padding:7px 4px;border-bottom:1px dashed var(--line);display:flex;gap:8px;color:#8a93a3;align-items:center}
+.road li.open{color:var(--ink);cursor:pointer}
+.road li.cur{font-weight:700;background:#eef3fb;border-radius:6px}
+.road li .st{font-size:11px;font-weight:700;margin-left:auto}
+.road li .st.c{color:var(--ok)}.road li .st.o{color:var(--look)}
+.kg.ex{grid-template-columns:repeat(4,1fr);margin-top:6px}
+.kg.ex button{font-size:17px}
+.ch.sm{padding:9px 12px}
 .road li em{font-style:normal;font-size:11px;color:var(--sub);margin-left:auto;font-weight:400}
 
 /* 問題画面 */
@@ -119,6 +125,18 @@ svg .fl.ghost{stroke:#b9c3d1;stroke-dasharray:3 4;stroke-width:1.6}
 svg .tick{stroke:var(--ink);stroke-width:1.8}
 svg .band{fill:rgba(28,109,208,.07);stroke:none}
 svg .lab.mk{font-size:12px}
+svg .lab.ln{font-size:15px}
+svg .lab.tk{font-size:12px;font-weight:500;fill:var(--sub)}
+svg .fl.thick{stroke-width:3.2}
+svg .fl.vec{stroke-width:2.4}
+svg .vh{stroke:var(--ink);stroke-width:2.4;fill:none}
+svg .vh.match{stroke:var(--match)}svg .vh.look{stroke:var(--look)}
+svg .fl.match{stroke:var(--match);stroke-width:3}
+svg .gridl{stroke:#e9eef5;stroke-width:1}
+svg .axis{stroke:#5b6475;stroke-width:1.5;fill:none}
+svg .pf{fill:rgba(28,109,208,.10);stroke:none}
+svg .pf.b{fill:rgba(232,89,12,.12)}
+svg .pf.match{fill:rgba(28,109,208,.18)}
 svg .look.fl,svg .look.fa{stroke:var(--look);stroke-width:4}
 svg .look.lab{fill:var(--look)}
 svg .match.fa{stroke:var(--match);stroke-width:3.2}
@@ -166,7 +184,7 @@ svg .wedge.match{fill:rgba(28,109,208,.13)}
   </div>
   <main>
     <div class="col l">
-      <div class="ch-h"><b>第1章　角度</b><span>図の中の「等しい角」と「決まった角の和」に気づく</span></div>
+      <div class="ch-h" id="chH"></div>
       <div class="tree" id="tree"></div>
     </div>
     <div class="col r">
@@ -181,7 +199,7 @@ svg .wedge.match{fill:rgba(28,109,208,.13)}
         <p style="margin-top:6px"><b style="color:var(--look)">練習中</b>：Lv1〜2の、その型のステップを、ヒントなし・ミスなしで3回連続で正解すると <b style="color:var(--match)">習得</b>（次の型とLv3が開く）→ 3日後の復習で、Lv3の問題をステップなしで正解すると <b style="color:var(--ok)">定着</b>。</p>
       </div>
       <div class="card">
-        <h3>全体の道すじ</h3>
+        <h3>全体の道すじ（章をえらぶ）</h3>
         <ul class="road" id="road"></ul>
       </div>
     </div>
@@ -1111,20 +1129,380 @@ const STAGE=[
 ];
 
 PROBS.push(...TYPE_PROBS);
+
+/* ---------- 第2章以降の共通の道具 ---------- */
+function Q(id,skill,lv,text,fig,steps,final,ex){return Object.assign({id,skill,lv,text,fig,steps,final},ex||{});}
+function CHO(skill,q,ok,wr,look,hint,ans,sum,after){return {kind:'choice',skill,q,choices:[{t:ok,ok:1}].concat(wr.map(w=>({t:w[0],why:w[1]}))),look:look||[],hint,ans,sum,after};}
+function INP(q,answer,o){return Object.assign({kind:'input',skill:null,q,answer,unit:'',look:[],hint:'',ans:'',sum:''},o||{});}
+function FIN(q,answer,o){return Object.assign({q,answer,unit:''},o||{});}
+function FCH(q,ok,wr){return {kind:'choice',q,choices:[{t:ok,ok:1}].concat(wr.map(t=>({t})))};}
+function LEN(id,a,b,label,val,side,o){return Object.assign({t:'len',id,a,b,label,val,side:side||1},o||{});}
+function D2(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1]);}
+function lerp(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
+function mid(a,b){return lerp(a,b,0.5);}
+function tri3(B,dir,a,c,b,sc,flip){const cb=(a*a+c*c-b*b)/(2*a*c),Bd=Math.acos(cb)*180/Math.PI;return {B,C:from(B,dir,a*sc),A:from(B,dir+(flip?-Bd:Bd),c*sc)};}
+function rot(P,O,deg){const t=deg*RAD,x=P[0]-O[0],y=-(P[1]-O[1]);return [O[0]+x*Math.cos(t)-y*Math.sin(t),O[1]-(x*Math.sin(t)+y*Math.cos(t))];}
+function area(pts){let s=0;for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];s+=a[0]*b[1]-b[0]*a[1];}return Math.abs(s)/2;}
+function angAt(V,P1,P2){let a=n360(dirTo(V,P2)-dirTo(V,P1));return a>180?360-a:a;}
+function arcS(id,V,P1,P2,sym,o){return arcV(id,V,P1,P2,sym,angAt(V,P1,P2),Object.assign({r:20,lr:11},o||{}));}
+function lnX(p1,p2,q1,q2){return inter(p1,dirTo(p1,p2),q1,dirTo(q1,q2));}
+function polyF(id,pts,cls,o){return Object.assign({t:'poly',id,pts,cls},o||{});}
+function TX(id,p,s,o){return Object.assign({t:'txt',id,p,s},o||{});}
+
+/*CH2-START*/
+/* ==================== 第2章 相似と比 ==================== */
+SKILLS.push(
+ {id:'c2a',ch:2,name:'相似な三角形を見つける',desc:'等しい角の印から相似を見つけ、頂点の対応をそろえる',ready:true},
+ {id:'c2b',ch:2,name:'平行線と線分の比',desc:'平行線があったら、ピラミッド形・砂時計形の相似を探す',ready:true},
+ {id:'c2c',ch:2,name:'中点連結定理',desc:'中点が2つあったら、結んで平行・半分を使う',ready:true},
+ {id:'c2d',ch:2,name:'面積比・体積比',desc:'相似なら2乗・3乗、高さが同じなら底辺の比',ready:true},
+ {id:'c2e',ch:2,name:'直角三角形の相似',desc:'直角と共通な角から、重なった相似を見ぬく',ready:true});
+PROBS.push(
+/* ---- 相似な三角形を見つける ---- */
+(()=>{const T=tri3([40,245],0,6,4,5,22),A=T.A,B=T.B,C=T.C;
+ const U=tri3([350,55],210,9,6,7.5,22),D0=U.A,E0=U.B,F0=U.C;
+ return Q('a1','c2a',1,'2つの三角形で、● どうし、○ どうしは等しい角です。x の値を求めなさい。',
+ [sg('s1',A,B),sg('s2',B,C),sg('s3',C,A),sg('t1',D0,E0),sg('t2',E0,F0),sg('t3',F0,D0),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D0,'D'),pt(E0,'E'),pt(F0,'F'),
+  arcS('b1',B,C,A,'●'),arcS('c1',C,A,B,'○'),arcS('b2',E0,F0,D0,'●'),arcS('c2',F0,D0,E0,'○'),
+  LEN('l1',A,B,'4',4,1),LEN('l2',B,C,'6',6,1),LEN('l3',D0,E0,'6',6,1),LEN('ax',E0,F0,'x',9,1,{x:1})],
+ [CHO('c2a','2つの三角形の、頂点の対応は？','△ABC ∽ △DEF（A↔D、B↔E、C↔F）',
+   [['△ABC ∽ △DFE','● の角は B と E にある。B に対応するのは E だよ。'],['△ABC ∽ △EDF','頂点の対応は、角の印で決める。● どうし（B と E）、○ どうし（C と F）を対応させよう。']],
+   ['b1','b2','c1','c2'],'● どうし、○ どうしを対応させる。2組の角が等しいので相似。','● の B↔E、○ の C↔F、残りの A↔D。△ABC ∽ △DEF。','△ABC ∽ △DEF（● と ○ で対応を決める）',{match:['b1','b2','c1','c2']}),
+  INP('x の値は？',9,{look:['l1','l3','l2','ax'],hint:'AB:DE ＝ 4:6 ＝ 2:3。BC:EF も 2:3。',ans:'相似比は 4:6 ＝ 2:3。6:x ＝ 2:3 なので x ＝ 9',sum:'相似比 2:3 → x ＝ 9',after:{label:{ax:'9'}}})],
+ FIN('x の値は？',9),{scale:22});})(),
+
+(()=>{const SC=26,A=[150,32],B=from(A,250,8*SC),C=from(A,305,6*SC),D=lerp(A,B,3/8),E=lerp(A,C,4/6);
+ return Q('a2','c2a',2,'● の2つの角は等しい角です。AE の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sDE',D,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  arcS('m1',D,A,E,'●'),arcS('m2',C,B,A,'●'),
+  LEN('l1',A,D,'3',3,-1),LEN('l2',D,B,'5',5,-1),LEN('l3',A,C,'6',6,1,{off:36}),LEN('ax',A,E,'x',4,1,{x:1,off:14})],
+ [CHO('c2a','相似な三角形と、頂点の対応は？','△ADE ∽ △ACB（D↔C、E↔B）',
+   [['△ADE ∽ △ABC（D↔B、E↔C）','∠ADE と等しいのは ∠ACB（● の印）。D に対応するのは B ではなく C だよ。'],['DE ∥ BC なので △ADE ∽ △ABC','DE と BC が平行とは書いていないよ。● の印は「等しい角」だよ。']],
+   ['m1','m2'],'∠A は共通。● の ∠ADE と ∠ACB が等しい。D に対応するのはどの頂点？','∠A 共通、∠ADE ＝ ∠ACB なので △ADE ∽ △ACB（D↔C、E↔B）。','△ADE ∽ △ACB（D↔C、E↔B）',{match:['m1','m2']}),
+  INP('x の値は？',4,{look:['l1','l3','ax'],hint:'対応に合わせて AD:AC ＝ AE:AB。3:6 ＝ x:8',ans:'3:6 ＝ x:8 なので x ＝ 4',sum:'AD:AC ＝ AE:AB → x ＝ 4',after:{label:{ax:'4'}}})],
+ FIN('x の値は？',4),{scale:26});})(),
+
+(()=>{const SC=26,A=[45,240],B=[45+10*SC,240],H=[45+3.6*SC,240],C=[H[0],240-4.8*SC];
+ return Q('a3','c2a',2,'∠ACB＝90°、CH⊥AB です。AH の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sCH',C,H),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(H,'H'),rt(C,A,B),rt(H,C,B),
+  LEN('l1',A,C,'6',6,1),LEN('l2',A,B,'10',10,-1,{off:20}),LEN('ax',A,H,'x',3.6,1,{x:1,off:12})],
+ [CHO('c2a','AH をふくむ三角形と相似な三角形は？','△ACH ∽ △ABC（∠A が共通で、どちらも直角がある）',
+   [['△ACH ≡ △BCH（合同）','形が同じでも大きさがちがう。合同ではないよ。'],['相似な三角形はない','∠A が共通で、∠AHC ＝ ∠ACB ＝ 90°。2組の角が等しいよ。']],
+   ['sAC','sCH','sAB'],'∠A をふくむ直角三角形が2つある。小さい △ACH と大きい △ABC。','∠A 共通、∠AHC ＝ ∠ACB ＝ 90° なので △ACH ∽ △ABC（H↔C、C↔B）。','△ACH ∽ △ABC（∠A 共通・直角）'),
+  INP('x の値は？',['3.6','18/5'],{keys:'./',look:['l1','l2','ax'],hint:'AH:AC ＝ AC:AB → x:6 ＝ 6:10',ans:'x ＝ 6 × 6 ÷ 10 ＝ 3.6',sum:'AH:AC ＝ AC:AB → x ＝ 3.6',after:{label:{ax:'3.6'}}})],
+ FIN('x の値は？',['3.6','18/5'],{keys:'./'}),{scale:26});})(),
+
+(()=>{const SC=30,T=tri3([45,240],0,9,6,7.5,SC),A=T.A,B=T.B,C=T.C,D=lerp(B,C,4/9);
+ return Q('a4','c2a',3,'点Dは辺BC上の点で、● の2つの角は等しい角です。DC の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),
+  arcS('m1',A,B,D,'●',{r:30}),arcS('m2',C,A,B,'●',{r:28}),
+  LEN('l1',A,B,'6',6,1),LEN('l2',B,C,'9',9,-1,{off:38}),LEN('ax',D,C,'x',5,1,{x:1,off:12})],
+ [CHO('c2a','相似な三角形と、頂点の対応は？','△ABD ∽ △CBA（B↔B、A↔C、D↔A）',
+   [['△ABD ∽ △ACD','2つの三角形に共通な角がないよ。∠B をふくむ三角形を探そう。'],['△ABD ∽ △ABC（同じ順）','● の ∠BAD に対応するのは ∠BCA。A↔C、D↔A と対応させよう。']],
+   ['m1','m2','sAB','sBC'],'∠B は △ABD と △ABC の両方にある。● とあわせて2組の角。','∠B 共通、∠BAD ＝ ∠BCA なので △ABD ∽ △CBA。','△ABD ∽ △CBA（∠B 共通・●）'),
+  CHO('c2a','対応に合わせた比の式は？','BD:BA ＝ BA:BC',
+   [['BD:BC ＝ BA:BD','BD に対応するのは BA（△CBA の辺）。対応する辺どうしで比をつくろう。'],['BD:DC ＝ AB:AC','これは角の二等分線のときの比。ここでは使えないよ。']],
+   ['sAB','sBC'],'△ABD の辺 BD・BA は、△CBA のどの辺に対応する？','BD↔BA、BA↔BC なので BD:BA ＝ BA:BC。','BD:BA ＝ BA:BC'),
+  INP('x の値は？',5,{look:['l1','l2','ax'],hint:'BD:6 ＝ 6:9 なので BD ＝ 4。DC ＝ 9 − 4',ans:'BD ＝ 6 × 6 ÷ 9 ＝ 4、x ＝ 9 − 4 ＝ 5',sum:'BD ＝ 4 → x ＝ 5',after:{label:{ax:'5'}}})],
+ FIN('x の値は？',5),{scale:30});})(),
+
+(()=>{const SC=20,A=[50,245],H=[130,245],B=[310,245],C=[130,245-6*SC];
+ return Q('a5','c2a',3,'∠ACB＝90°、CH⊥AB です。CH の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sCH',C,H),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(H,'H'),rt(C,A,B),rt(H,C,B),
+  arcS('m1',C,A,H,'●',{hidden:1,r:28}),arcS('m2',B,H,C,'●',{hidden:1,r:30}),
+  LEN('l1',A,H,'4',4,-1),LEN('l2',H,B,'9',9,-1),LEN('ax',C,H,'x',6,-1,{x:1,off:12})],
+ [CHO('c2a','CH をふくむ2つの小さな三角形の関係は？','△ACH ∽ △CBH（∠ACH ＝ ∠B）',
+   [['△ACH ≡ △CBH（合同）','AH ＝ 4、HB ＝ 9 で大きさがちがう。合同ではないよ。'],['関係はない','∠ACH ＝ 90° − ∠BCH ＝ ∠B。直角とあわせて2組の角が等しいよ。']],
+   ['sCH','sAC','sBC'],'∠ACH と ∠BCH を足すと 90°。∠B と ∠BCH を足しても 90°。','∠ACH ＝ ∠B（どちらも 90° − ∠BCH）。直角とあわせて △ACH ∽ △CBH。','△ACH ∽ △CBH（∠ACH ＝ ∠B）',{show:['m1','m2'],match:['m1','m2']}),
+  CHO(null,'対応に合わせた比の式は？','AH:CH ＝ CH:BH',
+   [['AH:CH ＝ BH:CH','対応をそろえよう。△ACH の AH↔△CBH の CH、△ACH の CH↔△CBH の BH。'],['AH:BH ＝ CH:AB','AB は △CBH の辺ではないよ。']],
+   ['sCH'],'A↔C、C↔B、H↔H と対応させる。','AH:CH ＝ CH:BH（CH × CH ＝ AH × BH）。','AH:CH ＝ CH:BH'),
+  INP('x の値は？',6,{look:['l1','l2','ax'],hint:'x × x ＝ 4 × 9',ans:'x × x ＝ 36 なので x ＝ 6',sum:'x × x ＝ 4 × 9 → x ＝ 6',after:{label:{ax:'6'}}})],
+ FIN('x の値は？',6),{scale:20});})(),
+
+/* ---- 平行線と線分の比 ---- */
+(()=>{const SC=30,A=[150,35],B=from(A,240,6*SC),C=[B[0]+9*SC,B[1]],D=lerp(A,B,4/6),E=lerp(A,C,4/6);
+ return Q('p1','c2b',1,'DE ∥ BC です。BC の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sDE',D,E),{t:'par',p:mid(D,E)},{t:'par',p:mid(B,C)},pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),
+  LEN('l1',A,D,'4',4,-1),LEN('l2',D,B,'2',2,-1),LEN('l3',D,E,'6',6,-1,{off:12}),LEN('ax',B,C,'x',9,-1,{x:1})],
+ [CHO('c2b','DE と BC の比は、どの比と等しい？','AD:AB（＝ 4:6）',
+   [['AD:DB（＝ 4:2）','DE と BC は、小さい △ADE と大きい △ABC の対応する辺。比べるのは AD と AB（全体）だよ。'],['DB:AB（＝ 2:6）','DE に対応するのは AD。DB ではないよ。']],
+   ['sAB','sDE','sBC'],'△ADE と △ABC はピラミッド形の相似。DE ↔ BC、AD ↔ AB。','DE ∥ BC なので △ADE ∽ △ABC。DE:BC ＝ AD:AB ＝ 4:6。','ピラミッド形：DE:BC ＝ AD:AB ＝ 4:6'),
+  INP('x の値は？',9,{look:['l3','ax'],hint:'6:x ＝ 4:6',ans:'6:x ＝ 2:3 なので x ＝ 9',sum:'6:x ＝ 2:3 → x ＝ 9',after:{label:{ax:'9'}}})],
+ FIN('x の値は？',9),{scale:30});})(),
+
+(()=>{const SC=18,O=[195,150],A=from(O,200,3*SC),cb=(9+20.25-36)/(2*3*4.5),ang=Math.acos(cb)*180/Math.PI,B=from(O,200+ang,4.5*SC),Dd=from(O,20,5*SC),Cc=from(O,20+ang,7.5*SC);
+ return Q('p2','c2b',2,'AB ∥ CD で、AD と BC は点Oで交わっています。CD の長さ x を求めなさい。',
+ [sg('sAD',A,Dd),sg('sBC',B,Cc),sg('sAB',A,B),sg('sCD',Cc,Dd),{t:'par',p:mid(A,B),d:dirTo(A,B)},{t:'par',p:mid(Cc,Dd),d:dirTo(Cc,Dd)},pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(O,'O'),
+  LEN('l1',A,O,'3',3,1),LEN('l2',O,Dd,'5',5,1),LEN('l3',A,B,'6',6,1),LEN('ax',Dd,Cc,'x',10,1,{x:1})],
+ [CHO('c2b','AB と DC の比は、どの比と等しい？','AO:DO（＝ 3:5）',
+   [['AO:AD（＝ 3:8）','砂時計形では、点Oをはさんだ向かい合う線分どうしを比べる。AO ↔ DO だよ。'],['AB と DC の比は決まらない','AB ∥ CD なので、△OAB ∽ △ODC（砂時計形）。比が決まるよ。']],
+   ['sAD','sBC','sAB','sCD'],'AB ∥ CD で、O をはさんで2つの三角形が向かい合っている（砂時計形）。','△OAB ∽ △ODC なので AB:DC ＝ AO:DO ＝ 3:5。','砂時計形：AB:DC ＝ AO:DO ＝ 3:5'),
+  INP('x の値は？',10,{look:['l3','ax'],hint:'6:x ＝ 3:5',ans:'6:x ＝ 3:5 なので x ＝ 10',sum:'6:x ＝ 3:5 → x ＝ 10',after:{label:{ax:'10'}}})],
+ FIN('x の値は？',10),{scale:SC});})(),
+
+(()=>{const t1=80,s1=Math.sin(t1*RAD),t2=Math.asin(s1/1.5)*180/Math.PI,y0=48,SC=19,g1=4*SC*s1,g2=6*SC*s1;
+ const P1=[110,y0],P2=inter(P1,360-t1,[0,y0+g1],0),P3=inter(P1,360-t1,[0,y0+g1+g2],0);
+ const Q1=[205,y0],Q2=inter(Q1,360-t2,[0,y0+g1],0),Q3=inter(Q1,360-t2,[0,y0+g1+g2],0);
+ return Q('p3','c2b',2,'3本の直線 ℓ、m、n は平行です。x の値を求めなさい。',
+ [{t:'line',id:'L1',p:[0,y0],d:0},{t:'line',id:'L2',p:[0,y0+g1],d:0},{t:'line',id:'L3',p:[0,y0+g1+g2],d:0},
+  {t:'par',p:[360,y0]},{t:'par',p:[360,y0+g1]},{t:'par',p:[360,y0+g1+g2]},{t:'nm',p:[24,y0-10],s:'ℓ'},{t:'nm',p:[24,y0+g1-10],s:'m'},{t:'nm',p:[24,y0+g1+g2-10],s:'n'},
+  {t:'line',id:'T1',p:P1,d:360-t1},{t:'line',id:'T2',p:Q1,d:360-t2},
+  LEN('l1',P1,P2,'4',4,1),LEN('l2',P2,P3,'6',6,1),LEN('l3',Q1,Q2,'6',6,-1),LEN('ax',Q2,Q3,'x',9,-1,{x:1})],
+ [CHO('c2b','どんな比の式が成り立つ？','4:6 ＝ 6:x',
+   [['4:6 ＝ x:6','同じ順に対応させよう。上の区間どうし（4 と 6）、下の区間どうし（6 と x）。'],['4 ＋ 6 ＝ 6 ＋ x','長さが等しくなるのではなく、比が等しくなるよ。']],
+   ['T1','T2'],'平行線にはさまれた線分の比は、どの直線の上でも同じ。','左の直線で 4:6、右の直線で 6:x。比が等しい。','平行線にはさまれた線分の比：4:6 ＝ 6:x'),
+  INP('x の値は？',9,{look:['l3','ax'],hint:'4:6 ＝ 2:3 なので 6:x ＝ 2:3',ans:'x ＝ 9',sum:'6:x ＝ 2:3 → x ＝ 9',after:{label:{ax:'9'}}})],
+ FIN('x の値は？',9),{scale:SC});})(),
+
+(()=>{const SC=20,B=[50,245],Cc=[50+12*SC,245],A=[120,85],Dd=[120+6*SC,85],E=lerp(A,B,1/3),F=lerp(Dd,Cc,1/3),G=lnX(A,Cc,E,F);
+ return Q('p4','c2b',3,'AD ∥ EF ∥ BC、AE:EB＝1:2 の台形です。EF の長さ x を求めなさい。',
+ [sg('sAD',A,Dd),sg('sBC',B,Cc),sg('sAB',A,B),sg('sDC',Dd,Cc),sg('sEF',E,F),sg('aux',A,Cc,{dash:1,hidden:1}),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(E,'E'),pt(F,'F'),
+  LEN('l1',A,Dd,'6',6,1),LEN('l2',B,Cc,'12',12,-1),LEN('ax',E,F,'x',8,1,{x:1,off:12}),LEN('g1',E,G,'4',4,-1,{hidden:1,off:12}),LEN('g2',G,F,'4',4,-1,{hidden:1,off:12})],
+ [CHO('c2b','x を求めるための補助線は？','対角線 AC を引き、EF を2つに分ける',
+   [['x ＝ (6 ＋ 12) ÷ 2','それは E が AB の中点のとき。AE:EB ＝ 1:2 なので、比で分けて考えよう。'],['AD と BC をのばして三角形をつくる','それでも解けるけど遠回り。対角線を1本引けば、ピラミッド形が2つできるよ。']],
+   ['sEF','sAD','sBC'],'対角線 AC を引くと、△ABC と △CDA の2つのピラミッド形ができる。','対角線 AC と EF の交点を G とすると、EG は △ABC、GF は △CDA の中で比を使える。','対角線 AC で EF を EG と GF に分ける',{show:['aux']}),
+  INP('x の値は？',8,{look:['aux','l1','l2'],hint:'EG ＝ 12 × 1/3 ＝ 4（△ABC）、GF ＝ 6 × 2/3 ＝ 4（△CDA）',ans:'EG ＝ 4、GF ＝ 4 なので x ＝ 8',sum:'EG ＝ 4、GF ＝ 4 → x ＝ 8',after:{show:['g1','g2'],label:{ax:'8'}}})],
+ FIN('x の値は？',8),{scale:SC});})(),
+
+(()=>{const A=[110,70],B=[55,235],Cc=[305,235],Dd=[A[0]+Cc[0]-B[0],A[1]+Cc[1]-B[1]],E=lerp(A,Dd,2/3),F=lnX(B,E,A,Cc);
+ return Q('p5','c2b',3,'平行四辺形 ABCD で、AE:ED＝2:1 です。BE と AC の交点を F とするとき、AF:FC を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,Cc),sg('sCD',Cc,Dd),sg('sDA',Dd,A),sg('sAC',A,Cc),sg('sBE',B,E),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(E,'E'),pt(F,'F'),
+  polyF('t1',[A,F,E],'',{hidden:1}),polyF('t2',[Cc,F,B],'b',{hidden:1})],
+ [CHO('c2b','AF:FC を出すのに使う相似は？','△AFE ∽ △CFB（AD ∥ BC の砂時計形）',
+   [['△ABF ∽ △CBF','AB と CB は平行ではないので、この2つは相似にならないよ。'],['△ABC ∽ △ADC','合同だけど、F の位置はわからないよ。']],
+   ['sAC','sBE','sDA','sBC'],'AD ∥ BC。F をはさんで、AE 側と BC 側に三角形が向かい合っている。','AD ∥ BC なので △AFE ∽ △CFB。AF:FC ＝ AE:CB。','砂時計形 △AFE ∽ △CFB',{show:['t1','t2']}),
+  INP('AF:FC は？（例　2:5）','2:3',{keys:':',look:['sDA','sBC'],hint:'AE は AD の 2/3。AD ＝ BC なので AE:CB ＝ 2:3',ans:'AE:CB ＝ 2:3 なので AF:FC ＝ 2:3',sum:'AE:CB ＝ 2:3 → AF:FC ＝ 2:3'})],
+ FIN('AF:FC は？（例　2:5）','2:3',{keys:':'}),{chk:()=>Math.abs(D2(A,F)/D2(F,Cc)-2/3)<1e-9});})(),
+
+/* ---- 中点連結定理 ---- */
+(()=>{const SC=28,A=[160,35],B=[60,245],Cc=[60+10*SC,245],M=mid(A,B),N=mid(A,Cc);
+ return Q('m1','c2c',1,'M、N は辺 AB、AC の中点です。MN の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sMN',M,N),tk(A,M,1),tk(M,B,1),tk(A,N,2),tk(N,Cc,2),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(M,'M'),pt(N,'N'),
+  LEN('l1',B,Cc,'10',10,-1),LEN('ax',M,N,'x',5,1,{x:1,off:12})],
+ [CHO('c2c','MN と BC の関係は？','MN ∥ BC で、MN ＝ BC の半分（中点連結定理）',
+   [['MN ＝ AB の半分','中点連結定理で比べるのは、中点を結ばない「残りの辺」BC だよ。'],['MN ＝ BC','MN は △AMN の辺。△ABC の半分の大きさだよ。']],
+   ['sMN','sBC'],'2辺の中点を結んだ線分は、残りの辺と平行で、長さは半分。','中点連結定理：MN ∥ BC、MN ＝ BC ÷ 2。','中点連結定理：MN ＝ BC ÷ 2'),
+  INP('x の値は？',5,{look:['l1','ax'],hint:'10 ÷ 2',ans:'x ＝ 5',sum:'x ＝ 10 ÷ 2 ＝ 5',after:{label:{ax:'5'}}})],
+ FIN('x の値は？',5),{scale:SC});})(),
+
+(()=>{const SC=24,A=[55,150],Cc=[55+10*SC,150],B=[175,48],Dd=from(B,262,8*SC),P1=mid(A,B),P2=mid(B,Cc),P3=mid(Cc,Dd),P4=mid(Dd,A);
+ return Q('m2','c2c',2,'四角形 ABCD の各辺の中点を結んで四角形 PQRS をつくりました。AC＝10、BD＝8 のとき、四角形 PQRS のまわりの長さを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,Cc),sg('s3',Cc,Dd),sg('s4',Dd,A),sg('q1',P1,P2,{thick:1}),sg('q2',P2,P3,{thick:1}),sg('q3',P3,P4,{thick:1}),sg('q4',P4,P1,{thick:1}),
+  sg('dAC',A,Cc,{dash:1,hidden:1}),sg('dBD',B,Dd,{dash:1,hidden:1}),
+  tk(A,P1,1),tk(P1,B,1),tk(B,P2,2),tk(P2,Cc,2),tk(Cc,P3,3),tk(P3,Dd,3),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(P1,'P'),pt(P2,'Q'),pt(P3,'R'),pt(P4,'S')],
+ [CHO('c2c','PQRS の辺の長さを求めるには？','対角線 AC・BD を引いて、中点連結定理を使う',
+   [['四角形 ABCD の辺の長さを使う','ABCD の辺の長さはわかっていないよ。わかっているのは対角線の長さ。'],['PQRS は正方形なので、1辺 × 4','正方形とは限らないよ。']],
+   ['q1','q2'],'△ABC で P、Q は2辺の中点。その「残りの辺」は？','対角線を引くと、PQ ＝ SR ＝ AC ÷ 2、QR ＝ PS ＝ BD ÷ 2。','対角線 AC・BD を引く → 中点連結定理',{show:['dAC','dBD']}),
+  INP('まわりの長さは？',18,{look:['dAC','dBD'],hint:'PQ ＋ SR ＝ AC、QR ＋ PS ＝ BD',ans:'5 ＋ 5 ＋ 4 ＋ 4 ＝ 18',sum:'AC ＋ BD ＝ 18'})],
+ FIN('まわりの長さは？',18),{chk:()=>Math.abs(D2(A,Cc)/SC-10)<1e-9&&Math.abs(D2(B,Dd)/SC-8)<1e-9});})(),
+
+(()=>{const SC=20,B=[50,245],Cc=[50+14*SC,245],A=[125,85],Dd=[125+6*SC,85],M=mid(A,B),N=mid(Dd,Cc),G=mid(A,Cc);
+ return Q('m3','c2c',2,'AD ∥ BC の台形で、M、N は辺 AB、DC の中点です。MN の長さ x を求めなさい。',
+ [sg('sAD',A,Dd),sg('sBC',B,Cc),sg('sAB',A,B),sg('sDC',Dd,Cc),sg('sMN',M,N),sg('aux',A,Cc,{dash:1,hidden:1}),tk(A,M,1),tk(M,B,1),tk(Dd,N,2),tk(N,Cc,2),
+  pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(M,'M'),pt(N,'N'),
+  LEN('l1',A,Dd,'6',6,1),LEN('l2',B,Cc,'14',14,-1),LEN('ax',M,N,'x',10,1,{x:1,off:12}),LEN('g1',M,G,'7',7,-1,{hidden:1,off:12}),LEN('g2',G,N,'3',3,-1,{hidden:1,off:12})],
+ [CHO('c2c','中点連結定理を使うには？','対角線 AC を引き、△ABC と △CDA に分ける',
+   [['x ＝ (14 − 6) ÷ 2','それは MN のうち、2本の対角線にはさまれた部分の長さ。MN 全体ではないよ。'],['x ＝ 14 ÷ 2','台形はそのままでは三角形ではないので、中点連結定理を1回では使えないよ。']],
+   ['sMN','aux'],'台形のままでは三角形がない。対角線を1本引くと、中点連結定理が使える三角形が2つできる。','AC の中点を G とすると、MG ＝ BC ÷ 2、GN ＝ AD ÷ 2。','対角線 AC で △ABC と △CDA に分ける',{show:['aux']}),
+  INP('x の値は？',10,{look:['aux','l1','l2'],hint:'MG ＝ 14 ÷ 2、GN ＝ 6 ÷ 2',ans:'7 ＋ 3 ＝ 10',sum:'MG ＝ 7、GN ＝ 3 → x ＝ 10',after:{show:['g1','g2'],label:{ax:'10'}}})],
+ FIN('x の値は？',10),{scale:SC});})(),
+
+(()=>{const A=[175,35],B=[45,255],Cc=[345,255],M=mid(B,Cc),N=mid(A,M),Pp=lnX(B,N,A,Cc),Qq=lnX(M,[M[0]+(Pp[0]-B[0]),M[1]+(Pp[1]-B[1])],A,Cc);
+ return Q('m4','c2c',3,'M は辺 BC の中点、N は線分 AM の中点です。BN をのばして AC と交わる点を P とするとき、AP:PC を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sAM',A,M),sg('sBP',B,Pp),sg('aux',M,Qq,{dash:1,hidden:1}),tk(B,M,1),tk(M,Cc,1),tk(A,N,2),tk(N,M,2),
+  pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(M,'M'),pt(N,'N'),pt(Pp,'P'),{t:'pt',p:Qq,s:'Q',hidden:1,id:'qp'}],
+ [CHO('c2c','中点連結定理を使うための補助線は？','M を通り BP に平行な線を引き、AC との交点を Q とする',
+   [['N を通り BC に平行な線を引く','それでも解けるけど、AC 上の比に直接つながらないよ。'],['P と M を結ぶ','PM を引いても、平行や中点の関係がつくれないよ。']],
+   ['sBP','sAM','sBC'],'中点 M と中点 N がある。BP に平行な線を M から引くと、2つの三角形で中点連結定理が使える。','△AMQ で N は AM の中点、NP ∥ MQ なので P は AQ の中点。△CBP で M は BC の中点、MQ ∥ BP なので Q は PC の中点。','M を通り BP に平行な補助線 MQ',{show:['aux']}),
+  INP('AP:PC は？（例　2:5）','1:2',{keys:':',look:['aux','sAC'],hint:'AP ＝ PQ、PQ ＝ QC なので、AP:PC ＝ 1:(1＋1)',ans:'AP ＝ PQ ＝ QC なので AP:PC ＝ 1:2',sum:'AP ＝ PQ ＝ QC → AP:PC ＝ 1:2'})],
+ FIN('AP:PC は？（例　2:5）','1:2',{keys:':'}),{chk:()=>Math.abs(D2(A,Pp)/D2(Pp,Cc)-0.5)<1e-9});})(),
+
+(()=>{const L=180,B=[60,255],Dd=[205,50],A=from(B,80,L),Cc=from(Dd,330,L),M=mid(A,Dd),N=mid(B,Cc),Pp=mid(B,Dd);
+ return Q('m5','c2c',3,'四角形 ABCD で AB＝DC です。M、N、P はそれぞれ AD、BC、BD の中点です。∠x（∠PMN）の大きさを求めなさい。',
+ [sg('s1',A,B),sg('s2',B,Cc),sg('s3',Cc,Dd),sg('s4',Dd,A),sg('sBD',B,Dd),sg('sPM',Pp,M),sg('sPN',Pp,N),sg('sMN',M,N),tk(A,B,1),tk(Dd,Cc,1),
+  pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(M,'M'),pt(N,'N'),pt(Pp,'P'),
+  arcV('aP',Pp,M,N,'110°',110,{r:16,lr:22,whole:1}),arcV('ax',M,Pp,N,'x',35,{x:1,r:30})],
+ [CHO('c2c','△PMN はどんな三角形？','PM ＝ PN の二等辺三角形（中点連結定理と AB ＝ DC）',
+   [['正三角形','∠MPN ＝ 110° なので、正三角形ではないよ。'],['直角三角形','直角になる理由はないよ。']],
+   ['sPM','sPN','s1','s3'],'△DAB で M、P は中点 → PM は AB の半分。△BCD で N、P は中点 → PN は DC の半分。','PM ＝ AB ÷ 2、PN ＝ DC ÷ 2、AB ＝ DC なので PM ＝ PN。','中点連結定理 ×2 → PM ＝ PN（二等辺）'),
+  INP('x は何度？',35,{unit:'°',look:['aP','ax'],hint:'底角は (180 − 110) ÷ 2',ans:'x ＝ (180 − 110) ÷ 2 ＝ 35°',sum:'x ＝ 35°',after:{label:{ax:'35°'}}})],
+ FIN('∠x は何度？',35,{unit:'°'}));})(),
+
+/* ---- 面積比・体積比 ---- */
+(()=>{const T=tri3([45,215],0,4,3.5,3,30),U=tri3([195,250],12,6,5.25,4.5,30);
+ return Q('e1','c2d',1,'△ABC ∽ △DEF で、BC＝4、EF＝6 です。△ABC の面積が 8 のとき、△DEF の面積 x を求めなさい。',
+ [polyF('f1',[T.A,T.B,T.C]),polyF('f2',[U.A,U.B,U.C],'b'),sg('s1',T.A,T.B),sg('s2',T.B,T.C),sg('s3',T.C,T.A),sg('t1',U.A,U.B),sg('t2',U.B,U.C),sg('t3',U.C,U.A),
+  pt(T.A,'A'),pt(T.B,'B'),pt(T.C,'C'),pt(U.A,'D'),pt(U.B,'E'),pt(U.C,'F'),LEN('l1',T.B,T.C,'4',4,-1),LEN('l2',U.B,U.C,'6',6,-1),
+  TX('a1',[(T.A[0]+T.B[0]+T.C[0])/3,(T.A[1]+T.B[1]+T.C[1])/3],'8'),TX('ax',[(U.A[0]+U.B[0]+U.C[0])/3,(U.A[1]+U.B[1]+U.C[1])/3],'x',{x:1})],
+ [CHO('c2d','面積の比は？','4:9（相似比 2:3 の2乗）',
+   [['2:3（相似比と同じ）','面積はたて × よこ。どちらも 2:3 倍になるので、面積は2乗の比になるよ。'],['8:27（3乗）','3乗になるのは体積。面積は2乗だよ。']],
+   ['l1','l2'],'相似比は 4:6 ＝ 2:3。面積は、長さ × 長さ。','相似比 2:3 なので、面積比は 2²:3² ＝ 4:9。','面積比 ＝ 相似比の2乗 ＝ 4:9'),
+  INP('x の値は？',18,{look:['a1','ax'],hint:'8:x ＝ 4:9',ans:'x ＝ 8 × 9 ÷ 4 ＝ 18',sum:'8:x ＝ 4:9 → x ＝ 18',after:{label:{ax:'18'}}})],
+ FIN('x の値は？',18),{chk:()=>Math.abs(D2(T.B,T.C)/D2(U.B,U.C)-4/6)<1e-9&&Math.abs(D2(T.A,T.B)/D2(U.A,U.B)-4/6)<1e-9});})(),
+
+(()=>{const SC=60,A=[165,35],B=from(A,245,3*SC),Cc=[B[0]+260,B[1]],D=lerp(A,B,2/3),E=lerp(A,Cc,2/3);
+ return Q('e2','c2d',2,'DE ∥ BC、AD:DB＝2:1 です。△ABC の面積が 45 のとき、四角形 DBCE の面積 x を求めなさい。',
+ [polyF('f1',[D,B,Cc,E],'b'),sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sDE',D,E),{t:'par',p:mid(D,E)},{t:'par',p:mid(B,Cc)},pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(E,'E'),
+  LEN('l1',A,D,'2',2,-1),LEN('l2',D,B,'1',1,-1),TX('ax',[(D[0]+B[0]+Cc[0]+E[0])/4,(D[1]+B[1]+Cc[1]+E[1])/4],'x',{x:1})],
+ [CHO('c2d','△ADE と △ABC の面積の比は？','4:9（相似比 2:3 の2乗）',
+   [['4:1（相似比 2:1 の2乗）','相似な三角形どうしは △ADE と △ABC。対応する辺は AD と AB（全体）。相似比は 2:3 だよ。'],['2:3','面積の比は、相似比の2乗だよ。']],
+   ['sAB','sDE'],'相似比は AD:AB。AB ＝ AD ＋ DB。','AD:AB ＝ 2:3 なので、面積比は 4:9。','△ADE:△ABC ＝ 4:9'),
+  INP('x の値は？',25,{look:['f1'],hint:'△ADE ＝ 45 × 4/9 ＝ 20。四角形 ＝ 45 − 20',ans:'△ADE ＝ 20、x ＝ 45 − 20 ＝ 25',sum:'△ADE ＝ 20 → x ＝ 25',after:{label:{ax:'25'}}})],
+ FIN('x の値は？',25),{chk:()=>Math.abs(area([D,B,Cc,E])/area([A,B,Cc])-25/45)<1e-9});})(),
+
+(()=>{const SC=50,B=[50,240],Cc=[50+5*SC,240],A=[150,45],D=lerp(B,Cc,3/5);
+ return Q('e3','c2d',2,'点Dは辺BC上の点で、BD:DC＝3:2 です。△ABC の面積が 40 のとき、△ABD の面積 x を求めなさい。',
+ [polyF('f1',[A,B,D],'b'),sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),
+  LEN('l1',B,D,'3',3,-1),LEN('l2',D,Cc,'2',2,-1),TX('ax',[(A[0]+B[0]+D[0])/3,(A[1]+B[1]+D[1])/3],'x',{x:1})],
+ [CHO('c2d','△ABD と △ABC の面積の比は？','3:5（高さが同じなので、底辺の比）',
+   [['9:25（相似比の2乗）','△ABD と △ABC は相似ではないよ。2乗を使えるのは相似な図形だけ。'],['3:2','比べたいのは △ABD と △ABC（全体）。底辺は BD と BC だよ。']],
+   ['sAD','sBC'],'△ABD と △ABC は、頂点Aからの高さが同じ。','高さが同じなので、面積比 ＝ 底辺の比 ＝ BD:BC ＝ 3:5。','高さが同じ → 面積比 ＝ 底辺の比 3:5'),
+  INP('x の値は？',24,{look:['f1'],hint:'40 × 3/5',ans:'x ＝ 40 × 3/5 ＝ 24',sum:'x ＝ 40 × 3/5 ＝ 24',after:{label:{ax:'24'}}})],
+ FIN('x の値は？',24),{chk:()=>Math.abs(area([A,B,D])/area([A,B,Cc])-0.6)<1e-9});})(),
+
+(()=>{const A=[105,65],B=[50,240],Cc=[300,240],Dd=[A[0]+Cc[0]-B[0],A[1]+Cc[1]-B[1]],E=mid(A,Dd),F=lnX(B,E,A,Cc);
+ return Q('e4','c2d',3,'平行四辺形 ABCD の面積は 60、E は辺 AD の中点です。BE と AC の交点を F とするとき、△ABF の面積 x を求めなさい。',
+ [polyF('f1',[A,B,F],'b'),sg('sAB',A,B),sg('sBC',B,Cc),sg('sCD',Cc,Dd),sg('sDA',Dd,A),sg('sAC',A,Cc),sg('sBE',B,E),tk(A,E,1),tk(E,Dd,1),
+  pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(E,'E'),pt(F,'F'),TX('ax',[(A[0]+B[0]+F[0])/3,(A[1]+B[1]+F[1])/3],'x',{x:1})],
+ [CHO('c2b','最初の一手は？','AE ∥ BC の砂時計形 △AFE ∽ △CFB → AF:FC ＝ AE:CB ＝ 1:2',
+   [['△ABF ∽ △CDF','AB ∥ DC だけど、F は AC と BE の交点。DF は引かれていないよ。'],['F は AC の中点','F は AC と BE の交点。BE は対角線ではないので、中点とは限らないよ。']],
+   ['sAC','sBE','sDA','sBC'],'AD ∥ BC。F をはさんだ砂時計形を探そう。','△AFE ∽ △CFB で AF:FC ＝ AE:CB ＝ 1:2。','砂時計形 → AF:FC ＝ 1:2'),
+  CHO('c2d','△ABF と △ABC の面積の比は？','1:3（高さが同じなので AF:AC）',
+   [['1:9（相似比の2乗）','△ABF と △ABC は相似ではないよ。'],['1:2','比べるのは AF と AC（全体）。AC ＝ AF ＋ FC だよ。']],
+   ['sAC','sAB'],'△ABF と △ABC は、頂点Bからの高さが同じ。','AF:AC ＝ 1:3 なので、面積比 1:3。','高さが同じ → △ABF:△ABC ＝ 1:3'),
+  INP('x の値は？',10,{look:['f1'],hint:'△ABC ＝ 60 ÷ 2 ＝ 30。その 1/3',ans:'△ABC ＝ 30、x ＝ 30 × 1/3 ＝ 10',sum:'x ＝ 30 × 1/3 ＝ 10',after:{label:{ax:'10'}}})],
+ FIN('x の値は？',10),{chk:()=>Math.abs(area([A,B,F])/area([A,B,Cc,Dd])-10/60)<1e-9});})(),
+
+(()=>{const V=[200,35],Bl=[95,245],Br=[305,245],Pl=mid(V,Bl),Pr=mid(V,Br);
+ return Q('e5','c2d',3,'円すいを、高さの中点を通り底面に平行な平面で切りました。もとの円すいの体積が 64 のとき、下の部分（円すい台）の体積 x を求めなさい。',
+ [{t:'ell',c:[200,245],rx:105,ry:22},{t:'ell',c:mid(Pl,Pr),rx:52.5,ry:11,id:'cut'},sg('s1',V,Bl),sg('s2',V,Br),sg('h',V,[200,245],{dash:1}),
+  tk(V,[200,140],1),tk([200,140],[200,245],1),pt(V,'O'),TX('ax',[200,200],'x',{x:1})],
+ [CHO('c2d','上の小さい円すいと、もとの円すいの体積の比は？','1:8（相似比 1:2 の3乗）',
+   [['1:4（2乗）','2乗は面積の比。体積は 長さ × 長さ × 長さ なので3乗だよ。'],['1:2（相似比のまま）','体積は、たて・よこ・高さのすべてが 1/2 倍になるよ。']],
+   ['cut'],'高さの中点で切ると、上の円すいはもとの円すいと相似で、相似比は 1:2。','相似比 1:2 なので、体積比は 1³:2³ ＝ 1:8。','体積比 ＝ 相似比の3乗 ＝ 1:8'),
+  INP('x の値は？',56,{hint:'上の円すい ＝ 64 × 1/8 ＝ 8。下の部分 ＝ 64 − 8',ans:'上の円すい ＝ 8、x ＝ 64 − 8 ＝ 56',sum:'上 ＝ 8 → x ＝ 56',after:{label:{ax:'56'}}})],
+ FIN('x の値は？',56),{noGeo:1});})(),
+
+/* ---- 直角三角形の相似 ---- */
+(()=>{const SC=26,A=[50,240],B=[50+8*SC,240],Cc=[50,240-6*SC],D=lerp(A,B,0.5),E=lnX(D,[D[0],0],Cc,B);
+ return Q('r1','c2e',1,'∠A＝90°、DE⊥AB です。DE の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sDE',D,E),rt(A,B,Cc),rt(D,E,B),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(E,'E'),
+  LEN('l1',A,Cc,'6',6,1),LEN('l2',A,D,'4',4,-1),LEN('l3',D,B,'4',4,-1),LEN('ax',D,E,'x',3,1,{x:1,off:12})],
+ [CHO('c2e','x をふくむ三角形と相似な三角形は？','△DBE ∽ △ABC（∠B が共通で、直角がある）',
+   [['△DBE ∽ △ACB','頂点の対応に注意。直角は D と A、共通の角は B。D↔A、B↔B、E↔C だよ。'],['相似な三角形はない','∠B が共通で、∠BDE ＝ ∠BAC ＝ 90°。2組の角が等しいよ。']],
+   ['sDE','sAC'],'∠B をふくむ直角三角形が2つ。','∠B 共通、直角どうしで △DBE ∽ △ABC。','△DBE ∽ △ABC（∠B 共通・直角）'),
+  INP('x の値は？',3,{look:['l1','l3','ax'],hint:'DE:AC ＝ DB:AB ＝ 4:8',ans:'x:6 ＝ 1:2 なので x ＝ 3',sum:'x:6 ＝ 4:8 → x ＝ 3',after:{label:{ax:'3'}}})],
+ FIN('x の値は？',3),{scale:SC});})(),
+
+(()=>{const SC=18,A=[50,240],B=[50+15*SC,240],Cc=[50,240-8*SC];
+ const Dp=(()=>{const t=((A[0]-Cc[0])*(B[0]-Cc[0])+(A[1]-Cc[1])*(B[1]-Cc[1]))/Math.pow(D2(B,Cc),2);return lerp(Cc,B,t);})();
+ return Q('r2','c2e',2,'∠A＝90°、AH⊥BC です。AB＝15、AC＝8、BC＝17 のとき、AH の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sAH',A,Dp),rt(A,B,Cc),rt(Dp,A,B),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dp,'H'),
+  LEN('l1',A,B,'15',15,-1),LEN('l2',A,Cc,'8',8,1),LEN('l3',Cc,B,'17',17,1),LEN('ax',A,Dp,'x',120/17,1,{x:1,off:12})],
+ [CHO('c2e','AH をふくむ三角形と相似で、辺の長さがわかっている三角形は？','△HAC ∽ △ABC（∠C が共通で、直角がある）',
+   [['△HAC ∽ △BAC（同じ順）','対応は直角どうし（H↔A）、共通の角どうし（C↔C）、残り（A↔B）だよ。'],['△ABH ∽ △ACH（合同）','2つの小さい三角形は相似だけど、どちらも辺の長さがわかっていないよ。']],
+   ['sAH','sAC','sBC'],'∠C をふくむ直角三角形 △HAC と、大きい △ABC。','∠C 共通、∠AHC ＝ ∠BAC ＝ 90° なので △HAC ∽ △ABC（H↔A、A↔B、C↔C）。','△HAC ∽ △ABC'),
+  INP('x の値は？（分数は 7/3 のように）','120/17',{keys:'/',look:['l1','l2','l3','ax'],hint:'AH:BA ＝ AC:BC → x:15 ＝ 8:17',ans:'x ＝ 15 × 8 ÷ 17 ＝ 120/17',sum:'x:15 ＝ 8:17 → x ＝ 120/17',after:{label:{ax:'120/17'}}})],
+ FIN('x の値は？（分数は 7/3 のように）','120/17',{keys:'/'}),{scale:SC});})(),
+
+
+(()=>{const SC=20,A=[50,250],B=[50+14*SC,250],Cc=[50+14*SC,250-9*SC],Dd=[50,250-9*SC],Pp=[50+6*SC,250],Qq=[50+14*SC,250-(16/3)*SC];
+ return Q('r3','c2e',2,'長方形 ABCD で、点Pは辺AB上、点Qは辺BC上にあり、∠DPQ＝90° です。BQ の長さ x を求めなさい。',
+ [sg('s1',A,B),sg('s2',B,Cc),sg('s3',Cc,Dd),sg('s4',Dd,A),sg('sDP',Dd,Pp),sg('sPQ',Pp,Qq),rt(Pp,Dd,Qq),rt(A,B,Dd),rt(B,Cc,A),
+  pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(Pp,'P'),pt(Qq,'Q'),arcS('m1',Dd,A,Pp,'●',{hidden:1,r:28}),arcS('m2',Pp,B,Qq,'●',{hidden:1,r:30}),
+  LEN('l1',A,Dd,'9',9,-1),LEN('l2',A,Pp,'6',6,-1),LEN('l3',Pp,B,'8',8,-1),LEN('ax',B,Qq,'x',16/3,-1,{x:1})],
+ [CHO('c2e','x をふくむ △PBQ と相似な三角形は？','△DAP（∠ADP ＝ ∠BPQ）',
+   [['△DPQ','△DPQ の辺の長さは、どれもわかっていないよ。'],['相似な三角形はない','∠APD ＋ ∠BPQ ＝ 90°、∠APD ＋ ∠ADP ＝ 90°。だから ∠ADP ＝ ∠BPQ。']],
+   ['sDP','sPQ'],'P のまわりは一直線で 180°。∠DPQ ＝ 90° なので、∠APD ＋ ∠BPQ ＝ 90°。','∠ADP ＝ ∠BPQ（どちらも 90° − ∠APD）、直角どうしで △DAP ∽ △PBQ。','直角が3つ並ぶ形 → △DAP ∽ △PBQ',{show:['m1','m2'],match:['m1','m2']}),
+  INP('x の値は？（分数は 7/3 のように）','16/3',{keys:'/',look:['l1','l2','l3','ax'],hint:'対応：D↔P、A↔B、P↔Q。AP:BQ ＝ AD:BP → 6:x ＝ 9:8',ans:'x ＝ 6 × 8 ÷ 9 ＝ 16/3',sum:'6:x ＝ 9:8 → x ＝ 16/3',after:{label:{ax:'16/3'}}})],
+ FIN('x の値は？（分数は 7/3 のように）','16/3',{keys:'/'}),{scale:SC});})(),
+
+(()=>{const SC=28,A=[40,250],B=[40+12*SC,250],Cc=inter(A,60,B,150),Dd=(()=>{const t=((Cc[0]-A[0])*(B[0]-A[0])+(Cc[1]-A[1])*(B[1]-A[1]))/Math.pow(D2(A,B),2);return lerp(A,B,t);})(),E=(()=>{const t=((Dd[0]-A[0])*(Cc[0]-A[0])+(Dd[1]-A[1])*(Cc[1]-A[1]))/Math.pow(D2(A,Cc),2);return lerp(A,Cc,t);})();
+ return Q('r4','c2e',3,'∠ACB＝90°、CD⊥AB、DE⊥AC です。AB＝12、AC＝6 のとき、AE の長さ x を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sCD',Cc,Dd),sg('sDE',Dd,E),rt(Cc,A,B),rt(Dd,Cc,B),rt(E,Dd,Cc),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(E,'E'),
+  LEN('l1',A,B,'12',12,-1),LEN('l2',A,Cc,'6',6,1),LEN('ax',A,E,'x',1.5,-1,{x:1,off:12}),LEN('g1',A,Dd,'3',3,1,{hidden:1,off:12})],
+ [CHO('c2e','最初に求める長さは？','AD（△ACD ∽ △ABC から AD:AC ＝ AC:AB）',
+   [['AE をすぐに求める','AE をふくむ △ADE の辺は、まだ1つもわかっていないよ。まず AD を出そう。'],['CD','CD を出しても AE には近づかないよ。AE と同じ直線の上にある AD ではなく、AE の三角形 △ADE の斜辺 AD が必要。']],
+   ['sCD','sAC','sAB'],'∠A をふくむ直角三角形が3つある（△ABC、△ACD、△ADE）。大きい方から順に使う。','△ACD ∽ △ABC で AD:AC ＝ AC:AB、AD ＝ 6 × 6 ÷ 12 ＝ 3。','△ACD ∽ △ABC → AD ＝ 3',{show:['g1']}),
+  CHO('c2e','次に使う相似は？','△AED ∽ △ADC（∠A 共通・直角）→ AE:AD ＝ AD:AC',
+   [['△AED ∽ △ABC で AE:AB ＝ AD:AC','対応に注意。△AED の直角は E、△ABC の直角は C。AE↔AC、AD↔AB だよ。'],['△AED ≡ △ACD','大きさがちがうので合同ではないよ。']],
+   ['sDE','g1'],'今度は △ADE と、さっきの △ACD を比べる。','∠A 共通、∠AED ＝ ∠ADC ＝ 90° なので △AED ∽ △ADC。AE:AD ＝ AD:AC。','△AED ∽ △ADC → AE:AD ＝ AD:AC'),
+  INP('x の値は？',['1.5','3/2'],{keys:'./',look:['g1','l2','ax'],hint:'x:3 ＝ 3:6',ans:'x ＝ 3 × 3 ÷ 6 ＝ 1.5',sum:'x ＝ 3 × 3 ÷ 6 ＝ 1.5',after:{label:{ax:'1.5'}}})],
+ FIN('x の値は？',['1.5','3/2'],{keys:'./'}),{scale:SC});})(),
+
+(()=>{const SC=16,B=[40,245],Cc=[40+20*SC,245],A=(()=>{const h=Math.sqrt(16*4)*SC;return [40+16*SC,245-h];})(),H=[A[0],245],M=mid(B,Cc);
+ return Q('r5','c2e',3,'∠BAC＝90°、AH⊥BC、M は BC の中点です。BH＝16、HC＝4 のとき、AM と AH の長さの比 AM:AH を求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sAH',A,H),sg('sAM',A,M),rt(A,B,Cc),rt(H,A,Cc),tk(B,M,1),tk(M,Cc,1),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(H,'H'),pt(M,'M'),
+  LEN('l1',B,H,'16',16,-1),LEN('l2',H,Cc,'4',4,-1)],
+ [CHO('c2e','AH を求めるのに使う相似は？','△ABH ∽ △CAH（∠BAH ＝ ∠C）→ AH:BH ＝ CH:AH',
+   [['△ABH ∽ △ACH（合同）','BH ＝ 16、HC ＝ 4 で大きさがちがうよ。'],['△ABM ∽ △ACM','M は中点だけど、この2つは相似ではないよ。']],
+   ['sAH'],'直角三角形の高さ AH は、2つの小さな直角三角形の共通の辺。','△ABH ∽ △CAH なので AH:BH ＝ CH:AH、AH × AH ＝ 16 × 4 ＝ 64、AH ＝ 8。','△ABH ∽ △CAH → AH ＝ 8'),
+  CHO(null,'AM の長さは？','10（M は直角三角形の斜辺の中点なので、AM ＝ BM ＝ CM）',
+   [['8','8 は AH の長さ。AM とは別の線分だよ。'],['求められない','直角三角形の斜辺の中点は、3つの頂点から等しい距離にある（外接円の中心）。']],
+   ['sAM'],'∠A ＝ 90° なので、A は BC を直径とする円の上にある。M はその円の中心。','AM ＝ BC ÷ 2 ＝ 20 ÷ 2 ＝ 10。','AM ＝ BC ÷ 2 ＝ 10'),
+  INP('AM:AH は？（いちばん簡単な整数の比で）','5:4',{keys:':',hint:'10:8 を簡単にする',ans:'10:8 ＝ 5:4',sum:'AM:AH ＝ 10:8 ＝ 5:4'})],
+ FIN('AM:AH は？（いちばん簡単な整数の比で）','5:4',{keys:':'}),{chk:()=>Math.abs(D2(A,M)/D2(A,H)-1.25)<1e-9&&Math.abs(D2(A,H)/SC-8)<1e-9});})()
+);
+STAGE.push(
+(()=>{const SC=35,A=[140,70],Dd=[140+4*SC,70],B=[70,235],Cc=[70+6*SC,235],O=lnX(A,Cc,B,Dd);
+ return Q('g21','stage',4,'AD ∥ BC の台形 ABCD で、対角線の交点を O とします。AD＝4、BC＝6、△AOD の面積が 8 のとき、△AOB の面積を求めなさい。',
+ [polyF('f1',[A,O,B],'b'),polyF('f0',[A,O,Dd]),sg('s1',A,B),sg('s2',B,Cc),sg('s3',Cc,Dd),sg('s4',Dd,A),sg('dAC',A,Cc),sg('dBD',B,Dd),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(O,'O'),
+  LEN('l1',A,Dd,'4',4,1),LEN('l2',B,Cc,'6',6,-1),TX('a0',[(A[0]+O[0]+Dd[0])/3,(A[1]+O[1]+Dd[1])/3+2],'8'),TX('ax',[(A[0]+O[0]+B[0])/3,(A[1]+O[1]+B[1])/3],'?')],
+ [CHO('c2b','最初の一手は？','△AOD ∽ △COB（砂時計形）→ DO:OB ＝ AD:CB ＝ 4:6',[['△AOB ∽ △COD','この2つは相似ではない（面積は等しくなる）よ。'],['O は対角線の中点','台形の対角線は、中点で交わるとは限らないよ。']],['dAC','dBD'],'AD ∥ BC で、O をはさむ砂時計形。','DO:OB ＝ 4:6。','砂時計形 → DO:OB ＝ 2:3'),
+  CHO('c2d','△AOB と △AOD の面積の比は？','6:4（高さが同じなので BO:OD）',[['36:16（相似比の2乗）','△AOB と △AOD は相似ではないよ。'],['1:1','底辺 BO と OD の長さがちがうよ。']],['f1','f0'],'△AOB と △AOD は、頂点 A からの高さが同じ。','面積比 ＝ BO:OD ＝ 6:4。','高さが同じ → △AOB:△AOD ＝ 6:4'),
+  INP('△AOB の面積は？',12,{hint:'8 × 6/4',ans:'8 × 6/4 ＝ 12',sum:'8 × 3/2 ＝ 12'})],
+ FIN('△AOB の面積は？',12),{ch:2,types:['c2b','c2d'],chk:()=>Math.abs(area([A,O,B])/area([A,O,Dd])-1.5)<1e-9});})(),
+
+(()=>{const A=[175,35],B=[50,250],Cc=[340,250],D=mid(A,B),E=mid(A,Cc),G=lnX(B,E,Cc,D);
+ return Q('g22','stage',4,'D、E は辺 AB、AC の中点で、BE と CD の交点を G とします。CD＝12 のとき、GC の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sBE',B,E),sg('sCD',Cc,D),sg('sDE',D,E,{dash:1,hidden:1}),tk(A,D,1),tk(D,B,1),tk(A,E,2),tk(E,Cc,2),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(D,'D'),pt(E,'E'),pt(G,'G')],
+ [CHO('c2c','最初の一手は？','DE を結ぶ → 中点連結定理で DE ∥ BC、DE ＝ BC ÷ 2',[['G は CD の中点','G は2本の線の交点。中点とは限らないよ。'],['△ABE ∽ △ACD','この2つが相似になる理由はないよ。']],['sBE','sCD'],'中点が2つある。結ぶと？','DE ∥ BC、DE ＝ BC ÷ 2。','DE を結ぶ（中点連結定理）',{show:['sDE']}),
+  CHO('c2b','次は？','△GDE ∽ △GCB（砂時計形）→ DG:GC ＝ DE:CB ＝ 1:2',[['DG:GC ＝ 1:1','DE は BC の半分なので、比は 1:2 だよ。'],['DG:GC ＝ 2:1','D 側が小さい三角形（DE 側）。DG:GC ＝ 1:2 だよ。']],['sDE','sBC'],'DE ∥ BC で、G をはさむ砂時計形。','DG:GC ＝ 1:2。','砂時計形 → DG:GC ＝ 1:2'),
+  INP('GC の長さは？',8,{hint:'12 × 2/3',ans:'12 × 2/3 ＝ 8',sum:'GC ＝ 12 × 2/3 ＝ 8'})],
+ FIN('GC の長さは？',8),{ch:2,types:['c2c','c2b'],chk:()=>Math.abs(D2(G,Cc)/D2(D,Cc)-2/3)<1e-9});})(),
+
+(()=>{const SC=20,A=[40,245],B=[40+16*SC,245],H=[40+4*SC,245],Cc=[H[0],245-Math.sqrt(4*12)*SC];
+ return Q('g23','stage',4,'∠ACB＝90°、CH⊥AB です。AH＝4、AB＝16 のとき、AC の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,Cc),sg('sBC',B,Cc),sg('sCH',Cc,H),rt(Cc,A,B),rt(H,Cc,B),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(H,'H'),LEN('l1',A,H,'4',4,-1),LEN('l2',A,B,'16',16,-1,{off:22})],
+ [CHO('c2e','AC を求めるのに使う相似は？','△ACH ∽ △ABC（∠A 共通・直角）→ AC:AB ＝ AH:AC',[['△ACH ∽ △CBH','この相似では AC と AB が同時に出てこないよ。'],['△ACH ≡ △BCH','合同ではないよ。']],['sAC','sCH'],'∠A をふくむ直角三角形が2つ。','AC:AB ＝ AH:AC、AC × AC ＝ AH × AB。','△ACH ∽ △ABC → AC × AC ＝ 4 × 16'),
+  INP('AC の長さは？',8,{hint:'AC × AC ＝ 64',ans:'AC ＝ 8',sum:'AC × AC ＝ 64 → AC ＝ 8'})],
+ FIN('AC の長さは？',8),{ch:2,types:['c2e','c2a'],chk:()=>Math.abs(D2(A,Cc)/SC-8)<1e-9});})(),
+
+(()=>{const A=[85,70],B=[40,235],Cc=[315,235],Dd=[A[0]+Cc[0]-B[0],A[1]+Cc[1]-B[1]],E=mid(Cc,Dd),F=lnX(A,E,B,Dd);
+ return Q('g24','stage',4,'平行四辺形 ABCD の面積は 72、E は辺 CD の中点です。AE と BD の交点を F とするとき、△DEF の面積を求めなさい。',
+ [polyF('f1',[Dd,E,F],'b'),sg('s1',A,B),sg('s2',B,Cc),sg('s3',Cc,Dd),sg('s4',Dd,A),sg('sAE',A,E),sg('sBD',B,Dd),tk(Cc,E,1),tk(E,Dd,1),pt(A,'A'),pt(B,'B'),pt(Cc,'C'),pt(Dd,'D'),pt(E,'E'),pt(F,'F')],
+ [CHO('c2b','最初の一手は？','AB ∥ DE の砂時計形 △FAB ∽ △FED → DF:FB ＝ DE:AB ＝ 1:2',[['F は BD の中点','F は AE と BD の交点。中点とは限らないよ。'],['△ADF ∽ △CBF','CF は引かれていないし、この2つが相似になる理由はないよ。']],['sAE','sBD','s1','s3'],'AB ∥ DC。F をはさむ砂時計形を探そう。','DF:FB ＝ 1:2、EF:FA ＝ 1:2。','砂時計形 → DF:FB ＝ 1:2'),
+  CHO('c2d','△ADF の面積は？','12（△ABD ＝ 36 の 1/3）',[['24','DF は DB の 1/3。△ADF は △ABD の 1/3 だよ。'],['18','F は BD の中点ではないよ。']],['sBD'],'△ADF と △ABD は、頂点 A からの高さが同じ。','△ABD ＝ 72 ÷ 2 ＝ 36、△ADF ＝ 36 × 1/3 ＝ 12。','△ADF ＝ 12'),
+  INP('△DEF の面積は？',6,{hint:'△DEF:△ADF ＝ EF:FA ＝ 1:2',ans:'12 × 1/2 ＝ 6',sum:'△DEF ＝ 12 × 1/2 ＝ 6'})],
+ FIN('△DEF の面積は？',6),{ch:2,types:['c2b','c2d'],chk:()=>Math.abs(area([Dd,E,F])/area([A,B,Cc,Dd])-6/72)<1e-9});})()
+);
+/*CH2-END*/
 /*DATA-END*/
+
+/* ===== 章の情報 ===== */
+SKILLS.forEach(k=>{if(!k.ch)k.ch=1;});STAGE.forEach(p=>{if(!p.ch)p.ch=1;});
+const CH_DESC=['','図の中の「等しい角」と「決まった角の和」に気づく','相似な三角形を見つけて、比で長さ・面積を求める','仮定から結論まで、根拠をつないで示す','直角三角形をつくって、長さを求める','円の中の「等しい角」と「直角」に気づく','三角比で、辺と角を行き来する','比の定理と円の定理を使いこなす','図形を座標とベクトルの式に置きかえる'];
+const NCH=CHAPTERS.length;
+function chSkills(c){return SKILLS.filter(k=>k.ch===c);}
+function chReady(c){return chSkills(c).length>0;}
 
 /* ===== 保存 ===== */
 const KEY='zukei-itte-v1';
-function blank(){const s={sk:{},idx:{},stage:{clear:false,best:null,tries:0}};SKILLS.forEach(k=>{s.sk[k.id]={st:0,streak:0,due:null};s.idx[k.id]=0});return s;}
-function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.sk){const b=blank();SKILLS.forEach(k=>{if(v.sk[k.id])b.sk[k.id]=v.sk[k.id];if(v.idx&&v.idx[k.id]!=null)b.idx[k.id]=v.idx[k.id]});if(v.stage)b.stage=v.stage;return b;}}catch(e){}return blank();}
+function blankStage(){return {clear:false,best:null,tries:0};}
+function blank(){const s={sk:{},idx:{},stage:{},cur:1};SKILLS.forEach(k=>{s.sk[k.id]={st:0,streak:0,due:null};s.idx[k.id]=0});for(let c=1;c<=NCH;c++)s.stage[c]=blankStage();return s;}
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.sk){const b=blank();SKILLS.forEach(k=>{if(v.sk[k.id])b.sk[k.id]=v.sk[k.id];if(v.idx&&v.idx[k.id]!=null)b.idx[k.id]=v.idx[k.id]});
+  if(v.stage){if('clear' in v.stage)b.stage[1]=v.stage;else for(const c in v.stage)b.stage[c]=v.stage[c];}if(v.cur)b.cur=v.cur;return b;}}catch(e){}return blank();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let S=load();
 const ST=['練習中','習得','定着'];
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 const CHECK=(()=>{try{return location.hash==='#check'}catch(e){return false}})(); // 確認用：URLの末尾に #check をつけると全部開く（記録は変えない）
-function unlocked(i){const k=SKILLS[i];if(!k.ready)return false;if(i===0||CHECK)return true;return S.sk[SKILLS[i-1].id].st>=1;}
-function stageOpen(){return CHECK||SKILLS.every(k=>S.sk[k.id].st>=1);}
+function chOpen(c){if(!chReady(c))return false;return c===1||CHECK||S.stage[c-1].clear;}
+function unlocked(i){const k=SKILLS[i];if(!k||!chOpen(k.ch))return false;if(CHECK)return true;const list=chSkills(k.ch),j=list.indexOf(k);return j===0||S.sk[list[j-1].id].st>=1;}
+function idxOf(id){return SKILLS.findIndex(k=>k.id===id);}
+function stageOpen(c){return chOpen(c)&&(CHECK||chSkills(c).every(k=>S.sk[k.id].st>=1));}
 function isDue(id){const s=S.sk[id];return s.st===1&&s.due&&today()>=s.due;}
 
 /* ===== 小物 ===== */
@@ -1133,32 +1511,39 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.to
 function toast(t){const e=$('#toast');e.innerHTML=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600);}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
 function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function normAns(v){return String(v).replace(/\s/g,'').replace(/－|−/g,'-').replace(/：/g,':');}
+function sameAns(v,ans){if(Array.isArray(ans))return ans.some(a=>sameAns(v,a));if(typeof ans==='number')return v!==''&&!/[^0-9.\-]/.test(v)&&Math.abs(Number(v)-ans)<1e-9;return normAns(v)===normAns(ans);}
+function ansText(a){return Array.isArray(a)?a[0]:a;}
+function passB(c){const n=STAGE.filter(p=>p.ch===c).length;return Math.ceil(n*0.8);}
 
 /* ===== ホーム ===== */
+function selectCh(c){if(!chOpen(c))return;S.cur=c;save();renderHome();}
 function renderHome(){
+  if(!chOpen(S.cur))S.cur=1;
+  const c=S.cur,list=chSkills(c);
+  $('#chH').innerHTML=`<b>第${c}章　${CHAPTERS[c-1]}</b><span>${CH_DESC[c]||''}</span>`;
   let h='';
-  SKILLS.forEach((k,i)=>{
-    const s=S.sk[k.id],un=unlocked(i);
+  list.forEach((k,j)=>{
+    const i=idxOf(k.id),s=S.sk[k.id],un=unlocked(i);
     let chip,cls='';
-    if(!k.ready){chip='<span class="chip lock">準備中</span>';cls='locked';}
-    else if(!un){chip='<span class="chip lock">🔒 前の型を習得すると開く</span>';cls='locked';}
+    if(!un){chip='<span class="chip lock">🔒 前の型を習得すると開く</span>';cls='locked';}
     else{chip=`<span class="chip s${s.st}">${ST[s.st]}</span>`;cls='s'+s.st;if(isDue(k.id))chip+=' <span class="chip due">復習の日</span>';}
     let dots='';
-    if(k.ready&&un&&s.st===0){dots='<span class="dots">'+[0,1,2].map(j=>`<i class="${j<s.streak?'f':''}"></i>`).join('')+'</span>';}
-    if(k.ready&&un&&s.st===1&&!isDue(k.id)&&s.due){dots=`<span style="font-size:11px;color:var(--sub)">復習：${s.due.slice(5).replace('-','/')}〜</span>`;}
+    if(un&&s.st===0){dots='<span class="dots">'+[0,1,2].map(q=>`<i class="${q<s.streak?'f':''}"></i>`).join('')+'</span>';}
+    if(un&&s.st===1&&!isDue(k.id)&&s.due){dots=`<span style="font-size:11px;color:var(--sub)">復習：${s.due.slice(5).replace('-','/')}〜</span>`;}
     let act='';
-    if(k.ready&&un){
-      act=`<button class="btn pri" onclick="startSkill('${k.id}')">練習する</button>`;
-      if(isDue(k.id))act=`<button class="btn" style="border-color:var(--look);color:var(--look)" onclick="startReview('${k.id}')">復習する</button>`+act;
-    }
-    h+=`<div class="node ${cls}"><div class="num">${s.st===2?'✓':i+1}</div><div class="bd"><div class="nm">${k.name}</div><div class="ds">${k.desc}</div><div class="meta">${chip}${dots}</div></div>${act?`<div class="act">${act}</div>`:''}</div>`;
+    if(un){act=`<button class="btn pri" onclick="startSkill('${k.id}')">練習する</button>`;
+      if(isDue(k.id))act=`<button class="btn" style="border-color:var(--look);color:var(--look)" onclick="startReview('${k.id}')">復習する</button>`+act;}
+    h+=`<div class="node ${cls}"><div class="num">${s.st===2?'✓':j+1}</div><div class="bd"><div class="nm">${k.name}</div><div class="ds">${k.desc}</div><div class="meta">${chip}${dots}</div></div>${act?`<div class="act">${act}</div>`:''}</div>`;
   });
-  const op=stageOpen(),sg0=S.stage;
-  const best=sg0.best?`<span style="font-size:11px;color:var(--sub)">ベスト：前半 ${sg0.best.a}/10・${fmt(sg0.best.ta)}　後半 ${sg0.best.b}/5・${fmt(sg0.best.tb)}</span>`:'';
-  h+=`<div class="node ${op?(sg0.clear?'s2':''):'locked'}" style="border-style:${op?'solid':'dashed'}"><div class="num">${sg0.clear?'✓':'★'}</div><div class="bd"><div class="nm">総合ステージ</div><div class="ds">前半：最初の一手を選ぶ10問（8問以上で合格）／後半：ステップなしで最後まで解く5問（4問以上で合格）。時間制限はなく、かかった時間を記録します。両方合格で第1章クリア。</div><div class="meta">${op?(sg0.clear?'<span class="chip s2">第1章クリア</span>':'<span class="chip s0">挑戦できます</span>'):'<span class="chip lock">🔒 7つの型がすべて習得になると開く</span>'}${best}</div></div>${op?`<div class="act"><button class="btn pri" onclick="startStage()">挑戦する</button></div>`:''}</div>`;
+  const op=stageOpen(c),sg0=S.stage[c],nb=STAGE.filter(p=>p.ch===c).length;
+  const best=sg0.best?`<span style="font-size:11px;color:var(--sub)">ベスト：前半 ${sg0.best.a}/10・${fmt(sg0.best.ta)}　後半 ${sg0.best.b}/${nb}・${fmt(sg0.best.tb)}</span>`:'';
+  const nextTxt=c<NCH?`両方合格で第${c}章クリア、第${c+1}章が開きます。`:'両方合格で、全章クリアです。';
+  h+=`<div class="node ${op?(sg0.clear?'s2':''):'locked'}" style="border-style:${op?'solid':'dashed'}"><div class="num">${sg0.clear?'✓':'★'}</div><div class="bd"><div class="nm">総合ステージ</div><div class="ds">前半：最初の一手を選ぶ10問（8問以上で合格）／後半：ステップなしで最後まで解く${nb}問（${passB(c)}問以上で合格）。時間制限はなく、かかった時間を記録します。${nextTxt}</div><div class="meta">${op?(sg0.clear?`<span class="chip s2">第${c}章クリア</span>`:'<span class="chip s0">挑戦できます</span>'):`<span class="chip lock">🔒 ${list.length}つの型がすべて習得になると開く</span>`}${best}</div></div>${op?`<div class="act"><button class="btn pri" onclick="startStage()">挑戦する</button></div>`:''}</div>`;
   $('#tree').innerHTML=h;
-  $('#road').innerHTML=CHAPTERS.map((c,i)=>`<li class="${i===0?'cur':''}">第${i+1}章　${c}${i===5?'<em>ここから高校</em>':''}</li>`).join('');
-  $('#testBtn').disabled=!PROBS.some(p=>unlocked(SKILLS.findIndex(k=>k.id===p.skill)));
+  $('#road').innerHTML=CHAPTERS.map((n,i)=>{const cc=i+1,o=chOpen(cc),cl=S.stage[cc]&&S.stage[cc].clear;
+    return `<li class="${o?'open':''} ${cc===c?'cur':''}" ${o?`onclick="selectCh(${cc})"`:''}>第${cc}章　${n}${cc===6?'<em style="font-style:normal;font-size:11px;color:var(--sub)">（高校）</em>':''}<span class="st ${cl?'c':(o?'o':'')}">${cl?'クリア':(o?'挑戦中':'🔒')}</span></li>`;}).join('');
+  $('#testBtn').disabled=!PROBS.some(p=>skillOf(p.skill).ch===c&&unlocked(idxOf(p.skill)));
 }
 
 /* ===== 図 ===== */
@@ -1167,10 +1552,10 @@ function f(n){return Math.round(n*100)/100;}
 const N360=a=>((a%360)+360)%360;
 function raysAtPt(p,c){const r=[];p.fig.forEach(e=>{
   if(e.t==='line'){const t=e.d*Math.PI/180,dx=c[0]-e.p[0],dy=-(c[1]-e.p[1]);if(Math.abs(Math.cos(t)*dy-Math.sin(t)*dx)<0.5)r.push(N360(e.d),N360(e.d+180));}
-  if(e.t==='seg'){const ea=Math.hypot(c[0]-e.a[0],c[1]-e.a[1]),eb=Math.hypot(c[0]-e.b[0],c[1]-e.b[1]),L=Math.hypot(e.a[0]-e.b[0],e.a[1]-e.b[1]);
-    if(ea<0.5)r.push(dirTo(c,e.b));else if(eb<0.5)r.push(dirTo(c,e.a));else if(Math.abs(ea+eb-L)<0.01){r.push(dirTo(c,e.a),dirTo(c,e.b));}}});
+  if(e.t==='seg'||e.t==='vec'){const ea=Math.hypot(c[0]-e.a[0],c[1]-e.a[1]),eb=Math.hypot(c[0]-e.b[0],c[1]-e.b[1]),L=Math.hypot(e.a[0]-e.b[0],e.a[1]-e.b[1]);
+    if(ea<0.5)r.push(dirTo(c,e.b));else if(eb<0.5)r.push(dirTo(c,e.a));else if(Math.abs(ea+eb-L)<0.01){r.push(dirTo(c,e.a),dirTo(c,e.b));}}
+  if(e.t==='circle'){const d=Math.hypot(c[0]-e.c[0],c[1]-e.c[1]);if(Math.abs(d-e.r)<0.5){const t=dirTo(e.c,c);r.push(N360(t+90),N360(t-90));}}});
   return [...new Set(r.map(x=>Math.round(x*1000)/1000))].sort((a,b)=>a-b);}
-// 点の名前は、角の印（隠れている印も含む）がない、いちばん広いすき間の真ん中に置く
 function freeDir(p,c){const r=raysAtPt(p,c);if(!r.length)return 315;
   const arcs=p.fig.filter(e=>e.t==='arc'&&Math.hypot(e.c[0]-c[0],e.c[1]-c[1])<0.5);
   let best=null;
@@ -1183,22 +1568,37 @@ function drawFig(p,st){
   p.fig.forEach(e=>{
     if(e.hidden&&!st.shown.has(e.id))return;
     const c=(st.look.has(e.id)?' look':'')+(st.match.has(e.id)?' match':'');
-    if(e.t==='line'){const a=P(e.p,-700,e.d),b=P(e.p,700,e.d);L+=`<line class="fl${c}" x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}"/>`;}
+    if(e.t==='line'){const a=P(e.p,-700,e.d),b=P(e.p,700,e.d);L+=`<line class="fl${e.dash?' aux':''}${c}" x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}"/>`;}
     else if(e.t==='arc'){
       const s=P(e.c,e.r,e.a1),t=P(e.c,e.r,e.a2),span=((e.a2-e.a1)%360+360)%360,lg=span>180?1:0;
       A+=`<path class="wedge${c}" d="M${f(e.c[0])} ${f(e.c[1])} L${f(s[0])} ${f(s[1])} A${e.r} ${e.r} 0 ${lg} 0 ${f(t[0])} ${f(t[1])} Z"/>`;
       A+=`<path class="fa${c}" d="M${f(s[0])} ${f(s[1])} A${e.r} ${e.r} 0 ${lg} 0 ${f(t[0])} ${f(t[1])}"/>`;
-      const lab=st.labels[e.id]||e.label,isx=e.x&&!st.labels[e.id];
+      const lab=st.labels[e.id]!=null?st.labels[e.id]:e.label,isx=e.x&&st.labels[e.id]==null;
       const m=P(e.c,e.r+(e.lr||(isx?14:22)),e.a1+span/2);
       if(lab)T+=`<text class="lab${isx?' x':''}${lab==='●'||lab==='○'?' mk':''}${c}" x="${f(m[0])}" y="${f(m[1])}">${esc(lab)}</text>`;
     }
-    else if(e.t==='seg'){L+=`<line class="fl${e.dash?' aux':''}${e.ghost?' ghost':''}${c}" x1="${f(e.a[0])}" y1="${f(e.a[1])}" x2="${f(e.b[0])}" y2="${f(e.b[1])}"/>`;}
+    else if(e.t==='seg'){L+=`<line class="fl${e.dash?' aux':''}${e.ghost?' ghost':''}${e.thick?' thick':''}${c}" x1="${f(e.a[0])}" y1="${f(e.a[1])}" x2="${f(e.b[0])}" y2="${f(e.b[1])}"/>`;}
+    else if(e.t==='vec'){const d=Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),h1=[e.b[0]-11*Math.cos(d-0.4),e.b[1]-11*Math.sin(d-0.4)],h2=[e.b[0]-11*Math.cos(d+0.4),e.b[1]-11*Math.sin(d+0.4)];
+      L+=`<line class="fl vec${c}" x1="${f(e.a[0])}" y1="${f(e.a[1])}" x2="${f(e.b[0])}" y2="${f(e.b[1])}"/><path class="vh${c}" d="M${f(h1[0])} ${f(h1[1])} L${f(e.b[0])} ${f(e.b[1])} L${f(h2[0])} ${f(h2[1])}"/>`;}
+    else if(e.t==='ell'){L+=`<ellipse class="fl${c}" cx="${f(e.c[0])}" cy="${f(e.c[1])}" rx="${f(e.rx)}" ry="${f(e.ry)}" fill="none"/>`;}
+    else if(e.t==='circle'){L+=`<circle class="fl${e.dash?' aux':''}${c}" cx="${f(e.c[0])}" cy="${f(e.c[1])}" r="${f(e.r)}" fill="none"/>`;}
+    else if(e.t==='poly'){A=`<path class="pf${e.cls?' '+e.cls:''}${c}" d="M${e.pts.map(q=>f(q[0])+' '+f(q[1])).join(' L')} Z"/>`+A;}
+    else if(e.t==='len'){const m=[(e.a[0]+e.b[0])/2,(e.a[1]+e.b[1])/2],d=Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),n=[Math.sin(d),-Math.cos(d)],o=(e.off||16)*(e.side||1);
+      const lab=st.labels[e.id]!=null?st.labels[e.id]:e.label;if(lab)T+=`<text class="lab ln${e.x?' x':''}${c}" x="${f(m[0]+n[0]*o)}" y="${f(m[1]+n[1]*o)}">${esc(lab)}</text>`;}
+    else if(e.t==='txt'){T+=`<text class="lab${e.x?' x':''}${c}" x="${f(e.p[0])}" y="${f(e.p[1])}">${esc(st.labels[e.id]!=null?st.labels[e.id]:e.s)}</text>`;}
+    else if(e.t==='axes'){const[ox,oy]=e.o,u=e.u,x0=ox+e.xr[0]*u,x1=ox+e.xr[1]*u,y0=oy-e.yr[0]*u,y1=oy-e.yr[1]*u;
+      for(let i=Math.ceil(e.xr[0]);i<=Math.floor(e.xr[1]);i++)if(i)L+=`<line class="gridl" x1="${f(ox+i*u)}" y1="${f(y0)}" x2="${f(ox+i*u)}" y2="${f(y1)}"/>`;
+      for(let i=Math.ceil(e.yr[0]);i<=Math.floor(e.yr[1]);i++)if(i)L+=`<line class="gridl" x1="${f(x0)}" y1="${f(oy-i*u)}" x2="${f(x1)}" y2="${f(oy-i*u)}"/>`;
+      L+=`<line class="axis" x1="${f(x0)}" y1="${oy}" x2="${f(x1+8)}" y2="${oy}"/><line class="axis" x1="${ox}" y1="${f(y0)}" x2="${ox}" y2="${f(y1-8)}"/>`;
+      L+=`<path class="axis" d="M${f(x1+2)} ${oy-4} L${f(x1+8)} ${oy} L${f(x1+2)} ${oy+4}"/><path class="axis" d="M${ox-4} ${f(y1-2)} L${ox} ${f(y1-8)} L${ox+4} ${f(y1-2)}"/>`;
+      T+=`<text class="nm" x="${f(x1+10)}" y="${oy+16}">x</text><text class="nm" x="${ox+8}" y="${f(y1-6)}">y</text><text class="nm" style="font-style:normal;font-size:15px" x="${ox-14}" y="${oy+16}">O</text>`;
+      (e.ticks||[]).forEach(t=>{T+=`<text class="lab tk" x="${f(t[0]==='x'?ox+t[1]*u:ox-12)}" y="${f(t[0]==='x'?oy+14:oy-t[1]*u)}">${t[1]}</text>`;});}
     else if(e.t==='tick'){const at=e.at||0.5,m=[e.a[0]+(e.b[0]-e.a[0])*at,e.a[1]+(e.b[1]-e.a[1])*at],d=Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),u=[Math.cos(d),Math.sin(d)],n=[-u[1],u[0]];
       for(let k=0;k<e.n;k++){const o=(k-(e.n-1)/2)*4.5,cx=m[0]+u[0]*o,cy=m[1]+u[1]*o;L+=`<line class="tick" x1="${f(cx-n[0]*6)}" y1="${f(cy-n[1]*6)}" x2="${f(cx+n[0]*6)}" y2="${f(cy+n[1]*6)}"/>`;}}
     else if(e.t==='right'){const g=(q)=>{const L0=Math.hypot(q[0]-e.c[0],q[1]-e.c[1]);return [(q[0]-e.c[0])/L0*11,(q[1]-e.c[1])/L0*11];},a=g(e.p),b=g(e.q);
       L+=`<path class="fa" d="M${f(e.c[0]+a[0])} ${f(e.c[1]+a[1])} L${f(e.c[0]+a[0]+b[0])} ${f(e.c[1]+a[1]+b[1])} L${f(e.c[0]+b[0])} ${f(e.c[1]+b[1])}"/>`;}
     else if(e.t==='band'){A=`<path class="band" d="M${e.pts.map(q=>f(q[0])+' '+f(q[1])).join(' L')} Z"/>`+A;}
-    else if(e.t==='pt'){const d=freeDir(p,e.p),q=P(e.p,e.s==='O'?17:15,d);T+=`<circle class="pt" cx="${f(e.p[0])}" cy="${f(e.p[1])}" r="3.2"/><text class="nm" x="${f(q[0])}" y="${f(q[1])}" text-anchor="middle" dominant-baseline="central" style="font-style:normal;font-size:16px">${e.s}</text>`;}
+    else if(e.t==='pt'){const d=e.dir!=null?e.dir:freeDir(p,e.p),q=P(e.p,e.s==='O'?17:15,d);T+=`<circle class="pt" cx="${f(e.p[0])}" cy="${f(e.p[1])}" r="3.2"/><text class="nm" x="${f(q[0])}" y="${f(q[1])}" text-anchor="middle" dominant-baseline="central" style="font-style:normal;font-size:16px">${e.s}</text>`;}
     else if(e.t==='par'){const d=(e.d||0)*Math.PI/180,u=[Math.cos(d),-Math.sin(d)],n=[Math.sin(d),Math.cos(d)],[x,y]=e.p;
       const q=(a,b)=>f(x+a*u[0]+b*n[0])+' '+f(y+a*u[1]+b*n[1]);L+=`<path class="par" d="M${q(-6,-6)} L${q(2,0)} L${q(-6,6)}"/>`;}
     else if(e.t==='nm'){T+=`<text class="nm" x="${e.p[0]}" y="${e.p[1]}" text-anchor="middle">${e.s}</text>`;}
@@ -1207,19 +1607,14 @@ function drawFig(p,st){
 }
 
 /* ===== 問題の進行 ===== */
-let C=null; // 現在の問題の状態
-function skillOf(id){return SKILLS.find(k=>k.id===id);}
+let C=null;
+function skillOf(id){return SKILLS.find(k=>k.id===id)||{name:'総合ステージ',ch:0};}
 function probsOf(id){return PROBS.filter(p=>p.skill===id);}
 function practiceList(id){const all=probsOf(id).sort((a,b)=>a.lv-b.lv);return S.sk[id].st===0?all.filter(p=>p.lv<=2):all;}
-
-function startSkill(id){
-  const list=practiceList(id);const p=list[S.idx[id]%list.length];
-  S.idx[id]=(S.idx[id]+1)%list.length;save();
-  begin(p,'step');
-}
+function startSkill(id){const list=practiceList(id);const p=list[S.idx[id]%list.length];S.idx[id]=(S.idx[id]+1)%list.length;save();begin(p,'step');}
 function startReview(id){const list=probsOf(id).filter(p=>p.lv===3);begin(list[Math.floor(Math.random()*list.length)],'review');}
 function startTest(){
-  const pool=PROBS.filter(p=>unlocked(SKILLS.findIndex(k=>k.id===p.skill))&&(p.lv<3||S.sk[p.skill].st>=1));
+  const pool=PROBS.filter(p=>skillOf(p.skill).ch===S.cur&&unlocked(idxOf(p.skill))&&(p.lv<3||S.sk[p.skill].st>=1));
   let p=pool[Math.floor(Math.random()*pool.length)];
   if(C&&C.mode==='test'&&pool.length>1)while(p.id===C.p.id)p=pool[Math.floor(Math.random()*pool.length)];
   begin(p,'test');
@@ -1227,13 +1622,12 @@ function startTest(){
 function begin(p,mode){
   C={p,mode,si:0,miss:0,hint:0,clean:true,done:false,val:'',shown:new Set(),match:new Set(),look:new Set(),labels:{},log:[],order:null,picked:new Set()};
   show('play');
-  const k=skillOf(p.skill)||{name:'総合ステージ'};
+  const k=skillOf(p.skill);
   $('#pTitle').textContent=mode.startsWith('stage')?'総合ステージ':(mode==='step'?k.name:(mode==='review'?'復習：'+k.name:'仕上げテスト'));
   $('#pSub').textContent=mode==='stageA'?'前半：最初の一手':(mode==='stageB'?'後半：ステップなしで解く':(mode==='step'?'ステップで考える':'図だけを見て答えよう'));
   $('#pText').innerHTML=`<span class="tag lv${p.lv}">Lv${p.lv}　${['','その型だけ','見つけにくい図','組み合わせ','総合'][p.lv]}</span>${esc(p.text)}`;
   $('#log').innerHTML='';
-  renderDots();
-  drawFig(p,C);
+  renderDots();drawFig(p,C);
   if(mode==='step')renderStep();else if(mode==='stageA')renderStageA();else renderTest();
 }
 function renderDots(){
@@ -1242,41 +1636,38 @@ function renderDots(){
   const s=S.sk[C.p.skill];
   $('#pDots').innerHTML=(C.mode==='step'&&s.st===0)?'<span style="font-size:11px;color:var(--sub);margin-right:4px">習得まで</span>'+[0,1,2].map(j=>`<i class="${j<s.streak?'f':''}"></i>`).join(''):(C.mode==='step'?`<span class="chip s${s.st}">${ST[s.st]}</span>`:'');
 }
-
 function stepHeader(){return `<div class="sn">ステップ ${C.si+1} / ${C.p.steps.length}</div>`;}
 function renderStep(){
   const st=C.p.steps[C.si];
   C.miss=0;C.hint=0;C.clean=true;C.done=false;C.val='';C.look.clear();C.picked=new Set();
   drawFig(C.p,C);
   let h=`<div class="qcard">${stepHeader()}<div class="q">${esc(st.q)}</div>`;
-  if(st.kind==='choice'){
-    C.order=shuffle(st.choices.map((c,i)=>i));
-    h+=C.order.map(i=>`<button class="ch" data-i="${i}" onclick="pick(${i})">${esc(st.choices[i].t)}</button>`).join('');
-  }
+  if(st.kind==='choice'){C.order=shuffle(st.choices.map((c,i)=>i));h+=C.order.map(i=>`<button class="ch" data-i="${i}" onclick="pick(${i})">${esc(st.choices[i].t)}</button>`).join('');}
   const hints=`<div class="hints"><button id="h1" onclick="useHint(1)">① どこを見る？</button><button id="h2" onclick="useHint(2)" disabled>② どの型？</button><button id="h3" onclick="useHint(3)" disabled>③ 答え</button></div>`;
-  h+=st.kind==='choice'?hints:hints+keypad(st.unit);
+  h+=st.kind==='choice'?hints:hints+keypad(st.unit,st.keys);
   h+=`<div class="fb" id="fb"></div></div>`;
-  $('#cur').innerHTML=h;$('#nextbar').innerHTML='';
-  $('#scroll').scrollTop=0;
+  $('#cur').innerHTML=h;$('#nextbar').innerHTML='';$('#scroll').scrollTop=0;
 }
-function keypad(unit){
-  C.unit=unit;
-  return `<div class="kp"><div class="kd" id="kd"><span class="ph">数字を入力</span></div><div class="kg">
-  ${[7,8,9].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')}<button onclick="key('bs')">⌫</button>
-  ${[4,5,6].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')}<button onclick="key('c')" style="font-size:14px">クリア</button>
-  ${[1,2,3].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')}<button class="go" onclick="key('go')" style="grid-row:span 2;height:auto">決定</button>
-  <button onclick="key(0)" style="grid-column:span 3">0</button></div></div>`;
+// keys：'√' '/' ':' '.' '-' を必要な問題だけ追加
+function keypad(unit,keys){
+  C.unit=unit||'';
+  const ex=(keys||'').split('').filter(Boolean);
+  return `<div class="kp"><div class="kd" id="kd"><span class="ph">${ex.length?'答えを入力':'数字を入力'}</span></div><div class="kg">
+  ${[7,8,9].map(n=>`<button onclick="key('${n}')">${n}</button>`).join('')}<button onclick="key('bs')">⌫</button>
+  ${[4,5,6].map(n=>`<button onclick="key('${n}')">${n}</button>`).join('')}<button onclick="key('c')" style="font-size:14px">クリア</button>
+  ${[1,2,3].map(n=>`<button onclick="key('${n}')">${n}</button>`).join('')}<button class="go" onclick="key('go')" style="grid-row:span 2;height:auto">決定</button>
+  <button onclick="key('0')" style="grid-column:span 3">0</button></div>
+  ${ex.length?`<div class="kg ex">${ex.map(k=>`<button onclick="key('${k}')">${k==='-'?'−':k}</button>`).join('')}</div>`:''}</div>`;
 }
 function key(k){
   if(C.done)return;
   if(k==='bs')C.val=C.val.slice(0,-1);
   else if(k==='c')C.val='';
   else if(k==='go'){if(C.val!=='')submit();return;}
-  else if(C.val.length<4)C.val=(C.val==='0'?'':C.val)+k;
-  $('#kd').innerHTML=C.val===''?'<span class="ph">数字を入力</span>':`${C.val}<span class="u">${C.unit}</span>`;
+  else if(C.val.length<9)C.val=(C.val==='0'&&/[0-9]/.test(k)?'':C.val)+k;
+  $('#kd').innerHTML=C.val===''?'<span class="ph">数字を入力</span>':`${esc(C.val.replace(/-/g,'−'))}<span class="u">${C.unit}</span>`;
 }
 function fb(cls,html){const e=$('#fb');e.className='fb on '+cls;e.innerHTML=html;}
-
 function pick(i){
   if(C.done)return;
   const st=C.p.steps[C.si],c=st.choices[i],b=document.querySelector(`.ch[data-i="${i}"]`);
@@ -1289,7 +1680,7 @@ function pick(i){
 function submit(){
   if(C.mode!=='step'){testSubmit();return;}
   const st=C.p.steps[C.si];
-  if(Number(C.val)===st.answer){stepDone(false);return;}
+  if(sameAns(C.val,st.answer)){stepDone(false);return;}
   C.miss++;C.clean=false;
   if(C.miss>=2){fb('ng','<b>✕ もう一度ちがったね。答えを確認しよう。</b>');setTimeout(()=>reveal(),800);}
   else{fb('ng','<b>✕ 計算をもう一度見直そう。</b><br>'+esc(st.hint));C.val='';$('#kd').innerHTML='<span class="ph">数字を入力</span>';}
@@ -1306,30 +1697,25 @@ function useHint(n){
 function reveal(){
   const st=C.p.steps[C.si];C.clean=false;
   if(st.kind==='choice'){const i=st.choices.findIndex(c=>c.ok);document.querySelector(`.ch[data-i="${i}"]`).classList.add('ok');}
-  else{C.val=String(st.answer);$('#kd').innerHTML=`${C.val}<span class="u">${st.unit}</span>`;}
+  else{C.val=String(ansText(st.answer));$('#kd').innerHTML=`${esc(C.val)}<span class="u">${st.unit||''}</span>`;}
   stepDone(true);
 }
+function applyAfter(a){(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));Object.assign(C.labels,a.label||{});}
 function stepDone(revealed){
   C.done=true;
   const st=C.p.steps[C.si];
   document.querySelectorAll('.ch').forEach(b=>b.disabled=true);
   document.querySelectorAll('.hints button').forEach(b=>b.disabled=true);
-  C.look.clear();
-  const a=st.after||{};
-  (a.show||[]).forEach(id=>C.shown.add(id));
-  (a.match||[]).forEach(id=>C.match.add(id));
-  Object.assign(C.labels,a.label||{});
-  drawFig(C.p,C);
+  C.look.clear();applyAfter(st.after||{});drawFig(C.p,C);
   fb(revealed?'hint':'ok',(revealed?'<b>答え</b>　':'<b>◯ 正解！</b>　')+esc(st.ans));
-  // 習得判定
   let msg='';
-  if(st.skill&&C.mode==='step'&&C.p.lv<=2){
+  if(st.skill&&C.mode==='step'&&C.p.lv<=2&&S.sk[st.skill]){
     const s=S.sk[st.skill];
     if(s.st===0){
       s.streak=C.clean?s.streak+1:0;
       if(s.streak>=3){s.st=1;s.due=addDays(3);s.streak=0;
-        const i=SKILLS.findIndex(k=>k.id===st.skill),nx=SKILLS[i+1];
-        msg=`「${skillOf(st.skill).name}」を習得！`+(nx&&nx.ready?`<br><span style="font-weight:400;font-size:12px">次の型「${nx.name}」が開きました</span>`:'');
+        const k=skillOf(st.skill),list=chSkills(k.ch),nx=list[list.indexOf(k)+1];
+        msg=`「${k.name}」を習得！`+(nx?`<br><span style="font-weight:400;font-size:12px">次の型「${nx.name}」が開きました</span>`:'<br><span style="font-weight:400;font-size:12px">この章の総合ステージに挑戦できるか、ホームで確かめよう</span>');
       }
       save();renderDots();
     }
@@ -1339,10 +1725,7 @@ function stepDone(revealed){
   const last=C.si===C.p.steps.length-1;
   $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'finish()':'nextStep()'}">${last?'まとめを見る ▶':'次のステップ ▶'}</button>`;
 }
-function nextStep(){
-  $('#log').innerHTML=C.log.map((s,i)=>`<div><b>${['①','②','③','④','⑤'][i]}</b>${esc(s)}</div>`).join('');
-  C.si++;renderStep();
-}
+function nextStep(){$('#log').innerHTML=C.log.map((s,i)=>`<div><b>${['①','②','③','④','⑤','⑥'][i]}</b>${esc(s)}</div>`).join('');C.si++;renderStep();}
 function finish(){
   $('#log').innerHTML='';
   $('#cur').innerHTML=`<div class="sum"><h3>この問題の筋道</h3><ol>${C.log.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
@@ -1350,24 +1733,29 @@ function finish(){
   $('#nextbar').innerHTML=C.p.skill==='stage'?`<button class="btn pri" onclick="goHome()">ホームへ</button>`:`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startSkill('${C.p.skill}')">次の問題 ▶</button>`;
 }
 
-/* ===== 仕上げテスト・復習 ===== */
+/* ===== 仕上げテスト・復習（数字または選択） ===== */
 function renderTest(){
   C.done=false;C.val='';
-  const fq=C.p.final;
-  $('#cur').innerHTML=`<div class="qcard"><div class="sn">${C.mode==='review'?'復習（ステップなし）':(C.mode==='stageB'?`後半 ${G.j+1} / 5（ステップなし）`:'仕上げテスト（ステップなし）')}</div><div class="q">${esc(fq.q)}</div>${keypad(fq.unit)}<div class="fb" id="fb"></div></div>`;
+  const fq=C.p.final,lab=C.mode==='review'?'復習（ステップなし）':(C.mode==='stageB'?`後半 ${G.j+1} / ${G.bqs.length}（ステップなし）`:'仕上げテスト（ステップなし）');
+  let body;
+  if(fq.kind==='choice'){C.order=shuffle(fq.choices.map((c,i)=>i));body=C.order.map(i=>`<button class="ch" data-i="${i}" onclick="pickF(${i})">${esc(fq.choices[i].t)}</button>`).join('');}
+  else body=keypad(fq.unit,fq.keys);
+  $('#cur').innerHTML=`<div class="qcard"><div class="sn">${lab}</div><div class="q">${esc(fq.q)}</div>${body}<div class="fb" id="fb"></div></div>`;
   $('#nextbar').innerHTML='';
 }
-function testSubmit(){
-  if(C.mode==='stageB'){stageBSubmit();return;}
+function pickF(i){if(C.done)return;const fq=C.p.final;document.querySelectorAll('.ch').forEach(b=>b.disabled=true);
+  const k=fq.choices.findIndex(c=>c.ok);document.querySelector(`.ch[data-i="${k}"]`).classList.add('ok');if(i!==k)document.querySelector(`.ch[data-i="${i}"]`).classList.add('ng');
+  finalResult(i===k);}
+function testSubmit(){finalResult(sameAns(C.val,C.p.final.answer));}
+function showSolved(){C.p.steps.forEach(s=>applyAfter(s.after||{}));drawFig(C.p,C);}
+function finalResult(ok){
   C.done=true;
-  const fq=C.p.final,ok=Number(C.val)===fq.answer,k=C.p.skill;
+  if(C.mode==='stageB'){stageBResult(ok);return;}
+  const k=C.p.skill;
   if(ok){
-    const last=C.p.steps[C.p.steps.length-1];Object.assign(C.labels,(last.after||{}).label||{});
-    C.p.steps.forEach(s=>{const a=s.after||{};(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));});
-    drawFig(C.p,C);
-    let extra='';
+    showSolved();let extra='';
     if(C.mode==='review'){S.sk[k].st=2;S.sk[k].due=null;save();extra=`<br>「${skillOf(k).name}」が<b>定着</b>しました。`;toast(`「${skillOf(k).name}」が定着！`);}
-    fb('ok','<b>◯ 正解！</b>　ステップなしで最初の一手が出せました。'+extra);
+    fb('ok','<b>◯ 正解！</b>　ステップなしで最後までたどり着けました。'+extra);
     $('#nextbar').innerHTML=C.mode==='review'?`<button class="btn pri" onclick="goHome()">ホームへ</button>`:`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startTest()">次の問題 ▶</button>`;
   }else{
     if(C.mode==='review'){S.sk[k].st=1;S.sk[k].due=addDays(3);save();}
@@ -1375,22 +1763,22 @@ function testSubmit(){
     $('#nextbar').innerHTML=`<button class="btn pri" onclick="toSteps()">ステップで確かめる ▶</button>`;
   }
 }
-function toSteps(){const p=C.p;begin(p,'step');}
+function toSteps(){begin(C.p,'step');}
 function goHome(){G=null;clearInterval(tick.h);renderHome();show('home');}
 
-
-/* ===== 総合ステージ ===== */
+/* ===== 総合ステージ（章ごと） ===== */
 let G=null;
 function fmt(ms){const t=Math.round(ms/1000);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
-function tickText(){if(!G)return;const ph=G.phase==='a'?`前半 ${G.i+1}/10`:`後半 ${Math.min(G.j+1,5)}/5`;
+function tickText(){if(!G)return;const ph=G.phase==='a'?`前半 ${G.i+1}/10`:`後半 ${Math.min(G.j+1,G.bqs.length)}/${G.bqs.length}`;
   $('#pDots').innerHTML=`<span style="font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums">${ph}　⏱ ${fmt(Date.now()-G.t0)}</span>`;}
 function tick(){clearInterval(tick.h);tick.h=setInterval(tickText,400);}
 function startStage(){
-  const pool=PROBS.filter(p=>p.lv>=2&&p.steps[0].kind==='choice');
-  let pick=SKILLS.map(k=>{const l=pool.filter(p=>p.skill===k.id);return l[Math.floor(Math.random()*l.length)];}).filter(Boolean);
+  const c=S.cur,sk=chSkills(c);
+  const pool=PROBS.filter(p=>skillOf(p.skill).ch===c&&p.lv>=2&&p.steps[0].kind==='choice');
+  let pick=sk.map(k=>{const l=pool.filter(p=>p.skill===k.id);return l[Math.floor(Math.random()*l.length)];}).filter(Boolean);
   pick=shuffle(pick.concat(shuffle(pool.filter(p=>!pick.includes(p))).slice(0,10-pick.length)));
-  G={phase:'a',qs:pick,i:0,a:0,ta:0,j:0,b:0,tb:0,bqs:shuffle(STAGE),missA:[],missB:[],t0:Date.now()};
-  S.stage.tries=(S.stage.tries||0)+1;save();
+  G={ch:c,phase:'a',qs:pick,i:0,a:0,ta:0,j:0,b:0,tb:0,bqs:shuffle(STAGE.filter(p=>p.ch===c)),missA:[],missB:[],t0:Date.now()};
+  S.stage[c].tries=(S.stage[c].tries||0)+1;save();
   tick();begin(G.qs[0],'stageA');
 }
 function renderStageA(){
@@ -1407,37 +1795,37 @@ function pickA(i){
   document.querySelector(`.ch[data-i="${k}"]`).classList.add('ok');
   if(c.ok){G.a++;fb('ok','<b>◯ 正解！</b>　'+esc(st.ans));}
   else{document.querySelector(`.ch[data-i="${i}"]`).classList.add('ng');G.missA.push(C.p.skill);fb('ng','<b>✕ '+esc(c.why)+'</b><br>'+esc(st.ans));}
-  const a=st.after||{};(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));drawFig(C.p,C);
-  const last=G.i===9;
+  applyAfter(st.after||{});drawFig(C.p,C);
+  const last=G.i===G.qs.length-1;
   $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'toStageB()':'nextA()'}">${last?'後半へ ▶':'次へ ▶'}</button>`;
 }
 function nextA(){G.i++;begin(G.qs[G.i],'stageA');}
 function toStageB(){G.ta=Date.now()-G.t0;G.phase='b';G.t0=Date.now();
   $('#log').innerHTML='';
-  $('#cur').innerHTML=`<div class="sum"><h3>前半おわり：${G.a} / 10　（${fmt(G.ta)}）</h3><p style="font-size:14px;line-height:1.7">${G.a>=8?'合格ラインの 8 問をこえました。':'合格ラインは 8 問です。'}後半は、ステップなしで最後まで解く 5 問です。入試と同じように、図だけを見て答えを出しましょう。</p></div>`;
+  $('#cur').innerHTML=`<div class="sum"><h3>前半おわり：${G.a} / 10　（${fmt(G.ta)}）</h3><p style="font-size:14px;line-height:1.7">${G.a>=8?'合格ラインの 8 問をこえました。':'合格ラインは 8 問です。'}後半は、ステップなしで最後まで解く ${G.bqs.length} 問です。入試と同じように、図だけを見て答えを出しましょう。</p></div>`;
   $('#nextbar').innerHTML=`<button class="btn pri" onclick="startB()">後半を始める ▶</button>`;}
 function startB(){G.t0=Date.now();begin(G.bqs[0],'stageB');}
-function stageBSubmit(){
-  C.done=true;const p=C.p,ok=Number(C.val)===p.final.answer;
-  if(ok){G.b++;const L=p.steps[p.steps.length-1];Object.assign(C.labels,(L.after||{}).label||{});
-    p.steps.forEach(s=>{const a=s.after||{};(a.show||[]).forEach(id=>C.shown.add(id));(a.match||[]).forEach(id=>C.match.add(id));});drawFig(p,C);
-    fb('ok','<b>◯ 正解！</b>');}
-  else{G.missB.push(p);fb('ng',`<b>✕ 正解は ${p.final.answer}${p.final.unit}</b>　解き方は、最後の結果画面から見られます。`);}
-  const last=G.j===4;
+function stageBResult(ok){
+  const p=C.p;
+  if(ok){G.b++;showSolved();fb('ok','<b>◯ 正解！</b>');}
+  else{G.missB.push(p);const fq=p.final;fb('ng',`<b>✕ 正解は ${fq.kind==='choice'?esc(fq.choices.find(c=>c.ok).t):esc(ansText(fq.answer))+(fq.unit||'')}</b>　解き方は、最後の結果画面から見られます。`);}
+  const last=G.j===G.bqs.length-1;
   $('#nextbar').innerHTML=`<button class="btn pri" onclick="${last?'stageEnd()':'nextB()'}">${last?'結果を見る ▶':'次へ ▶'}</button>`;
 }
 function nextB(){G.j++;begin(G.bqs[G.j],'stageB');}
 function stageEnd(){
   G.tb=Date.now()-G.t0;clearInterval(tick.h);
-  const pa=G.a>=8,pb=G.b>=4,clear=pa&&pb;
-  const b=S.stage.best,score=G.a+G.b,time=G.ta+G.tb;
-  if(!b||score>b.a+b.b||(score===b.a+b.b&&time<b.ta+b.tb))S.stage.best={a:G.a,b:G.b,ta:G.ta,tb:G.tb};
-  if(clear)S.stage.clear=true;save();
-  const weak=[...new Set(G.missA.concat(G.missB.flatMap(p=>p.types)))].filter(id=>skillOf(id));
+  const c=G.ch,nb=G.bqs.length,pa=G.a>=8,pb=G.b>=passB(c),clear=pa&&pb;
+  const b=S.stage[c].best,score=G.a+G.b,time=G.ta+G.tb;
+  if(!b||score>b.a+b.b||(score===b.a+b.b&&time<b.ta+b.tb))S.stage[c].best={a:G.a,b:G.b,ta:G.ta,tb:G.tb};
+  const first=clear&&!S.stage[c].clear;if(clear)S.stage[c].clear=true;save();
+  const weak=[...new Set(G.missA.concat(G.missB.flatMap(p=>p.types)))].filter(id=>S.sk[id]);
   const R=G;
   $('#pDots').innerHTML='';$('#log').innerHTML='';
-  let h=`<div class="sum" style="border-color:${clear?'var(--ok)':'var(--look)'}"><h3 style="color:${clear?'var(--ok)':'var(--look)'}">${clear?'第1章 クリア！':'もう一歩！'}</h3>
-  <p style="font-size:14px;line-height:1.9">前半（最初の一手）：<b>${R.a} / 10</b>　${pa?'◯ 合格':'✕ 8問以上で合格'}　⏱ ${fmt(R.ta)}<br>後半（ステップなし）：<b>${R.b} / 5</b>　${pb?'◯ 合格':'✕ 4問以上で合格'}　⏱ ${fmt(R.tb)}</p>`;
+  let h=`<div class="sum" style="border-color:${clear?'var(--ok)':'var(--look)'}"><h3 style="color:${clear?'var(--ok)':'var(--look)'}">${clear?`第${c}章 クリア！`:'もう一歩！'}</h3>
+  <p style="font-size:14px;line-height:1.9">前半（最初の一手）：<b>${R.a} / 10</b>　${pa?'◯ 合格':'✕ 8問以上で合格'}　⏱ ${fmt(R.ta)}<br>後半（ステップなし）：<b>${R.b} / ${nb}</b>　${pb?'◯ 合格':`✕ ${passB(c)}問以上で合格`}　⏱ ${fmt(R.tb)}</p>`;
+  if(first&&c<NCH&&chReady(c+1))h+=`<p style="font-size:14px;margin-top:6px"><b>第${c+1}章「${CHAPTERS[c]}」が開きました。</b></p>`;
+  if(first&&c===NCH)h+=`<p style="font-size:14px;margin-top:6px"><b>全章クリア！ 角度から座標・ベクトルまで、図形の一手がそろいました。</b></p>`;
   if(weak.length)h+=`<p style="font-size:13px;margin-top:8px;color:var(--sub)">まちがえた問題で使う型：</p><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${weak.map(id=>`<button class="btn" onclick="startSkill('${id}')">${skillOf(id).name} を練習</button>`).join('')}</div>`;
   if(R.missB.length)h+=`<p style="font-size:13px;margin-top:10px;color:var(--sub)">後半でまちがえた問題の解き方：</p><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${R.missB.map(p=>`<button class="btn" onclick="begin(STAGE.find(q=>q.id==='${p.id}'),'step')">${esc(p.text.slice(0,14))}… の解き方</button>`).join('')}</div>`;
   h+=`</div>`;
@@ -1451,8 +1839,8 @@ $('#testBtn').onclick=startTest;
 $('#gear').onclick=()=>{$('#resetAsk').textContent='記録をすべてリセット';$('#resetAsk').dataset.armed='';$('#modal').classList.add('on');};
 $('#closeM').onclick=()=>$('#modal').classList.remove('on');
 $('#resetAsk').onclick=e=>{const b=e.currentTarget;if(!b.dataset.armed){b.dataset.armed='1';b.textContent='もう一度押すとリセットします';return;}S=blank();save();renderHome();$('#modal').classList.remove('on');toast('記録をリセットしました');};
-
 renderHome();
+
 </script>
 </body>
 </html>
