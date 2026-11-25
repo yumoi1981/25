@@ -2266,6 +2266,240 @@ STAGE.push(
  FIN('∠x は何度？',115,{unit:'°'}),{ch:5,types:['c5e','c5b']});})()
 );
 /*CH5-END*/
+/*CH6-START*/
+/* ==================== 第6章 三角比と図形の計量 ==================== */
+SKILLS.push(
+ {id:'c6a',ch:6,name:'三角比の定義',desc:'どの角から見て、どの辺か。向かい／となり／斜辺で sin・cos・tan を選ぶ',ready:true},
+ {id:'c6b',ch:6,name:'正弦定理',desc:'辺と「向かいの角」の組がそろったら正弦定理。外接円の半径もこれ',ready:true},
+ {id:'c6c',ch:6,name:'余弦定理',desc:'2辺とその間の角 → 残りの辺。3辺 → 角',ready:true},
+ {id:'c6d',ch:6,name:'三角形の面積',desc:'面積 ＝ ½ × 2辺 × sin（間の角）。角がなければ cos から作る',ready:true},
+ {id:'c6e',ch:6,name:'定理の選び分け',desc:'わかっているものを見て道具を選ぶ。面積の分割・内接四角形も',ready:true});
+function incenter(A,B,C){const a=D2(B,C),b=D2(C,A),c=D2(A,B),s=a+b+c;return [(a*A[0]+b*B[0]+c*C[0])/s,(a*A[1]+b*B[1]+c*C[1])/s];}
+function chordDeg(L,R){return 2*Math.asin(L/(2*R))*180/Math.PI;}
+const S3=Math.sqrt(3),S2=Math.sqrt(2);
+PROBS.push(
+/* ---- 三角比の定義 ---- */
+(()=>{const sc=22,B=[70,240],C=[70+8*sc,240],A=[70+8*sc,240-6*sc];
+ return Q('6a1','c6a',1,'∠C＝90° の直角三角形で、AB＝10、cos B＝4/5 です。x の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),rt(C,A,B),pt(A,'A'),pt(B,'B'),pt(C,'C'),LEN('l1',B,A,'10',10,1),LEN('ax',B,C,'x',8,-1,{x:1})],
+ [CHO('c6a','x（BC）は、∠B から見てどの辺？','B のとなりの辺 → x ＝ 10 × cos B',[['B の向かいの辺 → x ＝ 10 × sin B','B の向かいにあるのは AC。BC は B にくっついている辺だよ。'],['斜辺 → x ＝ 10','斜辺は直角の向かいの AB だよ。']],['ax','l1'],'斜辺は AB。x は B にくっついている？向かいにある？','cos B ＝ となりの辺 ÷ 斜辺 → x ＝ 10 cos B。','x ＝ 10 cos B'),
+  INP('x の値は？',8,{keys:'/',hint:'10 × 4/5',ans:'x ＝ 8',sum:'x ＝ 10 × 4/5 ＝ 8',after:{label:{ax:'8'}}})],
+ FIN('x の値は？',8,{keys:'/'}),{scale:sc});})(),
+
+(()=>{const sc=60,A=[80,230],C=[80+Math.sqrt(5)*sc,230],B=[80+Math.sqrt(5)*sc,230-2*sc];
+ return Q('6a2','c6a',2,'0°＜θ＜90° で sinθ＝2/3 のとき、cosθ の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),rt(C,A,B),arcV('aT',A,C,B,'θ',angAt(A,C,B),{r:34}),LEN('l1',A,B,'3',3,1,{hidden:1}),LEN('l2',C,B,'2',2,-1,{hidden:1}),LEN('l3',A,C,'?',Math.sqrt(5),-1)],
+ [CHO('c6a','sinθ＝2/3 を直角三角形で表すと？','斜辺 3、θ の向かいの辺 2',[['斜辺 3、θ のとなりの辺 2','となりの辺 ÷ 斜辺 は cos。sin は「向かいの辺 ÷ 斜辺」だよ。'],['斜辺 2、θ の向かいの辺 3','斜辺がいちばん長い。分母が斜辺だよ。']],['aT'],'sin ＝ 向かいの辺 ÷ 斜辺。','斜辺 3、θ の向かいの辺 2 の直角三角形をかく。','斜辺 3・向かいの辺 2',{show:['l1','l2']}),
+  INP('残りの辺（θ のとなりの辺）は？','√5',{keys:'√/',look:['l3'],hint:'三平方：3² − 2² ＝ 5',ans:'√5',sum:'√(9 − 4) ＝ √5 → cosθ ＝ √5/3',after:{label:{l3:'√5'}}})],
+ FIN('cosθ の値は？','√5/3',{keys:'√/'}),{scale:sc,multiAns:1,chk:()=>Math.abs(D2(A,C)/D2(A,B)-Math.sqrt(5)/3)<1e-9});})(),
+
+(()=>{const sc=26,B=[60,240],C=[60+10*sc,240],A=from(B,60,8*sc),H=[A[0],240];
+ return Q('6a3','c6a',2,'△ABC で AB＝8、BC＝10、∠B＝60° です。A から BC に垂線 AH を引くとき、AH の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAH',A,H,{dash:1}),rt(H,A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(H,'H'),arcV('aB',B,C,A,'60°',60,{r:26}),LEN('l1',B,A,'8',8,1),LEN('l2',B,C,'10',10,-1),LEN('ax',A,H,'x',4*S3,-1,{x:1})],
+ [CHO('c6a','AH を出すには、どの直角三角形で、どの比を使う？','△ABH で AH ＝ 8 sin60°',[['△ABH で AH ＝ 8 cos60°','8 cos60° は B のとなりの辺 BH。AH は ∠B の向かいの辺だよ。'],['△AHC で AH ＝ 10 sin60°','60° は ∠B。△AHC に 60° の角はないし、10 は AC でもないよ。']],['l1','aB','ax'],'AB＝8 が斜辺になる直角三角形は？','△ABH：斜辺 8、AH は ∠B の向かいの辺 → sin。','AH ＝ 8 sin60°'),
+  INP('AH の長さは？','4√3',{keys:'√',hint:'8 × √3/2',ans:'AH ＝ 4√3',sum:'AH ＝ 8 × √3/2 ＝ 4√3',after:{label:{ax:'4√3'}}})],
+ FIN('AH の長さは？','4√3',{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=9,h=10*S3,H=[330,250],T=[330,250-h*sc],A=[330-30*sc,250],B=[330-10*sc,250];
+ return Q('6a4','c6a',3,'塔 TH があります。A から先端 T を見上げた角は 30°、塔に 20 m 近づいた B からは 60° でした。塔の高さ TH を求めなさい。',
+ [sg('sAH',A,H),sg('sTH',T,H),sg('sAT',A,T),sg('sBT',B,T),rt(H,T,A),pt(A,'A'),pt(B,'B'),pt(H,'H'),pt(T,'T'),arcV('aA',A,H,T,'30°',30,{r:44}),arcV('aB',B,H,T,'60°',60,{r:24}),arcV('aT',T,A,B,'30°',30,{r:40,lr:14,hidden:1}),LEN('l1',A,B,'20',20,-1),LEN('ax',T,H,'x',h,-1,{x:1})],
+ [CHO('c6a','最初の一手は？','∠ATB ＝ 60° − 30° ＝ 30°（△ABT は二等辺三角形）',[['TH ＝ 20 tan30°','20 は AH ではなく AB。AH の長さはまだわからないよ。'],['TH ＝ 20 sin60°','20 は BT ではなく AB。BT がわかれば使えるけど…']],['aA','aB'],'∠TBH（60°）は △ABT の外角。','外角 ＝ となりでない内角2つの和 → ∠ATB ＝ 30°。∠TAB と等しいので BT ＝ AB ＝ 20。','∠ATB ＝ 30° → BT ＝ 20',{show:['aT']}),
+  INP('TH の長さは？','10√3',{unit:'m',keys:'√',hint:'△TBH：TH ＝ BT sin60° ＝ 20 × √3/2',ans:'TH ＝ 10√3',sum:'TH ＝ 20 sin60° ＝ 10√3 m',after:{label:{ax:'10√3'}}})],
+ FIN('TH は何 m？','10√3',{unit:'m',keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=26,A=[150,220],C=from(A,0,6*sc),B=from(A,120,4*sc),H=[B[0],220];
+ return Q('6a5','c6a',3,'△ABC で AB＝4、AC＝6、∠A＝120° です。BC の長さを、B から直線 CA に垂線を引いて求めなさい。',
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAH',H,A,{dash:1,hidden:1}),sg('sBH',B,H,{dash:1,hidden:1}),rt(H,B,C,{hidden:1,id:'rH'}),pt(A,'A'),pt(B,'B'),pt(C,'C'),{t:'pt',p:H,s:'H',hidden:1,id:'pH'},arcV('aA',A,C,B,'120°',120,{r:22}),arcV('aH',A,B,H,'60°',60,{r:20,hidden:1}),LEN('l1',A,B,'4',4,-1),LEN('l2',A,C,'6',6,-1),LEN('ax',B,C,'x',2*Math.sqrt(19),1,{x:1})],
+ [CHO('c6a','B から直線 CA に垂線 BH を下ろすと、H はどこ？','CA を A の外側へのばした線の上',[['辺 AC の上','∠A が鈍角なので、垂線の足は辺 AC の上には来ないよ。'],['点 A','BA と CA は垂直ではないよ（120°）。']],['aA'],'∠A ＝ 120° は鈍角。','H は CA の延長上。∠BAH ＝ 180° − 120° ＝ 60° の直角三角形 ABH ができる。','H は延長上、∠BAH ＝ 60°',{show:['sAH','sBH','aH','rH','pH']}),
+  INP('AH の長さは？',2,{look:['aH','l1'],hint:'AH ＝ 4 cos60°',ans:'AH ＝ 2',sum:'AH ＝ 4 cos60° ＝ 2、BH ＝ 4 sin60° ＝ 2√3'}),
+  INP('BC の長さは？','2√19',{keys:'√',hint:'△BHC：HC ＝ 2 ＋ 6 ＝ 8、BH ＝ 2√3',ans:'BC² ＝ 8² ＋ (2√3)² ＝ 76',sum:'BC ＝ √76 ＝ 2√19（この計算をまとめたものが余弦定理）',after:{label:{ax:'2√19'}}})],
+ FIN('BC の長さは？',['2√19','√76'],{keys:'√'}),{scale:sc,chk:()=>Math.abs(D2(B,H)/sc-2*S3)<1e-9});})(),
+
+/* ---- 正弦定理 ---- */
+(()=>{const sc=24,B=[80,240],C=from(B,0,6*sc),A=from(B,60,6*Math.sin(75*RAD)/Math.sin(45*RAD)*sc);
+ return Q('6b1','c6b',1,'△ABC で ∠A＝45°、∠B＝60°、BC＝6 です。x（AC）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,B,C,'45°',45,{r:30}),arcV('aB',B,C,A,'60°',60,{r:26}),LEN('l1',B,C,'6',6,-1),LEN('ax',C,A,'x',3*Math.sqrt(6),-1,{x:1})],
+ [CHO('c6b','正弦定理で使う組は？','BC と ∠A、AC と ∠B（向かい合う辺と角）',[['BC と ∠B、AC と ∠A','B は BC の端の点で「向かい」ではないよ。辺と、その向かいの角が組。'],['BC と ∠A、AC と ∠C','x（AC）の向かいの角は ∠B だよ。']],['l1','ax','aA','aB'],'それぞれの辺の「向かい」にある角は？','6/sin45° ＝ x/sin60°。','6/sin45° ＝ x/sin60°'),
+  INP('x の値は？','3√6',{keys:'√',hint:'x ＝ 6 × sin60° ÷ sin45° ＝ 6 × √3/2 ÷ √2/2',ans:'x ＝ 6√3/√2 ＝ 3√6',sum:'x ＝ 3√6',after:{label:{ax:'3√6'}}})],
+ FIN('x の値は？','3√6',{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=27,O=[200,150],R=3*S2*sc,B=onCircle(O,R,225),C=onCircle(O,R,315),A=onCircle(O,R,75),E=onCircle(O,R,150);
+ return Q('6b2','c6b',2,'△ABC は円 O に内接し、BC＝6、∠A＝45°、∠B＝60° です。円 O の半径 R を求めなさい。',
+ [CIR(O,R),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sOE',O,E,{dash:1}),pt(O,'O'),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,B,C,'45°',45,{r:30}),arcV('aB',B,C,A,'60°',60,{r:28}),LEN('l1',B,C,'6',6,-1),LEN('ax',O,E,'R',3*S2,-1,{x:1})],
+ [CHO('c6b','R を求める式は？','6/sin45° ＝ 2R（BC と、その向かいの ∠A）',[['6/sin60° ＝ 2R','60° は ∠B。BC の向かいの角ではないよ。'],['6/sin45° ＝ R','正弦定理の右辺は 2R（直径）だよ。']],['l1','aA','aB'],'BC の向かいの角はどれ？','a/sinA ＝ 2R → 6 ÷ (√2/2) ＝ 2R。','6/sin45° ＝ 2R'),
+  INP('R の値は？','3√2',{keys:'√',hint:'2R ＝ 6 × 2/√2 ＝ 6√2',ans:'R ＝ 3√2',sum:'2R ＝ 6√2 → R ＝ 3√2',after:{label:{ax:'3√2'}}})],
+ FIN('R の値は？','3√2',{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=28,O=[200,140],R=4*sc,B=onCircle(O,R,210),C=onCircle(O,R,330),A=onCircle(O,R,252),E=onCircle(O,R,100);
+ return Q('6b3','c6b',2,'△ABC は半径 4 の円 O に内接し、∠A＝120° です。BC の長さを求めなさい。',
+ [CIR(O,R),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sOE',O,E,{dash:1}),pt(O,'O'),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,C,B,'120°',120,{r:18,lr:12}),LEN('l1',O,E,'4',4,1),LEN('ax',B,C,'x',4*S3,1,{x:1})],
+ [CHO('c6b','BC を求める式は？','BC ＝ 2 × 4 × sin120°',[['BC ＝ 2 × 4 × cos120°','正弦定理は sin を使うよ。'],['BC ＝ 4 × sin120°','a/sinA ＝ 2R。半径の2倍（直径）をかけるよ。']],['aA','l1'],'BC と、その向かいの ∠A の組。','BC/sin120° ＝ 2 × 4。','BC ＝ 8 sin120°'),
+  INP('sin120° の値は？','√3/2',{keys:'√/',hint:'sin(180° − θ) ＝ sinθ → sin120° ＝ sin60°',ans:'sin120° ＝ √3/2',sum:'sin120° ＝ sin60° ＝ √3/2（鈍角でも sin は正）'})],
+ FIN('BC の長さは？','4√3',{keys:'√'}),{scale:sc,multiAns:1});})(),
+
+(()=>{const sc=25,B=[100,250],C=from(B,0,3*sc),A=from(B,60,8*sc);
+ return Q('6b4','c6b',3,'△ABC で sinA：sinB：sinC＝3：7：8 です。∠B の大きさを求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),LEN('l1',B,C,'3k',3,-1,{hidden:1}),LEN('l2',C,A,'7k',7,-1,{hidden:1}),LEN('l3',B,A,'8k',8,1,{hidden:1}),arcV('ax',B,C,A,'x',60,{x:1,r:26})],
+ [CHO('c6b','sinA：sinB：sinC ＝ 3：7：8 からわかることは？','BC：CA：AB ＝ 3：7：8（辺の比）',[['∠A：∠B：∠C ＝ 3：7：8','sin の比は角の比ではないよ。'],['∠C ＝ 90°','8 が最大でも、直角とは限らないよ。']],[],'正弦定理：a ＝ 2R sinA、b ＝ 2R sinB、c ＝ 2R sinC。','a：b：c ＝ sinA：sinB：sinC。BC＝3k、CA＝7k、AB＝8k とおける。','a：b：c ＝ 3：7：8',{show:['l1','l2','l3']}),
+  INP('cos B の値は？','1/2',{keys:'-/',hint:'∠B の向かいは CA＝7k。cos B ＝ (3² ＋ 8² − 7²) ÷ (2 × 3 × 8)',ans:'cos B ＝ 24/48 ＝ 1/2',sum:'cos B ＝ 1/2 → ∠B ＝ 60°',after:{label:{ax:'60°'}}})],
+ FIN('∠B は何度？',60,{unit:'°'}),{scale:sc,multiAns:1});})(),
+
+(()=>{const sc=60,B=[60,240],C=from(B,0,2*S3*sc),A=from(B,45,2*S2*Math.sin(75*RAD)/Math.sin(45*RAD)*sc);
+ return Q('6b5','c6b',3,'△ABC で ∠B＝45°、∠C＝75°、AC＝2√2 です。BC の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aB',B,C,A,'45°',45,{r:34}),arcV('aC',C,A,B,'75°',75,{r:26}),arcV('aA',A,B,C,'60°',60,{r:28,hidden:1}),LEN('l1',C,A,'2√2',2*S2,-1),LEN('ax',B,C,'x',2*S3,-1,{x:1})],
+ [CHO('c6b','BC と組になる角は？','∠A（BC の向かい）→ まず ∠A を出す',[['∠B（45°）','B は BC の端の点。向かいの角ではないよ。'],['∠C（75°）','C も BC の端の点だよ。']],['ax','aB','aC'],'BC の向かいにある頂点は？','∠A ＝ 180° − 45° − 75° ＝ 60°。AC と ∠B の組もそろっている。','∠A ＝ 60° → x/sin60° ＝ 2√2/sin45°',{show:['aA']}),
+  INP('BC の長さは？','2√3',{keys:'√',hint:'x ＝ 2√2 × sin60° ÷ sin45° ＝ 2√2 × √3/2 ÷ √2/2',ans:'x ＝ 2√3',sum:'BC ＝ 2√3',after:{label:{ax:'2√3'}}})],
+ FIN('BC の長さは？','2√3',{keys:'√'}),{scale:sc});})(),
+
+/* ---- 余弦定理 ---- */
+(()=>{const sc=28,A=[70,230],B=from(A,0,8*sc),C=from(A,60,5*sc);
+ return Q('6c1','c6c',1,'△ABC で AB＝8、AC＝5、∠A＝60° です。x（BC）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,B,C,'60°',60,{r:28}),LEN('l1',A,B,'8',8,-1),LEN('l2',A,C,'5',5,1),LEN('ax',C,B,'x',7,1,{x:1})],
+ [CHO('c6c','x を求める式は？','x² ＝ 5² ＋ 8² − 2 × 5 × 8 × cos60°',[['x² ＝ 5² ＋ 8²','三平方の定理は直角三角形だけ。この三角形に直角はないよ。'],['x² ＝ 5² ＋ 8² ＋ 2 × 5 × 8 × cos60°','余弦定理は「− 2bc cosA」だよ。']],['l1','l2','aA'],'2辺とその間の角がわかっている。','余弦定理：a² ＝ b² ＋ c² − 2bc cosA。','x² ＝ 25 ＋ 64 − 80 cos60°'),
+  INP('x の値は？',7,{keys:'√',hint:'25 ＋ 64 − 40 ＝ 49',ans:'x ＝ 7',sum:'x² ＝ 49 → x ＝ 7',after:{label:{ax:'7'}}})],
+ FIN('x の値は？',7,{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=30,A=[120,220],B=from(A,0,5*sc),C=from(A,120,3*sc);
+ return Q('6c2','c6c',2,'△ABC で AB＝5、AC＝3、∠A＝120° です。x（BC）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,B,C,'120°',120,{r:22}),LEN('l1',A,B,'5',5,-1),LEN('l2',C,A,'3',3,-1),LEN('ax',C,B,'x',7,1,{x:1})],
+ [CHO('c6c','x² ＝ 3² ＋ 5² − 2·3·5·cos120° の「− 2·3·5·cos120°」はいくつ？','＋15（cos120° ＝ −1/2）',[['−15','cos120° は負の数。− × − で ＋ になるよ。'],['0','cos が 0 になるのは 90° だよ。']],['aA'],'120° は鈍角。cos は負になる。','cos120° ＝ −1/2 → −2·3·5·(−1/2) ＝ ＋15。','− 2·3·5·cos120° ＝ ＋15'),
+  INP('x の値は？',7,{keys:'√',hint:'9 ＋ 25 ＋ 15 ＝ 49',ans:'x ＝ 7',sum:'x² ＝ 49 → x ＝ 7',after:{label:{ax:'7'}}})],
+ FIN('x の値は？',7,{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=30,t=tri3([60,230],0,7,5,3,sc),A=t.A,B=t.B,C=t.C;
+ return Q('6c3','c6c',2,'3辺が BC＝7、CA＝3、AB＝5 の △ABC があります。いちばん大きい角の大きさを求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),LEN('l1',B,C,'7',7,-1),LEN('l2',C,A,'3',3,-1),LEN('l3',B,A,'5',5,1),arcV('ax',A,B,C,'x',120,{x:1,r:18,lr:12,hidden:1})],
+ [CHO('c6c','いちばん大きい角はどれ？','∠A（いちばん長い辺 BC＝7 の向かい）',[['∠B','∠B の向かいの辺は CA＝3（最短）。いちばん小さい角だよ。'],['∠C','∠C の向かいは AB＝5。最大の辺 7 の向かいを探そう。']],['l1','l2','l3'],'大きい角の向かいには、長い辺がある。','最大の辺 BC＝7 の向かいの ∠A が最大。','最大の角は ∠A',{show:['ax']}),
+  INP('cos A の値は？','-1/2',{keys:'-/',hint:'cos A ＝ (3² ＋ 5² − 7²) ÷ (2 × 3 × 5)',ans:'cos A ＝ −15/30 ＝ −1/2',sum:'cos A ＝ −1/2（負なので鈍角）',after:{label:{ax:'120°'}}})],
+ FIN('いちばん大きい角は何度？',120,{unit:'°'}),{scale:sc,multiAns:1});})(),
+
+(()=>{const sc=30,B=[130,225],C=from(B,0,3*sc),A=from(B,120,5*sc);
+ return Q('6c4','c6c',3,'△ABC で AB＝5、CA＝7、∠B＝120° です。x（BC）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aB',B,C,A,'120°',120,{r:20}),LEN('l1',A,B,'5',5,1),LEN('l2',C,A,'7',7,1),LEN('ax',B,C,'x',3,-1,{x:1})],
+ [CHO('c6c','余弦定理をどう使う？','∠B を使う：7² ＝ 5² ＋ x² − 2·5·x·cos120°',[['∠A を使う','∠A の大きさはわからないよ。わかっている角は ∠B だけ。'],['x² ＝ 5² ＋ 7² − 2·5·7·cos120°','120° は ∠B。5 と 7 にはさまれた角ではないよ。']],['aB','l1','l2'],'わかっている角は ∠B だけ。その向かいの辺は？','∠B の向かいは CA＝7。49 ＝ 25 ＋ x² ＋ 5x → x² ＋ 5x − 24 ＝ 0。','x² ＋ 5x − 24 ＝ 0'),
+  INP('x の値は？',3,{keys:'-',hint:'(x ＋ 8)(x − 3) ＝ 0、x ＞ 0',ans:'x ＝ 3',sum:'x ＝ 3（x ＝ −8 は長さにならない）',after:{label:{ax:'3'}}})],
+ FIN('x の値は？',3,{keys:'-'}),{scale:sc});})(),
+
+(()=>{const sc=28,t=tri3([60,240],0,8,7,5,sc),A=t.A,B=t.B,C=t.C,M=mid(B,C);
+ return Q('6c5','c6c',3,'△ABC で AB＝7、BC＝8、CA＝5 です。BC の中点を M とするとき、AM の長さを求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAM',A,M),tk(B,M,1),tk(M,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(M,'M'),LEN('l1',B,A,'7',7,1),LEN('l2',C,A,'5',5,-1),LEN('l3',B,C,'8',8,-1,{off:38}),LEN('ax',M,A,'x',Math.sqrt(21),-1,{x:1,at:0.6})],
+ [CHO('c6c','AM を出すために、まず何を求める？','cos B（△ABC と △ABM に共通の角）',[['∠AMB','∠AMB は △ABM の中でしか決まらず、まだ出せないよ。'],['AM² ＝ 7² − 4²（三平方）','AM は BC に垂直ではないよ。']],['l1','l2','l3'],'△ABC は3辺がわかっている。△ABM と共通の角は？','△ABC で cos B を出し、それを △ABM でも使う。','共通の ∠B を橋わたしにする'),
+  INP('cos B の値は？','11/14',{keys:'/',hint:'(7² ＋ 8² − 5²) ÷ (2 × 7 × 8) ＝ 88/112',ans:'cos B ＝ 11/14',sum:'cos B ＝ 11/14'}),
+  INP('AM の長さは？','√21',{keys:'√/',hint:'△ABM：AM² ＝ 7² ＋ 4² − 2·7·4·(11/14)',ans:'AM² ＝ 49 ＋ 16 − 44 ＝ 21',sum:'AM ＝ √21',after:{label:{ax:'√21'}}})],
+ FIN('AM の長さは？','√21',{keys:'√/'}),{scale:sc});})(),
+
+/* ---- 三角形の面積 ---- */
+(()=>{const sc=30,A=[60,230],C=from(A,0,8*sc),B=from(A,30,6*sc);
+ return Q('6d1','c6d',1,'△ABC で AB＝6、AC＝8、∠A＝30° です。△ABC の面積を求めなさい。',
+ [polyF('pS',[A,B,C],''),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,C,B,'30°',30,{r:44}),LEN('l1',A,B,'6',6,1),LEN('l2',A,C,'8',8,-1)],
+ [CHO('c6d','面積を求める式は？','½ × 6 × 8 × sin30°',[['½ × 6 × 8','6 は高さではないよ（直角ではない）。'],['½ × 6 × 8 × cos30°','高さ ＝ 6 sin30°。面積は sin を使うよ。']],['l1','l2','aA'],'2辺とその間の角がわかっている。','S ＝ ½ × 2辺 × sin（間の角）。','S ＝ ½ × 6 × 8 × sin30°'),
+  INP('面積は？',12,{hint:'24 × ½',ans:'S ＝ 12',sum:'S ＝ ½ × 6 × 8 × ½ ＝ 12'})],
+ FIN('△ABC の面積は？',12),{scale:sc,chk:()=>Math.abs(area([A,B,C])/sc/sc-12)<1e-9});})(),
+
+(()=>{const sc=28,B=[150,220],C=from(B,0,6*sc),A=from(B,135,4*sc);
+ return Q('6d2','c6d',2,'△ABC で AB＝4、BC＝6、∠B＝135° です。△ABC の面積を求めなさい。',
+ [polyF('pS',[A,B,C],''),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aB',B,C,A,'135°',135,{r:20,lr:13}),LEN('l1',B,A,'4',4,1),LEN('l2',B,C,'6',6,-1)],
+ [CHO('c6d','sin135° の値は？','√2/2（sin(180° − θ) ＝ sinθ）',[['−√2/2','鈍角でも sin は正。負になるのは cos だよ。'],['1/2','sin135° ＝ sin45° だよ。']],['aB'],'135° ＝ 180° − 45°。','sin135° ＝ sin45° ＝ √2/2。','sin135° ＝ √2/2'),
+  INP('面積は？','6√2',{keys:'√',hint:'½ × 4 × 6 × √2/2',ans:'S ＝ 6√2',sum:'S ＝ 12 × √2/2 ＝ 6√2'})],
+ FIN('△ABC の面積は？','6√2',{keys:'√'}),{scale:sc,chk:()=>Math.abs(area([A,B,C])/sc/sc-6*S2)<1e-9});})(),
+
+(()=>{const sc=28,A=[50,220],D=from(A,0,8*sc),B=from(A,60,5*sc),C=[B[0]+D[0]-A[0],B[1]+D[1]-A[1]];
+ return Q('6d3','c6d',2,'平行四辺形 ABCD で AB＝5、AD＝8、∠A＝60° です。平行四辺形の面積を求めなさい。',
+ [polyF('pS',[A,B,C,D],''),sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sAD',A,D),sg('sBD',B,D,{dash:1,hidden:1}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcV('aA',A,D,B,'60°',60,{r:28}),LEN('l1',A,B,'5',5,1),LEN('l2',A,D,'8',8,-1)],
+ [CHO('c6d','平行四辺形の面積は？','5 × 8 × sin60°（△ABD の 2つ分）',[['½ × 5 × 8 × sin60°','それは △ABD だけ。平行四辺形はその2倍だよ。'],['5 × 8','高さは 5 ではないよ。']],['l1','l2','aA'],'対角線 BD で、合同な三角形2つに分かれる。','△ABD ＝ ½·5·8·sin60°。平行四辺形はその2倍。','S ＝ 5 × 8 × sin60°',{show:['sBD']}),
+  INP('面積は？','20√3',{keys:'√',hint:'40 × √3/2',ans:'S ＝ 20√3',sum:'S ＝ 40 × √3/2 ＝ 20√3'})],
+ FIN('平行四辺形の面積は？','20√3',{keys:'√'}),{scale:sc,chk:()=>Math.abs(area([A,B,C,D])/sc/sc-20*S3)<1e-9});})(),
+
+(()=>{const sc=30,A=[60,230],B=from(A,0,8*sc),C=from(A,60,5*sc);
+ return Q('6d4','c6d',3,'3辺が AB＝8、BC＝7、CA＝5 の △ABC の面積を求めなさい。',
+ [polyF('pS',[A,B,C],''),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,B,C,'60°',60,{r:26,hidden:1}),LEN('l1',A,B,'8',8,-1),LEN('l2',C,B,'7',7,1),LEN('l3',A,C,'5',5,1)],
+ [CHO('c6d','3辺だけで面積を出す。最初の一手は？','余弦定理で、1つの角の cos を求める',[['½ × 8 × 7 × 5','3辺を全部かける面積の式はないよ。'],['正弦定理で角を求める','向かい合う辺と角の組がまだないので使えないよ。']],['l1','l2','l3'],'面積には「2辺とその間の角」が必要。','角がない → 余弦定理で cos → sin → 面積。','余弦定理 → cos → sin → 面積'),
+  INP('∠A（8 と 5 の間の角）の cos A は？','1/2',{keys:'-/',hint:'cos A ＝ (8² ＋ 5² − 7²) ÷ (2 × 8 × 5) ＝ 40/80',ans:'cos A ＝ 1/2',sum:'cos A ＝ 1/2 → ∠A ＝ 60°、sin A ＝ √3/2',after:{show:['aA']}}),
+  INP('面積は？','10√3',{keys:'√',hint:'½ × 8 × 5 × √3/2',ans:'S ＝ 10√3',sum:'S ＝ 20 × √3/2 ＝ 10√3'})],
+ FIN('△ABC の面積は？','10√3',{keys:'√'}),{scale:sc,chk:()=>Math.abs(area([A,B,C])/sc/sc-10*S3)<1e-9&&Math.abs(D2(B,C)/sc-7)<1e-9});})(),
+
+(()=>{const sc=36,A=[40,235],B=from(A,0,8*sc),C=from(A,60,3*sc),I=incenter(A,B,C),r=2*S3/3,F=[I[0],235];
+ return Q('6d5','c6d',3,'△ABC で AB＝8、AC＝3、∠A＝60° です。△ABC の内接円の半径 r を求めなさい。',
+ [CIR(I,r*sc),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sIA',I,A,{dash:1,hidden:1}),sg('sIB',I,B,{dash:1,hidden:1}),sg('sIC',I,C,{dash:1,hidden:1}),sg('sIF',I,F,{dash:1}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(I,'I'),arcV('aA',A,B,C,'60°',60,{r:24}),LEN('l1',A,B,'8',8,-1,{off:26}),LEN('l2',A,C,'3',3,1),LEN('ax',I,F,'r',r,1,{x:1})],
+ [CHO('c6d','内接円の半径 r を求める道具は？','面積：S ＝ ½ r（a ＋ b ＋ c）',[['正弦定理 a/sinA ＝ 2R','それは外接円の半径 R を出す式だよ。'],['r ＝ AC ÷ 2','内接円の直径が辺になるわけではないよ。']],[],'内接円の中心 I と頂点を結ぶと、高さ r の三角形が3つできる。','S ＝ ½·r·AB ＋ ½·r·BC ＋ ½·r·CA。BC と S が必要。','S ＝ ½ r（a ＋ b ＋ c）',{show:['sIA','sIB','sIC']}),
+  INP('BC の長さは？',7,{keys:'√',hint:'余弦定理：BC² ＝ 8² ＋ 3² − 2·8·3·cos60°',ans:'BC² ＝ 49',sum:'BC ＝ 7'}),
+  INP('面積 S は？','6√3',{keys:'√',hint:'½ × 8 × 3 × sin60°',ans:'S ＝ 6√3',sum:'S ＝ 6√3 → 6√3 ＝ ½ × r × 18'})],
+ FIN('r の値は？','2√3/3',{keys:'√/'}),{scale:sc,multiAns:1});})(),
+
+/* ---- 定理の選び分け ---- */
+(()=>{const sc=38,A=[45,240],C=from(A,0,4*Math.sin(105*RAD)/0.5*sc),B=from(A,30,4*S2*sc);
+ return Q('6e1','c6e',1,'△ABC で BC＝4、∠A＝30°、∠C＝45° です。x（AB）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,C,B,'30°',30,{r:46}),arcV('aC',C,B,A,'45°',45,{r:34}),LEN('l1',C,B,'4',4,-1),LEN('ax',A,B,'x',4*S2,1,{x:1})],
+ [CHO('c6e','使う定理は？','正弦定理（BC と ∠A、x と ∠C の組がそろう）',[['余弦定理','余弦定理は2辺が必要。わかっている辺は BC だけだよ。'],['三平方の定理','直角三角形ではないよ。']],['l1','aA','aC','ax'],'わかっているのは 1辺と2角。向かい合う組は？','4/sin30° ＝ x/sin45°。','4/sin30° ＝ x/sin45°'),
+  INP('x の値は？','4√2',{keys:'√',hint:'x ＝ 4 × sin45° ÷ sin30° ＝ 4 × √2/2 ÷ 1/2',ans:'x ＝ 4√2',sum:'x ＝ 4√2',after:{label:{ax:'4√2'}}})],
+ FIN('x の値は？','4√2',{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=32,t=tri3([60,235],0,7,4,5,sc),A=t.A,B=t.B,C=t.C;
+ return Q('6e2','c6e',2,'3辺が BC＝7、AB＝4、CA＝5 の △ABC は、鋭角三角形・直角三角形・鈍角三角形のどれですか。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),LEN('l1',B,C,'7',7,-1),LEN('l2',B,A,'4',4,1),LEN('l3',A,C,'5',5,1)],
+ [CHO('c6e','何を調べれば決まる？','最大の辺 7 の向かいの角が 90° より大きいか',[['最小の辺 4 の向かいの角','短い辺の向かいの角は小さい。鈍角になるなら最大の辺の向かいだよ。'],['3つの角をすべて求める','いちばん大きい角だけ調べれば十分だよ。']],['l1','l2','l3'],'鈍角があるとしたら、どの角？','最大の辺 BC＝7 の向かいの ∠A。cos A の符号 ＝ 4² ＋ 5² − 7² の符号。','∠A の cos の符号を調べる'),
+  INP('4² ＋ 5² − 7² はいくつ？',-8,{keys:'-',hint:'16 ＋ 25 − 49',ans:'−8',sum:'−8 ＜ 0 → cos A ＜ 0 → ∠A は鈍角'})],
+ FCH('この三角形は？','鈍角三角形',['鋭角三角形','直角三角形']),{scale:sc});})(),
+
+(()=>{const sc=36,A=[60,230],C=from(A,0,6*Math.sin(75*RAD)/Math.sin(60*RAD)*sc),B=from(A,45,6*sc);
+ return Q('6e3','c6e',2,'△ABC で AB＝6、∠A＝45°、∠C＝60° です。x（BC）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aA',A,C,B,'45°',45,{r:40}),arcV('aC',C,B,A,'60°',60,{r:28}),LEN('l1',A,B,'6',6,1),LEN('ax',C,B,'x',2*Math.sqrt(6),-1,{x:1})],
+ [CHO('c6e','6（AB）と組になる角は？','∠C（60°）：AB の向かいの角',[['∠A（45°）','A は AB の端の点。向かいの角ではないよ。'],['組はつくれないので余弦定理','∠C が AB の向かいにある。正弦定理で解けるよ。']],['l1','aA','aC','ax'],'AB の向かいにある頂点は？ x の向かいは？','6/sin60° ＝ x/sin45°（x の向かいは ∠A）。','6/sin60° ＝ x/sin45°'),
+  INP('x の値は？','2√6',{keys:'√',hint:'x ＝ 6 × sin45° ÷ sin60° ＝ 6 × √2/2 ÷ √3/2 ＝ 6√2/√3',ans:'x ＝ 2√6',sum:'x ＝ 6√2/√3 ＝ 2√6',after:{label:{ax:'2√6'}}})],
+ FIN('x の値は？','2√6',{keys:'√'}),{scale:sc});})(),
+
+(()=>{const sc=42,A=[152,40],B=from(A,210,3*sc),C=from(A,330,6*sc),D=lerp(B,C,1/3);
+ return Q('6e4','c6e',3,'△ABC で AB＝3、AC＝6、∠A＝120° です。∠A の二等分線と BC の交点を D とするとき、x（AD）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcV('aA',A,B,C,'',120,{r:16,whole:1}),TX('t120',[A[0]+34,A[1]+4],'120°'),arcS('a1',A,B,D,'●',{hidden:1,r:28,lr:20}),arcS('a2',A,D,C,'●',{hidden:1,r:28,lr:20}),LEN('l1',A,B,'3',3,1),LEN('l2',A,C,'6',6,-1),LEN('ax',A,D,'x',2,1,{x:1,at:0.72})],
+ [CHO('c6e','AD を求める道具は？','面積：△ABC ＝ △ABD ＋ △ADC',[['△ABD で余弦定理','BD もわからないので、x だけの式にならないよ。'],['正弦定理','x の向かいの角がわからないので使えないよ。']],['aA','ax'],'AD は △ABD と △ADC の共通の辺。∠BAD ＝ ∠DAC ＝ 60°。','½·3·6·sin120° ＝ ½·3·x·sin60° ＋ ½·6·x·sin60°。','面積の和で式をつくる',{show:['a1','a2']}),
+  INP('x の値は？',2,{hint:'sin120° ＝ sin60° なので、両辺を ½ sin60° でわると 18 ＝ 3x ＋ 6x',ans:'x ＝ 2',sum:'18 ＝ 9x → x ＝ 2',after:{label:{ax:'2'}}})],
+ FIN('x の値は？',2),{scale:sc});})(),
+
+(()=>{const sc=28,O=[200,150],R=7/S3*sc,a0=168,A=onCircle(O,R,a0),B=onCircle(O,R,a0+chordDeg(5,7/S3)),C=onCircle(O,R,a0+120),D=onCircle(O,R,a0+120+chordDeg(3,7/S3));
+ return Q('6e5','c6e',3,'四角形 ABCD は円に内接し、AB＝5、BC＝3、CD＝3、∠ABC＝120° です。x（AD）の値を求めなさい。',
+ [CIR(O,R),sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sAD',A,D),sg('sAC',A,C,{dash:1,hidden:1}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcV('aB',B,C,A,'120°',120,{r:18,lr:12}),arcV('aD',D,A,C,'60°',60,{r:24,hidden:1}),LEN('l1',A,B,'5',5,1),LEN('l2',B,C,'3',3,1),LEN('l3',C,D,'3',3,-1),LEN('ax',D,A,'x',8,-1,{x:1})],
+ [CHO('c6e','最初の一手は？','対角線 AC を、△ABC の余弦定理で求める',[['△ACD の余弦定理で x を直接','△ACD は AC も角もまだわからないよ。'],['x ＝ AB ＋ BC','そういう関係はないよ。']],['aB','l1','l2'],'△ABC は、2辺とその間の角がそろっている。','AC² ＝ 25 ＋ 9 − 2·5·3·cos120° ＝ 49 → AC ＝ 7。','AC ＝ 7',{show:['sAC']}),
+  CHO('c6e','∠ADC は？','60°（円に内接する四角形の対角の和は 180°）',[['120°','∠D は ∠B の対角。等しいのではなく、たして 180° だよ。'],['90°','直径は出てこないよ。']],['aB'],'D は B の向かいの頂点。','∠ADC ＝ 180° − 120° ＝ 60°。','∠D ＝ 60°',{show:['aD']}),
+  INP('x の値は？',8,{keys:'-',hint:'△ACD：7² ＝ x² ＋ 3² − 2·x·3·cos60° → x² − 3x − 40 ＝ 0',ans:'(x − 8)(x ＋ 5) ＝ 0',sum:'x ＝ 8（x ＝ −5 は長さにならない）',after:{label:{ax:'8'}}})],
+ FIN('x の値は？',8,{keys:'-'}),{scale:sc,chk:()=>Math.abs(D2(A,C)/sc-7)<1e-9&&Math.abs(angAt(D,A,C)-60)<1e-9});})()
+);
+
+STAGE.push(
+(()=>{const sc=28,Rr=7/S3,O=[200,150],R=Rr*sc,a0=200,A=onCircle(O,R,a0),B=onCircle(O,R,a0+chordDeg(8,Rr)),C=onCircle(O,R,a0+chordDeg(8,Rr)+chordDeg(5,Rr)),D=onCircle(O,R,a0+chordDeg(8,Rr)+2*chordDeg(5,Rr));
+ return Q('g61','stage',4,'四角形 ABCD は円に内接し、AB＝8、BC＝5、CD＝5、DA＝3 です。四角形 ABCD の面積を求めなさい。',
+ [CIR(O,R),polyF('pS',[A,B,C,D],''),sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sAD',A,D),sg('sAC',A,C,{dash:1,hidden:1}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),LEN('l1',A,B,'8',8,-1),LEN('l2',B,C,'5',5,-1),LEN('l3',C,D,'5',5,-1),LEN('l4',D,A,'3',3,-1)],
+ [CHO('c6e','角が1つもない。最初の一手は？','AC² を △ABC と △ACD の2通りで表す（∠D ＝ 180° − ∠B）',[['AC を三平方の定理で求める','直角はどこにもないよ。'],['∠B ＝ 90° とみなす','そう決める根拠はないよ。']],['l1','l2','l3','l4'],'内接四角形 → ∠D ＝ 180° − ∠B → cos D ＝ −cos B。','64 ＋ 25 − 80 cos B ＝ 25 ＋ 9 ＋ 30 cos B。','AC² の2通りの式を等しいとおく',{show:['sAC']}),
+  INP('cos B の値は？','1/2',{keys:'-/',hint:'89 − 80 cos B ＝ 34 ＋ 30 cos B → 110 cos B ＝ 55',ans:'cos B ＝ 1/2',sum:'∠B ＝ 60°、∠D ＝ 120°（sin はどちらも √3/2）'}),
+  INP('四角形 ABCD の面積は？','55√3/4',{keys:'√/',hint:'½·8·5·sin60° ＋ ½·5·3·sin120°',ans:'10√3 ＋ 15√3/4',sum:'S ＝ 55√3/4'})],
+ FIN('四角形 ABCD の面積は？','55√3/4',{keys:'√/'}),{ch:6,types:['c6e','c6c','c6d'],scale:sc,chk:()=>Math.abs(area([A,B,C,D])/sc/sc-55*S3/4)<1e-9&&Math.abs(D2(D,A)/sc-3)<1e-9});})(),
+
+(()=>{const sc=28,Rr=7/S3,O=[200,150],R=Rr*sc,B=onCircle(O,R,210),C=onCircle(O,R,330),A=onCircle(O,R,330+chordDeg(5,Rr)),E=onCircle(O,R,105);
+ return Q('g62','stage',4,'3辺が BC＝7、CA＝5、AB＝8 の △ABC の外接円の半径 R を求めなさい。',
+ [CIR(O,R),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sOE',O,E,{dash:1}),pt(O,'O'),pt(A,'A'),pt(B,'B'),pt(C,'C'),LEN('l1',B,C,'7',7,-1),LEN('l2',C,A,'5',5,-1),LEN('l3',A,B,'8',8,1,{at:0.72}),LEN('ax',O,E,'R',Rr,-1,{x:1})],
+ [CHO('c6b','R を出すのに必要なものは？','1つの辺と、その向かいの角（正弦定理）',[['3辺の和 ÷ 3','そういう公式はないよ。'],['面積だけ','面積から出すのは内接円の半径 r だよ。']],['ax'],'正弦定理：a/sinA ＝ 2R。','BC＝7 の向かいの ∠A を、余弦定理で出す。','BC と ∠A の組をつくる'),
+  INP('cos A の値は？','1/2',{keys:'-/',hint:'(5² ＋ 8² − 7²) ÷ (2 × 5 × 8)',ans:'cos A ＝ 1/2',sum:'∠A ＝ 60°'}),
+  INP('R の値は？','7√3/3',{keys:'√/',hint:'2R ＝ 7 ÷ sin60° ＝ 14/√3',ans:'R ＝ 7/√3 ＝ 7√3/3',sum:'R ＝ 7√3/3',after:{label:{ax:'7√3/3'}}})],
+ FIN('R の値は？','7√3/3',{keys:'√/'}),{ch:6,types:['c6b','c6c'],scale:sc,chk:()=>Math.abs(D2(A,B)/sc-8)<1e-9});})(),
+
+(()=>{const sc=36,A=[180,40],B=from(A,240,6*sc),C=from(A,300,3*sc),D=lerp(B,C,2/3);
+ return Q('g63','stage',4,'△ABC で AB＝6、AC＝3、∠A＝60° です。∠A の二等分線と BC の交点を D とするとき、x（AD）の値を求めなさい。',
+ [polyF('pS',[A,B,C],''),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcV('aA',A,B,C,'',60,{r:14,whole:1}),TX('t60',[A[0]+30,A[1]+2],'60°'),arcS('a1',A,B,D,'●',{r:32,lr:22}),arcS('a2',A,D,C,'●',{r:32,lr:22}),LEN('l1',A,B,'6',6,1),LEN('l2',A,C,'3',3,1),LEN('ax',A,D,'x',2*S3,-1,{x:1,at:0.72})],
+ [CHO('c6e','AD を求める道具は？','面積：△ABC ＝ △ABD ＋ △ADC',[['BD：DC ＝ 2：1 から三平方','直角がないので三平方は使えないよ。'],['正弦定理','x の向かいの角がわからないよ。']],['aA','ax'],'AD は2つの三角形の共通の辺。∠BAD ＝ ∠DAC ＝ 30°。','½·6·3·sin60° ＝ ½·6·x·sin30° ＋ ½·3·x·sin30°。','面積の和で式をつくる'),
+  INP('△ABC の面積は？','9√3/2',{keys:'√/',hint:'½ × 6 × 3 × sin60°',ans:'S ＝ 9√3/2',sum:'△ABC ＝ 9√3/2'}),
+  INP('x の値は？','2√3',{keys:'√/',hint:'9√3/2 ＝ ½·6·x·½ ＋ ½·3·x·½ ＝ 9x/4',ans:'x ＝ 2√3',sum:'x ＝ 2√3',after:{label:{ax:'2√3'}}})],
+ FIN('x の値は？','2√3',{keys:'√/'}),{ch:6,types:['c6e','c6d'],scale:sc});})(),
+
+(()=>{const H=[300,235],T=[300,55],A=[70,255],B=[215,205];
+ return Q('g64','stage',4,'塔 TH が地面に垂直に立っています。地面の2点 A、B から先端 T を見上げた角は、A から 30°、B から 45° です。∠AHB＝30°、AB＝40 m のとき、塔の高さを求めなさい。',
+ [poly0([A,B,H]),sg('sAH',A,H),sg('sBH',B,H),sg('sAB',A,B),sg('sTH',T,H),sg('sTA',T,A,{dash:1}),sg('sTB',T,B,{dash:1}),pt(A,'A'),pt(B,'B'),pt(H,'H'),pt(T,'T'),TX('t1',[A[0]+52,A[1]-16],'30°'),TX('t2',[B[0]+34,B[1]-20],'45°'),TX('t3',[H[0]-46,H[1]-6],'30°'),TX('t4',[(A[0]+B[0])/2-12,(A[1]+B[1])/2-12],'40')],
+ [CHO('c6a','最初の一手は？','TH ＝ h とおいて、AH と BH を h で表す',[['△ABT で余弦定理','△ABT は角も TA・TB もわからないよ。'],['TH ＝ 40 tan30°','40 は AH ではなく AB だよ。']],[],'△TAH、△TBH は直角三角形（∠H ＝ 90°）。','AH ＝ h ÷ tan30° ＝ √3 h、BH ＝ h ÷ tan45° ＝ h。','AH ＝ √3 h、BH ＝ h'),
+  CHO('c6c','地面の △ABH で余弦定理を使うと？','40² ＝ 3h² ＋ h² − 2·√3h·h·cos30°',[['40² ＝ 3h² ＋ h²','∠AHB は 90° ではなく 30° だよ。'],['40² ＝ 3h² ＋ h² ＋ 2·√3h·h·cos30°','余弦定理は「− 2ab cos」だよ。']],[],'∠AHB ＝ 30° をはさむ辺は AH と BH。','40² ＝ 4h² − 3h² ＝ h²。','40² ＝ h²'),
+  INP('塔の高さは？',40,{unit:'m',hint:'h² ＝ 1600',ans:'h ＝ 40',sum:'塔の高さは 40 m'})],
+ FIN('塔の高さは何 m？',40,{unit:'m'}),{ch:6,types:['c6a','c6c'],noGeo:1,chk:()=>{const h=40,ah=S3*h,bh=h;return Math.abs(ah*ah+bh*bh-2*ah*bh*Math.cos(30*RAD)-1600)<1e-9;}});})()
+);
+function poly0(pts){return {t:'poly',id:'pG',pts,cls:'b'};}
+
+/*CH6-END*/
 /*DATA-END*/
 
 /* ===== 章の情報 ===== */
