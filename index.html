@@ -350,7 +350,7 @@ const PROBS=[
  fig:[...parBase(A6,70),
   {t:'arc',id:'a110',c:A6,a1:70,a2:180,r:30,label:'110°',val:110,lr:26},
   {t:'arc',id:'ax',c:B6,a1:0,a2:70,r:32,label:'x',val:70,x:1},
-  {t:'arc',id:'a70',c:A6,a1:0,a2:70,r:32,label:'70°',val:70,hidden:1}],
+  {t:'arc',id:'a70',c:A6,a1:0,a2:70,r:20,label:'70°',val:70,hidden:1}],
  steps:[
   {kind:'choice',skill:null,q:'x を求めるために、まず何を考える？',
    choices:[
@@ -373,8 +373,8 @@ const PROBS=[
 {id:'t4',skill:'taicho',lv:2,text:'3本の直線が点Oで交わっています。∠x の大きさを求めなさい。',
  fig:[{t:'line',id:'La',p:O,d:10},{t:'line',id:'Lb',p:O,d:75},{t:'line',id:'Lc',p:O,d:130},{t:'pt',p:O,s:'O',off:[16,6]},
   {t:'arc',id:'a65',c:O,a1:10,a2:75,r:40,label:'65°',val:65},
-  {t:'arc',id:'a55',c:O,a1:75,a2:130,r:40,label:'55°',val:55},
-  {t:'arc',id:'ax',c:O,a1:255,a2:310,r:40,label:'x',val:55,x:1}],
+  {t:'arc',id:'a55',c:O,a1:75,a2:130,r:28,label:'55°',val:55},
+  {t:'arc',id:'ax',c:O,a1:255,a2:310,r:28,label:'x',val:55,x:1}],
  steps:[
   {kind:'choice',skill:'taicho',q:'x と向かい合っている角（対頂角）はどれ？',
    choices:[
@@ -410,9 +410,9 @@ const PROBS=[
  fig:[{t:'line',id:'La',p:O,d:0},{t:'line',id:'Lb',p:O,d:40},{t:'line',id:'Lc',p:O,d:100},{t:'pt',p:O,s:'O',off:[12,-14]},
   {t:'arc',id:'a80',c:O,a1:100,a2:180,r:34,label:'80°',val:80},
   {t:'arc',id:'ax',c:O,a1:180,a2:220,r:44,label:'x',val:40,x:1},
-  {t:'arc',id:'axp',c:O,a1:220,a2:280,r:34,label:'(x+20)°',val:60,lr:36},
+  {t:'arc',id:'axp',c:O,a1:220,a2:280,r:24,label:'(x+20)°',val:60,lr:40},
   {t:'arc',id:'ax2',c:O,a1:0,a2:40,r:44,label:'x',val:40,x:1,hidden:1},
-  {t:'arc',id:'axp2',c:O,a1:40,a2:100,r:34,label:'(x+20)°',val:60,lr:36,hidden:1}],
+  {t:'arc',id:'axp2',c:O,a1:40,a2:100,r:24,label:'(x+20)°',val:60,lr:40,hidden:1}],
  steps:[
   {kind:'choice',skill:'taicho',q:'下にある x と (x＋20)° を、横の直線の上側へ移せる？',
    choices:[
@@ -428,9 +428,9 @@ const PROBS=[
 
 {id:'t7',skill:'taicho',lv:3,text:'2本の直線が点Oで交わっています。∠y の大きさを求めなさい。',
  fig:[{t:'line',id:'L1',p:O,d:30},{t:'line',id:'L2',p:O,d:110},{t:'pt',p:O,s:'O',off:[16,4]},
-  {t:'arc',id:'a2x',c:O,a1:110,a2:210,r:34,label:'2x°',val:100},
-  {t:'arc',id:'axp',c:O,a1:30,a2:110,r:34,label:'(x+30)°',val:80,lr:38},
-  {t:'arc',id:'ax',c:O,a1:210,a2:290,r:34,label:'y',val:80,x:1}],
+  {t:'arc',id:'a2x',c:O,a1:110,a2:210,r:40,label:'2x°',val:100},
+  {t:'arc',id:'axp',c:O,a1:30,a2:110,r:26,label:'(x+30)°',val:80,lr:40},
+  {t:'arc',id:'ax',c:O,a1:210,a2:290,r:26,label:'y',val:80,x:1}],
  steps:[
   {kind:'choice',skill:null,q:'まず x を求めたい。2x° と (x＋30)° について言えることは？',
    choices:[
@@ -2309,7 +2309,7 @@ PROBS.push(
 
 (()=>{const sc=26,A=[150,220],C=from(A,0,6*sc),B=from(A,120,4*sc),H=[B[0],220];
  return Q('6a5','c6a',3,'△ABC で AB＝4、AC＝6、∠A＝120° です。BC の長さを、B から直線 CA に垂線を引いて求めなさい。',
- [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAH',H,A,{dash:1,hidden:1}),sg('sBH',B,H,{dash:1,hidden:1}),rt(H,B,C,{hidden:1,id:'rH'}),pt(A,'A'),pt(B,'B'),pt(C,'C'),{t:'pt',p:H,s:'H',hidden:1,id:'pH'},arcV('aA',A,C,B,'120°',120,{r:22}),arcV('aH',A,B,H,'60°',60,{r:20,hidden:1}),LEN('l1',A,B,'4',4,-1),LEN('l2',A,C,'6',6,-1),LEN('ax',B,C,'x',2*Math.sqrt(19),1,{x:1})],
+ [sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),sg('sAH',H,A,{dash:1,hidden:1}),sg('sBH',B,H,{dash:1,hidden:1}),rt(H,B,C,{hidden:1,id:'rH'}),pt(A,'A'),pt(B,'B'),pt(C,'C'),{t:'pt',p:H,s:'H',hidden:1,id:'pH'},arcV('aA',A,C,B,'120°',120,{r:22}),arcV('aH',A,B,H,'60°',60,{r:34,lr:14,hidden:1}),LEN('l1',A,B,'4',4,-1),LEN('l2',A,C,'6',6,-1),LEN('ax',B,C,'x',2*Math.sqrt(19),1,{x:1})],
  [CHO('c6a','B から直線 CA に垂線 BH を下ろすと、H はどこ？','CA を A の外側へのばした線の上',[['辺 AC の上','∠A が鈍角なので、垂線の足は辺 AC の上には来ないよ。'],['点 A','BA と CA は垂直ではないよ（120°）。']],['aA'],'∠A ＝ 120° は鈍角。','H は CA の延長上。∠BAH ＝ 180° − 120° ＝ 60° の直角三角形 ABH ができる。','H は延長上、∠BAH ＝ 60°',{show:['sAH','sBH','aH','rH','pH']}),
   INP('AH の長さは？',2,{look:['aH','l1'],hint:'AH ＝ 4 cos60°',ans:'AH ＝ 2',sum:'AH ＝ 4 cos60° ＝ 2、BH ＝ 4 sin60° ＝ 2√3'}),
   INP('BC の長さは？','2√19',{keys:'√',hint:'△BHC：HC ＝ 2 ＋ 6 ＝ 8、BH ＝ 2√3',ans:'BC² ＝ 8² ＋ (2√3)² ＝ 76',sum:'BC ＝ √76 ＝ 2√19（この計算をまとめたものが余弦定理）',after:{label:{ax:'2√19'}}})],
