@@ -2500,6 +2500,234 @@ STAGE.push(
 function poly0(pts){return {t:'poly',id:'pG',pts,cls:'b'};}
 
 /*CH6-END*/
+/*CH7-START*/
+/* ==================== 第7章 図形の性質 ==================== */
+SKILLS.push(
+ {id:'c7a',ch:7,name:'角の二等分線と比',desc:'内角の二等分線は対辺を内分、外角の二等分線は外分。比は「となりの2辺の比」',ready:true},
+ {id:'c7b',ch:7,name:'チェバ・メネラウス',desc:'1点で交わる3本ならチェバ、一直線ならメネラウス。どの三角形に使うかが勝負',ready:true},
+ {id:'c7c',ch:7,name:'方べきの定理',desc:'P からの距離どうしをかける。PA·PB ＝ PC·PD ＝ PT²',ready:true},
+ {id:'c7d',ch:7,name:'接弦定理',desc:'接線と弦の角 ＝ 弦の反対側の円周角。相似も生まれる',ready:true},
+ {id:'c7e',ch:7,name:'三角形の五心',desc:'重心は 2:1、内心は角の二等分線、外心は外接円の中心',ready:true});
+function tanSeg(id,O,A,l1,l2){const d=dirTo(O,A);return {s:sg(id,from(A,d+90,l1),from(A,d-90,l2)),T1:from(A,d+90,l1),T2:from(A,d-90,l2)};}
+function parM(a,b){return {t:'par',p:mid(a,b),d:dirTo(a,b)};}
+function cen(A,B,C){return [(A[0]+B[0]+C[0])/3,(A[1]+B[1]+C[1])/3];}
+function foot(P,A,B){const dx=B[0]-A[0],dy=B[1]-A[1],t=((P[0]-A[0])*dx+(P[1]-A[1])*dy)/(dx*dx+dy*dy);return [A[0]+t*dx,A[1]+t*dy];}
+function rat(P,Q,R){return D2(P,Q)/D2(Q,R);}
+const NEAR=(a,b)=>Math.abs(a-b)<1e-9;
+PROBS.push(
+/* ---- 角の二等分線と比 ---- */
+(()=>{const sc=40,t=tri3([60,240],0,5,6,4,sc),A=t.A,B=t.B,C=t.C,D=lerp(B,C,3/5);
+ return Q('7a1','c7a',1,'△ABC で AB＝6、AC＝4、BC＝5 です。∠A の二等分線と BC の交点を D とするとき、x（BD）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),arcS('a1',A,B,D,'●',{r:26,lr:17}),arcS('a2',A,D,C,'●',{r:26,lr:17}),LEN('l1',B,A,'6',6,1),LEN('l2',A,C,'4',4,1),LEN('ax',B,D,'x',3,-1,{x:1}),LEN('l3',D,C,'',2,-1)],
+ [CHO('c7a','BD：DC は？','6：4（AB：AC）',[['4：6（AC：AB）','BD は AB の側。BD：DC ＝ AB：AC の順だよ。'],['1：1','AD は中線ではなく、角の二等分線だよ。']],['l1','l2','a1','a2'],'角の二等分線は、対辺を「となりの2辺の比」に分ける。','BD：DC ＝ AB：AC ＝ 6：4 ＝ 3：2。','BD：DC ＝ 3：2'),
+  INP('x の値は？',3,{hint:'5 を 3：2 に分ける → 5 × 3/5',ans:'x ＝ 3',sum:'x ＝ 5 × 3/5 ＝ 3',after:{label:{ax:'3'}}})],
+ FIN('x の値は？',3),{scale:sc});})(),
+
+(()=>{const sc=20,B=[45,240],t=tri3(B,0,5,6,4,sc),A=t.A,C=t.C,E=from(B,0,15*sc),F=from(A,dirTo(B,A),55);
+ return Q('7a2','c7a',2,'△ABC で AB＝6、AC＝4、BC＝5 です。∠A の外角の二等分線と、辺 BC の延長との交点を E とします。x（CE）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAF',A,F,{dash:1}),sg('sCE',C,E,{dash:1}),sg('sAE',A,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(E,'E'),arcS('a1',A,F,E,'○',{r:24,lr:15}),arcS('a2',A,E,C,'○',{r:24,lr:15}),LEN('l1',B,A,'6',6,1),LEN('l2',A,C,'4',4,-1,{at:0.75}),LEN('l3',B,C,'5',5,-1),LEN('ax',C,E,'x',10,-1,{x:1})],
+ [CHO('c7a','E は BC をどう分ける？','3：2 に外分（BE：EC ＝ AB：AC ＝ 6：4）',[['3：2 に内分','内分するのは内角の二等分線。E は BC の外側にあるよ。'],['2：3 に外分','BE：EC ＝ AB：AC。B 側が 6（＝3）だよ。']],['a1','a2','l1','l2'],'外角の二等分線も「となりの2辺の比」。ただし外分。','BE：EC ＝ 3：2。BE − EC ＝ BC ＝ 5 なので、比の差 1 が 5 にあたる。','BE：EC ＝ 3：2（外分）'),
+  INP('x の値は？',10,{hint:'比の 1 が 5 → EC は 2 → 10',ans:'x ＝ 10',sum:'BE ＝ 15、EC ＝ 10',after:{label:{ax:'10'}}})],
+ FIN('x の値は？',10),{scale:sc});})(),
+
+(()=>{const sc=40,t=tri3([60,240],0,6,4,5,sc),A=t.A,B=t.B,C=t.C,D=lerp(B,C,4/9),I=incenter(A,B,C);
+ return Q('7a3','c7a',2,'△ABC で AB＝4、BC＝6、CA＝5 です。内心を I、直線 AI と BC の交点を D とします。AI：ID を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sBI',B,I),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(I,'I'),arcS('a1',A,B,I,'●',{r:24,lr:15}),arcS('a2',A,I,C,'●',{r:24,lr:15}),arcS('b1',B,D,I,'×',{r:30,lr:20}),arcS('b2',B,I,A,'×',{r:30,lr:20}),LEN('l1',B,A,'4',4,1),LEN('l2',A,C,'5',5,1),LEN('l3',B,C,'6',6,-1,{off:30})],
+ [CHO('c7a','AI：ID を出すには？','△ABD で BI は ∠B の二等分線 → AI：ID ＝ BA：BD',[['AI：ID ＝ AB：AC','それは BD：DC の比。I は AD 上の点だよ。'],['AI：ID ＝ 2：1','2：1 になるのは重心。I は内心だよ。']],['b1','b2','sBI'],'I は ∠B の二等分線の上にもある。△ABD に注目。','△ABD で、角の二等分線 BI が AD を BA：BD に分ける。まず BD。','AI：ID ＝ BA：BD'),
+  INP('BD の長さは？','8/3',{keys:'/',hint:'BD：DC ＝ AB：AC ＝ 4：5 → BD ＝ 6 × 4/9',ans:'BD ＝ 8/3',sum:'BD ＝ 8/3 → AI：ID ＝ 4：8/3 ＝ 12：8'})],
+ FIN('AI：ID は？','3:2',{keys:':/'}),{scale:sc,chk:()=>NEAR(rat(A,I,D),1.5)&&NEAR(D2(B,D)/sc,8/3)});})(),
+
+(()=>{const sc=22,t=tri3([50,240],0,10,9,6,sc),A=t.A,B=t.B,C=t.C,D=lerp(B,C,3/5),E=lerp(C,A,2/5);
+ return Q('7a4','c7a',3,'△ABC で AB＝9、AC＝6、BC＝10 です。∠A の二等分線と BC の交点を D とし、D を通り AB に平行な直線が AC と交わる点を E とします。x（DE）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sDE',D,E),parM(A,B),parM(E,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),arcS('a1',A,B,D,'●',{r:28,lr:18}),arcS('a2',A,D,C,'●',{r:28,lr:18}),LEN('l1',B,A,'9',9,1),LEN('l2',A,C,'6',6,1),LEN('l3',B,C,'10',10,-1),LEN('ax',D,E,'x',18/5,-1,{x:1})],
+ [CHO('c7a','最初の一手は？','BD：DC ＝ 9：6 ＝ 3：2（角の二等分線）',[['DE ＝ AB ÷ 2（中点連結定理）','D は BC の中点ではないよ。'],['DE ＝ AC','そう決める根拠はないよ。']],['a1','a2','l1','l2'],'AD は角の二等分線。','BD：DC ＝ AB：AC ＝ 3：2。','BD：DC ＝ 3：2'),
+  CHO('c7a','DE と AB の関係は？','DE：AB ＝ CD：CB ＝ 2：5（△CDE ∽ △CBA）',[['DE：AB ＝ BD：BC ＝ 3：5','相似なのは △CDE と △CBA。C 側の比を使うよ。'],['DE：AB ＝ 2：3','DC：BD ではなく、DC：CB（全体）との比だよ。']],['sDE','sAB'],'DE ∥ AB なので、C を頂点とする相似。','DE ＝ 9 × 2/5。','DE ＝ AB × 2/5'),
+  INP('x の値は？',['18/5','3.6'],{keys:'./',hint:'9 × 2/5',ans:'x ＝ 18/5',sum:'x ＝ 18/5（AE も 18/5：△ADE は二等辺三角形）',after:{label:{ax:'18/5'}}})],
+ FIN('x の値は？',['18/5','3.6'],{keys:'./'}),{scale:sc});})(),
+
+(()=>{const sc=26,B=[40,245],t=tri3(B,0,8,9,3,sc),A=t.A,C=t.C,D=lerp(B,C,3/4),E=from(B,0,12*sc);
+ return Q('7a5','c7a',3,'△ABC で AB＝9、AC＝3、BC＝8 です。∠A の二等分線と BC の交点を D、∠A の外角の二等分線と BC の延長の交点を E とします。x（DE）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sCE',C,E,{dash:1}),sg('sAE',A,E),rt(A,D,E,{hidden:1,id:'rA'}),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),LEN('l1',B,A,'9',9,1),LEN('l2',A,C,'3',3,1,{at:0.6}),LEN('l3',B,C,'8',8,-1,{off:26}),LEN('ax',D,E,'x',6,-1,{x:1,off:44})],
+ [CHO('c7a','D と E は、それぞれ BC をどう分ける？','D は 3：1 に内分、E は 3：1 に外分',[['D は 3：1 に内分、E は 1：3 に外分','どちらも AB：AC ＝ 9：3 ＝ 3：1。B 側が 3 だよ。'],['D は中点、E は 3：1 に外分','AD は中線ではないよ。']],['l1','l2'],'内角も外角も、二等分線の比は AB：AC。','BD：DC ＝ 3：1（内分）、BE：EC ＝ 3：1（外分）。','内分も外分も 3：1'),
+  INP('DC の長さは？',2,{hint:'8 × 1/4',ans:'DC ＝ 2',sum:'DC ＝ 2'}),
+  INP('CE の長さは？',4,{hint:'BE：EC ＝ 3：1、BE − EC ＝ 8 → 比の 2 が 8',ans:'CE ＝ 4',sum:'CE ＝ 4 → DE ＝ 2 ＋ 4（∠DAE ＝ 90° にもなっている）',after:{show:['rA']}})],
+ FIN('x（DE）の値は？',6),{scale:sc,multiAns:1});})(),
+
+/* ---- チェバ・メネラウス ---- */
+(()=>{const A=[160,35],B=[40,250],C=[350,250],F=lerp(A,B,1/3),D=lerp(B,C,3/7),P=lnX(A,D,C,F),E=lnX(B,P,C,A);
+ return Q('7b1','c7b',1,'△ABC の内部の点 P と頂点を結ぶ直線が、辺と D、E、F で交わります。AF：FB＝1：2、BD：DC＝3：4 のとき、CE：EA を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sBE',B,E),sg('sCF',C,F),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),pt(P,'P'),LEN('r1',A,F,'1',1,1),LEN('r2',F,B,'2',2,1),LEN('r3',B,D,'3',3,-1),LEN('r4',D,C,'4',4,-1)],
+ [CHO('c7b','使う式は？','(AF/FB)·(BD/DC)·(CE/EA) ＝ 1（チェバの定理）',[['(AF/FB)·(DC/BD)·(CE/EA) ＝ 1','A→F→B→D→C→E→A と、頂点と分点を順にたどる。DC/BD は逆だよ。'],['AF/FB ＋ BD/DC ＋ CE/EA ＝ 1','たし算ではなく、かけ算だよ。']],['sAD','sBE','sCF'],'3本の線が1点 P で交わっている。','(1/2)·(3/4)·(CE/EA) ＝ 1。','(1/2)·(3/4)·(CE/EA) ＝ 1'),
+  INP('CE：EA は？','8:3',{keys:':/',hint:'CE/EA ＝ 8/3',ans:'CE：EA ＝ 8：3',sum:'CE：EA ＝ 8：3'})],
+ FIN('CE：EA は？','8:3',{keys:':/'}),{chk:()=>NEAR(rat(C,E,A),8/3)});})(),
+
+(()=>{const A=[250,35],B=[150,250],C=[350,250],D=lerp(A,B,3/5),E=lerp(A,C,1/3),F=lnX(D,E,B,C);
+ return Q('7b2','c7b',2,'△ABC の辺 AB 上に AD：DB＝3：2、辺 AC 上に AE：EC＝1：2 となる点 D、E をとり、直線 DE と辺 BC の延長の交点を F とします。BF：FC を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sFB',F,B,{dash:1}),sg('sFE',F,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),LEN('r1',A,D,'3',3,-1),LEN('r2',D,B,'2',2,-1),LEN('r3',A,E,'1',1,1),LEN('r4',E,C,'2',2,1)],
+ [CHO('c7b','BF：FC を出すのに使うのは？','△ABC と直線 DF でメネラウスの定理',[['チェバの定理','3本の線が1点で交わる形ではないよ。D、E、F は一直線上。'],['△FBD ∽ △FCE','この2つの三角形は相似ではないよ。']],['sFE'],'1本の直線が、三角形の2辺と、残りの辺の延長を横切っている。','(AD/DB)·(BF/FC)·(CE/EA) ＝ 1 → (3/2)·(BF/FC)·(2/1) ＝ 1。','(3/2)·(BF/FC)·2 ＝ 1'),
+  INP('BF：FC は？','1:3',{keys:':/',hint:'BF/FC ＝ 1/3',ans:'BF：FC ＝ 1：3',sum:'BF：FC ＝ 1：3（F は B の外側）'})],
+ FIN('BF：FC は？','1:3',{keys:':/'}),{chk:()=>NEAR(rat(B,F,C)*0+D2(B,F)/D2(F,C),1/3)});})(),
+
+(()=>{const A=[70,245],B=[210,35],C=[350,245],F=lerp(A,B,1/3),E=lerp(A,C,3/5),P=lnX(B,E,C,F),D=lnX(A,P,B,C);
+ return Q('7b3','c7b',2,'△ABC の内部の点 P と頂点を結ぶ直線が、辺と D、E、F で交わります。AF：FB＝1：2、AE：EC＝3：2 のとき、BD：DC を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sBE',B,E),sg('sCF',C,F),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),pt(P,'P'),LEN('r1',A,F,'1',1,1),LEN('r2',F,B,'2',2,1),LEN('r3',A,E,'3',3,-1),LEN('r4',E,C,'2',2,-1)],
+ [CHO('c7b','チェバの式 (AF/FB)·(BD/DC)·(CE/EA) ＝ 1 に入れる CE/EA は？','2/3（AE：EC ＝ 3：2 を逆から読む）',[['3/2','式は C→E→A の順。CE/EA ＝ 2/3 だよ。'],['2/5','EA は全体 AC ではなく、E から A までだよ。']],['r3','r4'],'A→F→B→D→C→E→A とたどる。最後は C から E、E から A。','(1/2)·(BD/DC)·(2/3) ＝ 1。','(1/2)·(BD/DC)·(2/3) ＝ 1'),
+  INP('BD：DC は？','3:1',{keys:':/',hint:'BD/DC ＝ 3',ans:'BD：DC ＝ 3：1',sum:'BD：DC ＝ 3：1'})],
+ FIN('BD：DC は？','3:1',{keys:':/'}),{chk:()=>NEAR(rat(B,D,C),3)});})(),
+
+(()=>{const A=[150,35],B=[40,250],C=[350,250],D=lerp(B,C,2/5),E=lerp(C,A,1/3),P=lnX(A,D,B,E);
+ return Q('7b4','c7b',3,'△ABC の辺 BC 上に BD：DC＝2：3、辺 CA 上に CE：EA＝1：2 となる点 D、E をとり、AD と BE の交点を P とします。AP：PD を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sBE',B,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(P,'P'),LEN('r1',B,D,'2',2,-1),LEN('r2',D,C,'3',3,-1),LEN('r3',C,E,'1',1,-1),LEN('r4',E,A,'2',2,-1)],
+ [CHO('c7b','AP：PD を出すとき、メネラウスの定理に使う三角形と直線は？','△ADC と直線 BE',[['△ABC と直線 BE','直線 BE は頂点 B を通る。メネラウスは頂点を通らない直線で使うよ。'],['△ABD と直線 BE','直線 BE は頂点 B を通るよ。']],['sAD','sBE'],'AP：PD は AD の上の比。AD を1辺にもち、BE が頂点を通らない三角形は？','△ADC：(AP/PD)·(DB/BC)·(CE/EA) ＝ 1。','△ADC と直線 BE'),
+  INP('AP：PD は？','5:1',{keys:':/',hint:'(AP/PD)·(2/5)·(1/2) ＝ 1',ans:'AP/PD ＝ 5',sum:'AP：PD ＝ 5：1'})],
+ FIN('AP：PD は？','5:1',{keys:':/'}),{chk:()=>NEAR(rat(A,P,D),5)});})(),
+
+(()=>{const A=[150,35],B=[40,250],C=[350,250],D=lerp(B,C,1/3),E=lerp(C,A,3/4),P=lnX(A,D,B,E);
+ return Q('7b5','c7b',3,'△ABC の辺 BC 上に BD：DC＝1：2、辺 CA 上に CE：EA＝3：1 となる点 D、E をとり、AD と BE の交点を P とします。△PBD の面積は △ABC の何分の1ですか。比 △PBD：△ABC で答えなさい。',
+ [polyF('pS',[P,B,D],''),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sBE',B,E),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(P,'P'),LEN('r1',B,D,'1',1,-1),LEN('r2',D,C,'2',2,-1),LEN('r3',C,E,'3',3,-1),LEN('r4',E,A,'1',1,-1)],
+ [CHO('c7b','△PBD と △ABC をつなぐには？','△PBD → △ABD → △ABC と、高さが共通の三角形でつなぐ',[['相似比の2乗','△PBD と △ABC は相似ではないよ。'],['BD：BC ＝ 1：3 だけで決まる','P の高さも関係する。PD：AD も必要だよ。']],['pS'],'△PBD と △ABD は、底辺 PD と AD が同じ直線上（高さ共通）。','△PBD ＝ △ABD × PD/AD、△ABD ＝ △ABC × 1/3。PD：AD はメネラウス（△ADC と直線 BE）で。','PD/AD と BD/BC をかける'),
+  INP('AP：PD は？','1:1',{keys:':/',hint:'△ADC と直線 BE：(AP/PD)·(1/3)·(3/1) ＝ 1',ans:'AP：PD ＝ 1：1',sum:'P は AD の中点 → △PBD ＝ ½ △ABD'})],
+ FIN('△PBD：△ABC は？','1:6',{keys:':/'}),{multiAns:1,chk:()=>NEAR(area([P,B,D])/area([A,B,C]),1/6)});})(),
+
+/* ---- 方べきの定理 ---- */
+(()=>{const sc=30,P=[40,205],d=12,A=from(P,d,4*sc),B=from(P,d,9*sc),M=mid(A,B),O=from(M,d+90,40),R=D2(O,A),T=from(P,dirTo(P,O)+Math.asin(R/D2(P,O))*180/Math.PI,6*sc);
+ return Q('7c1','c7c',1,'PT は円の接線、T は接点です。PA＝4、AB＝5 のとき、x（PT）の値を求めなさい。',
+ [CIR(O,R),sg('sPB',P,B),sg('sPT',P,T),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(T,'T'),LEN('l1',P,A,'4',4,-1),LEN('l2',A,B,'5',5,-1),LEN('ax',P,T,'x',6,1,{x:1})],
+ [CHO('c7c','x を求める式は？','x² ＝ 4 × 9（PA × PB）',[['x² ＝ 4 × 5（PA × AB）','かけるのは P からの距離。PB ＝ 4 ＋ 5 ＝ 9 だよ。'],['x ＝ 4 ＋ 5','接線の長さは、そういう和にはならないよ。']],['l1','l2','ax'],'方べきの定理：PT² ＝ PA × PB。','PB ＝ 9。x² ＝ 36。','x² ＝ 4 × 9'),
+  INP('x の値は？',6,{keys:'√',hint:'x² ＝ 36',ans:'x ＝ 6',sum:'x ＝ 6',after:{label:{ax:'6'}}})],
+ FIN('x の値は？',6,{keys:'√'}),{scale:sc,chk:()=>NEAR(D2(O,T),R)});})(),
+
+(()=>{const sc=32,P=[35,150],A=from(P,18,3*sc),B=from(P,18,8*sc),C=from(P,-18,4*sc),D=from(P,-18,6*sc),O=ccenter(A,B,C),R=D2(O,A);
+ return Q('7c2','c7c',2,'点 P から引いた2本の直線が、円と A、B および C、D で交わります。PA＝3、AB＝5、PC＝4 のとき、x（CD）の値を求めなさい。',
+ [CIR(O,R),sg('sPB',P,B),sg('sPD',P,D),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),LEN('l1',P,A,'3',3,1),LEN('l2',A,B,'5',5,-1),LEN('l3',P,C,'4',4,-1),LEN('ax',C,D,'x',2,1,{x:1})],
+ [CHO('c7c','式は？','3 × 8 ＝ 4 × (4 ＋ x)',[['3 × 5 ＝ 4 × x','かけるのは P からの距離どうし。PA × PB ＝ PC × PD だよ。'],['3 × 4 ＝ 5 × x','同じ直線の上の2つの距離をかけるよ。']],['l1','l2','l3','ax'],'P は円の外。P からの距離で考える。','PA × PB ＝ PC × PD → 3 × 8 ＝ 4(4 ＋ x)。','24 ＝ 4(4 ＋ x)'),
+  INP('x の値は？',2,{hint:'4 ＋ x ＝ 6',ans:'x ＝ 2',sum:'x ＝ 2',after:{label:{ax:'2'}}})],
+ FIN('x の値は？',2),{scale:sc,chk:()=>NEAR(D2(O,D),R)});})(),
+
+(()=>{const sc=24,P=[35,215],d=10,A=from(P,d,3*sc),B=from(P,d,12*sc),M=mid(A,B),O=from(M,d+90,30),R=D2(O,A),T=from(P,dirTo(P,O)+Math.asin(R/D2(P,O))*180/Math.PI,6*sc);
+ return Q('7c3','c7c',2,'PT は円の接線、T は接点です。PT＝6、AB＝9 のとき、x（PA）の値を求めなさい。',
+ [CIR(O,R),sg('sPB',P,B),sg('sPT',P,T),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(T,'T'),LEN('ax',P,A,'x',3,-1,{x:1}),LEN('l2',A,B,'9',9,-1),LEN('l1',P,T,'6',6,1)],
+ [CHO('c7c','式は？','x(x ＋ 9) ＝ 6²',[['9x ＝ 6²','PB ＝ x ＋ 9。かけるのは P からの距離 PA と PB だよ。'],['x² ＋ 9² ＝ 6²','直角三角形の関係ではないよ。']],['ax','l1','l2'],'PT² ＝ PA × PB。PB を x で表すと？','x(x ＋ 9) ＝ 36 → x² ＋ 9x − 36 ＝ 0。','x(x ＋ 9) ＝ 36'),
+  INP('x の値は？',3,{keys:'-',hint:'(x ＋ 12)(x − 3) ＝ 0、x ＞ 0',ans:'x ＝ 3',sum:'x ＝ 3（x ＝ −12 は長さにならない）',after:{label:{ax:'3'}}})],
+ FIN('x の値は？',3,{keys:'-'}),{scale:sc,chk:()=>NEAR(D2(O,T),R)});})(),
+
+(()=>{const sc=22,P=[95,265],A=from(P,72,4*sc),B=from(P,72,9*sc),C=from(P,8,3*sc),D=from(P,8,12*sc),O2=ccenter(A,B,C),M=mid(A,B),O1=from(M,72+90,38);
+ return Q('7c4','c7c',3,'2つの円 O、O′ が A、B で交わっています。直線 AB 上の点 P を通る直線が、円 O′ と C、D で交わります。PA＝4、AB＝5、PC＝3 のとき、x（CD）の値を求めなさい。',
+ [CIR(O1,D2(O1,A)),CIR(O2,D2(O2,A)),sg('sPB',P,B),sg('sPD',P,D),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),TX('n1',[O1[0]-12,O1[1]+4],'O'),TX('n2',[O2[0]+4,O2[1]+4],'O′'),LEN('l1',P,A,'4',4,1),LEN('l2',A,B,'5',5,1),LEN('l3',P,C,'3',3,-1),LEN('ax',C,D,'x',9,-1,{x:1})],
+ [CHO('c7c','x を求める式は？','4 × 9 ＝ 3 × (3 ＋ x)',[['4 × 5 ＝ 3 × x','かけるのは P からの距離。PB ＝ 9、PD ＝ 3 ＋ x だよ。'],['円がちがうので PA・PB は使えない','A、B は2つの円の両方の上にある。円 O′ でも PA × PB が使えるよ。']],['l1','l2','l3'],'A、B は円 O′ の上の点でもある。','円 O′ で：PA × PB ＝ PC × PD → 36 ＝ 3(3 ＋ x)。','36 ＝ 3(3 ＋ x)'),
+  INP('x の値は？',9,{hint:'3 ＋ x ＝ 12',ans:'x ＝ 9',sum:'x ＝ 9',after:{label:{ax:'9'}}})],
+ FIN('x の値は？',9),{scale:sc,chk:()=>NEAR(D2(O2,D),D2(O2,A))});})(),
+
+(()=>{const sc=24,P=[40,200],A=from(P,0,2*sc),O=from(P,0,5*sc),B=from(P,0,8*sc),R=3*sc,T=from(P,Math.asin(R/D2(P,O))*180/Math.PI,4*sc);
+ return Q('7c5','c7c',3,'PT は円 O の接線、T は接点です。直線 PO は円と A、B で交わり、PA＝2、PT＝4 です。円 O の半径 r を求めなさい。',
+ [CIR(O,R),sg('sPB',P,B),sg('sPT',P,T),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(T,'T'),pt(O,'O'),LEN('l1',P,A,'2',2,-1),LEN('l2',P,T,'4',4,1),LEN('ax',O,B,'r',3,-1,{x:1})],
+ [CHO('c7c','どの直線で方べきの定理を使う？','中心を通る直線 PAB（PB ＝ 2 ＋ 2r）',[['PT² ＝ PA × r','かけるのは P からの距離 PA と PB だよ。'],['PT ＝ r（接線の長さ ＝ 半径）','接線の長さと半径が等しいとは限らないよ。']],['sPB','l1','l2'],'PB は PA に直径をたしたもの。','PT² ＝ PA × PB → 16 ＝ 2(2 ＋ 2r)。','16 ＝ 2(2 ＋ 2r)'),
+  INP('r の値は？',3,{hint:'2 ＋ 2r ＝ 8',ans:'r ＝ 3',sum:'r ＝ 3',after:{label:{ax:'3'}}})],
+ FIN('r の値は？',3),{scale:sc,chk:()=>NEAR(D2(O,T),R)});})(),
+
+/* ---- 接弦定理 ---- */
+(()=>{const O=[200,130],R=105,A=onCircle(O,R,250),B=onCircle(O,R,20),C=onCircle(O,R,150),t=tanSeg('sT',O,A,120,120);
+ return Q('7d1','c7d',1,'直線 TT′ は点 A で円に接しています。∠x の大きさを求めなさい。',
+ [CIR(O,R),t.s,sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),{t:'pt',p:t.T1,s:'T'},{t:'pt',p:t.T2,s:'T′'},arcV('aT',A,B,t.T1,'65°',65,{r:30}),arcV('ax',C,A,B,'x',65,{x:1,r:32})],
+ [CHO('c7d','x と等しい角は？','接線と弦 AB のつくる角（65°）',[['接線と弦 AC のつくる角','それは弧 AC に対する円周角と等しい。x は弧 AB に対する角だよ。'],['等しい角はない','接線と弦の角は、その内側の弧に対する円周角と等しいよ（接弦定理）。']],['aT','ax','sAB'],'x の2辺の先は A と B。弦 AB と接線の角を見よう。','接弦定理：∠TAB ＝ ∠ACB。','x ＝ 65°（接弦定理）',{match:['aT','ax'],label:{ax:'65°'}})],
+ FIN('∠x は何度？',65,{unit:'°'}));})(),
+
+(()=>{const O=[200,135],R=105,A=onCircle(O,R,270),B=onCircle(O,R,146),C=onCircle(O,R,6),t=tanSeg('sT',O,A,150,150);
+ return Q('7d2','c7d',2,'直線 TT′ は点 A で円に接しています。∠x（∠ABC）の大きさを求めなさい。',
+ [CIR(O,R),t.s,sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),{t:'pt',p:t.T2,s:'T'},{t:'pt',p:t.T1,s:'T′'},arcV('a1',A,t.T2,B,'62°',62,{r:34}),arcV('a2',A,C,t.T1,'48°',48,{r:40}),arcV('ax',B,C,A,'x',48,{x:1,r:30}),arcV('aC',C,A,B,'62°',62,{r:26,hidden:1})],
+ [CHO('c7d','x（∠ABC）と等しいのは？','∠T′AC ＝ 48°（弦 AC と接線の角）',[['∠TAB ＝ 62°','∠TAB は弦 AB と接線の角。等しいのは弦 AB の反対側の ∠ACB だよ。'],['∠BAC','∠BAC ＝ 180° − 62° − 48° ＝ 70°。x と等しくはないよ。']],['a1','a2','ax'],'x は弦 AC の向こう側の円周角。弦 AC と接線の角は？','接弦定理：∠T′AC ＝ ∠ABC。（∠TAB ＝ ∠ACB ＝ 62° は別のペア）','x ＝ ∠T′AC ＝ 48°',{match:['a2','ax'],show:['aC'],label:{ax:'48°'}})],
+ FIN('∠x は何度？',48,{unit:'°'}));})(),
+
+(()=>{const O=[150,150],R=80,B=onCircle(O,R,200),C=onCircle(O,R,340),A=onCircle(O,R,60),P=lnX(B,C,A,from(A,330,10));
+ return Q('7d3','c7d',2,'△ABC は円に内接し、A での接線と辺 BC の延長が点 P で交わります。∠ABC＝40°、∠APB＝30° のとき、∠x（∠ACB）の大きさを求めなさい。',
+ [CIR(O,R),sg('sAB',A,B),sg('sAC',A,C),sg('sBP',B,P),sg('sAP',A,P),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(P,'P'),arcV('aB',B,C,A,'40°',40,{r:34}),arcV('aP',P,A,C,'30°',30,{r:44}),arcV('aPA',A,C,P,'40°',40,{r:24,hidden:1}),arcV('ax',C,A,B,'x',70,{x:1,r:20})],
+ [CHO('c7d','最初の一手は？','∠PAC ＝ ∠ABC ＝ 40°（接弦定理）',[['∠PAC ＝ 30°','30° は ∠APB。∠PAC と等しい理由はないよ。'],['∠ACB ＝ ∠ABC ＝ 40°','AB ＝ AC とはいえないよ。']],['aB','sAP','sAC'],'AP は接線、AC は弦。その間の角は？','接弦定理：∠PAC ＝ ∠ABC ＝ 40°。','∠PAC ＝ 40°',{show:['aPA']}),
+  INP('x は何度？',70,{unit:'°',hint:'x は △APC の外角 → 40 ＋ 30',ans:'x ＝ 70°',sum:'x ＝ 40 ＋ 30 ＝ 70°',after:{label:{ax:'70°'}}})],
+ FIN('∠x は何度？',70,{unit:'°'}));})(),
+
+(()=>{const sc=26,P=[50,240],B=from(P,10,4*sc),C=from(P,10,9*sc),A=from(P,10+Math.acos(27/48)*180/Math.PI,6*sc),O=ccenter(A,B,C);
+ return Q('7d4','c7d',3,'PA は円の接線、A は接点で、直線 PBC は円と B、C で交わります。PA＝6、PB＝4、AB＝5 のとき、x（AC）の値を求めなさい。',
+ [CIR(O,D2(O,A)),sg('sPC',P,C),sg('sPA',P,A),sg('sAB',A,B),sg('sAC',A,C),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcS('m1',A,P,B,'●',{r:22,lr:14,hidden:1}),arcS('m2',C,P,A,'●',{r:30,lr:20,hidden:1}),LEN('l1',P,A,'6',6,1),LEN('l2',P,B,'4',4,-1),LEN('l3',A,B,'5',5,-1,{at:0.55}),LEN('ax',A,C,'x',7.5,1,{x:1})],
+ [CHO('c7d','AC を求めるには？','△PAB ∽ △PCA（∠P 共通、∠PAB ＝ ∠PCA）',[['方べきの定理だけ','方べきで PC ＝ 9 はわかるけど、AC は出ないよ。'],['△PAB ≡ △PCA','大きさがちがうので、合同ではなく相似だよ。']],['sAB','sAC'],'∠PAB は接線 PA と弦 AB の角。','接弦定理で ∠PAB ＝ ∠PCA。∠P 共通で △PAB ∽ △PCA。AC：AB ＝ PA：PB。','△PAB ∽ △PCA',{show:['m1','m2']}),
+  INP('x の値は？',['15/2','7.5'],{keys:'./',hint:'x：5 ＝ 6：4',ans:'x ＝ 15/2',sum:'x ＝ 5 × 6/4 ＝ 15/2',after:{label:{ax:'15/2'}}})],
+ FIN('x の値は？',['15/2','7.5'],{keys:'./'}),{scale:sc,chk:()=>NEAR(D2(A,B)/sc,5)});})(),
+
+(()=>{const O=[235,150],R=75,P=from(O,180,R/Math.sin(25*RAD)),A=onCircle(O,R,115),B=onCircle(O,R,245),C=onCircle(O,R,190);
+ return Q('7d5','c7d',3,'PA、PB は円の接線で、A、B は接点です。∠APB＝50° のとき、∠x（∠ACB）の大きさを求めなさい。',
+ [CIR(O,R),sg('sPA',P,A),sg('sPB',P,B),sg('sAB',A,B),sg('sAC',A,C),sg('sBC',B,C),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(C,'C'),arcV('aP',P,B,A,'50°',50,{r:34}),arcV('aA',A,P,B,'65°',65,{r:20,hidden:1,whole:1}),arcV('ax',C,B,A,'x',115,{x:1,r:16,lr:13})],
+ [CHO('c7d','∠PAB は？','65°（PA ＝ PB の二等辺三角形）',[['50°','50° は ∠APB だよ。'],['90°','90° は ∠PAO（接線と半径）。∠PAB ではないよ。']],['aP','sPA','sPB'],'1点から引いた2本の接線の長さは等しい。','∠PAB ＝ (180 − 50) ÷ 2 ＝ 65°。','∠PAB ＝ 65°',{show:['aA']}),
+  CHO('c7d','x と 65° の関係は？','x ＝ 180° − 65°（C は弦 AB の P 側にある）',[['x ＝ 65°','65° と等しいのは、弦 AB をはさんで P と反対側の円周角。C は P 側だよ。'],['x ＝ 65° × 2','そういう関係はないよ。']],['aA','ax'],'反対側の弧に点 D をとると ∠ADB ＝ 65°。四角形 ACBD は円に内接。','x ＋ 65° ＝ 180°。','x ＝ 180 − 65')],
+ FIN('∠x は何度？',115,{unit:'°'}));})(),
+
+/* ---- 三角形の五心 ---- */
+(()=>{const A=[160,35],B=[45,250],C=[345,250],D=mid(B,C),E=mid(C,A),F=mid(A,B),G=cen(A,B,C),sc=D2(A,D)/9;
+ return Q('7e1','c7e',1,'点 G は △ABC の重心で、AD は中線です。AD＝9 のとき、x（AG）の値を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sBE',B,E,{dash:1}),sg('sCF',C,F,{dash:1}),tk(B,D,1),tk(D,C,1),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(G,'G'),LEN('ax',A,G,'x',6,-1,{x:1}),LEN('l1',A,D,'9',9,1,{off:30})],
+ [CHO('c7e','AG：GD は？','2：1',[['1：1','G は AD の中点ではないよ。'],['1：2','頂点の側が長い。AG：GD ＝ 2：1 だよ。']],['ax','sAD'],'重心は中線を、頂点の側から 2：1 に分ける。','AG ＝ AD × 2/3。','AG：GD ＝ 2：1'),
+  INP('x の値は？',6,{hint:'9 × 2/3',ans:'x ＝ 6',sum:'x ＝ 6',after:{label:{ax:'6'}}})],
+ FIN('x の値は？',6),{scale:sc});})(),
+
+(()=>{const B=[90,252],C=[290,252],A=inter(B,70,C,120),I=incenter(A,B,C);
+ return Q('7e2','c7e',2,'点 I は △ABC の内心です。∠A＝50° のとき、∠x（∠BIC）の大きさを求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sBI',B,I),sg('sCI',C,I),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(I,'I'),arcV('aA',A,B,C,'50°',50,{r:30}),arcS('b1',B,C,I,'●',{r:36,lr:24}),arcS('b2',B,I,A,'●',{r:36,lr:24}),arcS('c1',C,I,B,'×',{r:36,lr:24}),arcS('c2',C,A,I,'×',{r:36,lr:24}),arcV('ax',I,B,C,'x',115,{x:1,r:20,lr:14})],
+ [CHO('c7e','∠IBC ＋ ∠ICB は？','(∠B ＋ ∠C) ÷ 2 ＝ 130° ÷ 2 ＝ 65°',[['∠B ＋ ∠C ＝ 130°','I は内心。BI、CI は角を半分にする線だよ。'],['50° ÷ 2 ＝ 25°','∠A を半分にしても ∠IBC ＋ ∠ICB にはならないよ。']],['b1','c1','aA'],'内心は、3つの角の二等分線の交点。','∠B ＋ ∠C ＝ 130°。その半分ずつ。x ＝ 180 − 65。','∠IBC ＋ ∠ICB ＝ 65°')],
+ FIN('∠x は何度？',115,{unit:'°'}));})(),
+
+(()=>{const O=[200,160],R=110,B=onCircle(O,R,220),C=onCircle(O,R,330),A=onCircle(O,R,100);
+ return Q('7e3','c7e',2,'点 O は △ABC の外心です。∠A＝55° のとき、∠x（∠OBC）の大きさを求めなさい。',
+ [CIR(O,R,{id:'cc',dash:1,hidden:1}),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sOB',O,B),sg('sOC',O,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(O,'O'),arcV('aA',A,B,C,'55°',55,{r:30}),arcV('aO',O,B,C,'110°',110,{r:20,hidden:1}),arcV('ax',B,C,O,'x',35,{x:1,r:40})],
+ [CHO('c7e','∠BOC は？','110°（O は外接円の中心。中心角 ＝ 円周角 × 2）',[['115°（90° ＋ 55° ÷ 2）','それは内心 I のときの ∠BIC だよ。O は外心。'],['55°','中心角は円周角の 2倍だよ。']],['aA'],'外心は、外接円の中心。','∠BOC は弧 BC の中心角 → 55 × 2 ＝ 110°。OB ＝ OC の二等辺三角形。','∠BOC ＝ 110°',{show:['cc','aO']})],
+ FIN('∠x は何度？',35,{unit:'°'}));})(),
+
+(()=>{const A=[175,35],B=[45,250],C=[345,250],M=mid(B,C),G=cen(A,B,C),D=lerp(A,B,2/3),E=lerp(A,C,2/3);
+ return Q('7e4','c7e',3,'点 G は △ABC の重心です。G を通り BC に平行な直線が AB、AC と D、E で交わります。△ABC の面積が 27 のとき、△ADE の面積を求めなさい。',
+ [polyF('pS',[A,D,E],''),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sDE',D,E),sg('sAM',A,M,{dash:1,hidden:1}),tk(B,M,1,{hidden:1,id:'k1'}),tk(M,C,1,{hidden:1,id:'k2'}),{t:'par',p:lerp(D,E,0.78),d:0},{t:'par',p:lerp(B,C,0.62),d:0},pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(G,'G')],
+ [CHO('c7e','AD：AB は？','2：3（AG：AM ＝ 2：3、DE ∥ BC）',[['1：2','D は AB の中点ではないよ。G を通る線だよ。'],['2：1','AD：DB ＝ 2：1。AD：AB は 2：3 だよ。']],['sDE'],'重心 G を通る中線 AM を引いてみよう。','AG：GM ＝ 2：1 → AG：AM ＝ 2：3。DE ∥ BC なので AD：AB ＝ 2：3。','相似比 2：3',{show:['sAM','k1','k2']}),
+  INP('△ADE の面積は？',12,{hint:'面積比は 2² ：3² ＝ 4：9 → 27 × 4/9',ans:'△ADE ＝ 12',sum:'△ADE ＝ 27 × 4/9 ＝ 12'})],
+ FIN('△ADE の面積は？',12),{chk:()=>NEAR(area([A,D,E])/area([A,B,C]),4/9)&&NEAR(lnX(D,E,A,M)[0],G[0])});})(),
+
+(()=>{const sc=30,t=tri3([50,245],0,8,7,5,sc),A=t.A,B=t.B,C=t.C,I=incenter(A,B,C),D=foot(I,B,C),E=foot(I,C,A),F=foot(I,A,B),r=D2(I,D);
+ return Q('7e5','c7e',3,'△ABC で AB＝7、BC＝8、CA＝5 です。内接円が辺 BC、CA、AB と接する点を D、E、F とします。x（BD）の値を求めなさい。',
+ [CIR(I,r),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(E,'E'),pt(F,'F'),tk(B,F,1,{hidden:1,id:'k1'}),tk(B,D,1,{hidden:1,id:'k2'}),tk(C,D,2,{hidden:1,id:'k3'}),tk(C,E,2,{hidden:1,id:'k4'}),tk(A,E,3,{hidden:1,id:'k5'}),tk(A,F,3,{hidden:1,id:'k6'}),LEN('l1',B,A,'7',7,1),LEN('l2',A,C,'5',5,1),LEN('l3',B,C,'8',8,-1,{off:30}),LEN('ax',B,D,'x',5,-1,{x:1})],
+ [CHO('c7e','接点で分けた長さの関係は？','1点から引いた接線の長さは等しい（BD ＝ BF、CD ＝ CE、AE ＝ AF）',[['BD ＝ DC（接点は辺の中点）','接点が中点になるとは限らないよ。'],['BD：DC ＝ AB：AC','それは角の二等分線と BC の交点。接点とはちがうよ。']],['l1','l2','l3'],'各辺は内接円の接線。頂点から接点までの長さに注目。','BD ＝ BF ＝ x → AF ＝ 7 − x ＝ AE、CD ＝ 8 − x ＝ CE。','BD ＝ BF、CD ＝ CE、AE ＝ AF',{show:['k1','k2','k3','k4','k5','k6']}),
+  INP('x の値は？',5,{hint:'AE ＋ EC ＝ 5 → (7 − x) ＋ (8 − x) ＝ 5',ans:'x ＝ 5',sum:'15 − 2x ＝ 5 → x ＝ 5',after:{label:{ax:'5'}}})],
+ FIN('x の値は？',5),{scale:sc});})()
+);
+
+STAGE.push(
+(()=>{const sc=40,t=tri3([60,245],0,5,6,4,sc),A=t.A,B=t.B,C=t.C,D=lerp(B,C,3/5),F=lerp(A,B,1/3),P=lnX(A,D,C,F);
+ return Q('g71','stage',4,'△ABC で AB＝6、AC＝4、BC＝5 です。∠A の二等分線と BC の交点を D、辺 AB を 1：2 に分ける点を F とし、AD と CF の交点を P とします。AP：PD を求めなさい。',
+ [sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),sg('sCF',C,F),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),pt(F,'F'),pt(P,'P'),arcS('a1',A,B,D,'●',{r:24,lr:15}),arcS('a2',A,D,C,'●',{r:24,lr:15}),LEN('l1',A,C,'4',4,1),LEN('l2',B,C,'5',5,-1),LEN('r1',A,F,'2',2,-1),LEN('r2',F,B,'4',4,-1)],
+ [CHO('c7a','BD：DC は？','3：2（AB：AC ＝ 6：4）',[['2：3','BD：DC ＝ AB：AC の順。B 側が 6 だよ。'],['1：1','AD は中線ではないよ。']],['a1','a2'],'AD は ∠A の二等分線。','BD：DC ＝ 3：2 → BC：CD ＝ 5：2。','BD：DC ＝ 3：2'),
+  CHO('c7b','AP：PD を出すのに使うのは？','△ABD と直線 CF でメネラウスの定理',[['△ABC と直線 CF','直線 CF は頂点 C を通るので使えないよ。'],['チェバの定理','3本の線が1点で交わる形はないよ。']],['sCF','sAD'],'AD を1辺にもち、CF が頂点を通らない三角形は？','(AF/FB)·(BC/CD)·(DP/PA) ＝ 1 → (1/2)·(5/2)·(DP/PA) ＝ 1。','△ABD と直線 CF'),
+  INP('AP：PD は？','5:4',{keys:':/',hint:'DP/PA ＝ 4/5',ans:'AP：PD ＝ 5：4',sum:'AP：PD ＝ 5：4'})],
+ FIN('AP：PD は？','5:4',{keys:':/'}),{ch:7,types:['c7a','c7b'],chk:()=>NEAR(rat(A,P,D),5/4)});})(),
+
+(()=>{const sc=24,P=[40,240],T=from(P,62,6*sc),dA=62-Math.acos(43/48)*180/Math.PI,A=from(P,dA,4*sc),B=from(P,dA,9*sc),O=ccenter(T,A,B);
+ return Q('g72','stage',4,'PT は円の接線、T は接点です。直線 PAB は円と A、B で交わり、PA＝4、AB＝5、TA＝3 です。x（TB）の値を求めなさい。',
+ [CIR(O,D2(O,T)),sg('sPB',P,B),sg('sPT',P,T),sg('sTA',T,A),sg('sTB',T,B),pt(P,'P'),pt(A,'A'),pt(B,'B'),pt(T,'T'),LEN('l1',P,A,'4',4,-1),LEN('l2',A,B,'5',5,-1),LEN('l3',T,A,'3',3,-1,{at:0.6}),LEN('ax',T,B,'x',4.5,1,{x:1}),LEN('lT',P,T,'',6,1,{hidden:1})],
+ [CHO('c7c','まず PT を出す式は？','PT² ＝ PA × PB ＝ 4 × 9',[['PT² ＝ PA × AB ＝ 4 × 5','かけるのは P からの距離。PB ＝ 9 だよ。'],['PT ＝ TA ＋ AB','そういう関係はないよ。']],['l1','l2'],'方べきの定理。','PT² ＝ 36 → PT ＝ 6。','PT ＝ 6',{label:{lT:'6'},show:['lT']}),
+  CHO('c7d','TB を出すには？','△PTA ∽ △PBT（∠P 共通、∠PTA ＝ ∠PBT）',[['△PTA ≡ △PBT','大きさがちがう。相似だよ。'],['TB ＝ PT','そう決める根拠はないよ。']],['sTA','sTB'],'∠PTA は接線 PT と弦 TA の角。','接弦定理で ∠PTA ＝ ∠PBT → △PTA ∽ △PBT。TB：TA ＝ PT：PA ＝ 6：4。','TB：TA ＝ 6：4'),
+  INP('x の値は？',['9/2','4.5'],{keys:'./',hint:'x ＝ 3 × 6/4',ans:'x ＝ 9/2',sum:'x ＝ 9/2',after:{label:{ax:'9/2'}}})],
+ FIN('x の値は？',['9/2','4.5'],{keys:'./'}),{ch:7,types:['c7c','c7d'],scale:sc,chk:()=>NEAR(D2(T,A)/sc,3)&&NEAR(D2(O,T)**2,(D2(O,P)**2-36*sc*sc))});})(),
+
+(()=>{const sc=34,t=tri3([45,240],0,8,7,5,sc),A=t.A,B=t.B,C=t.C,I=incenter(A,B,C),D=lerp(B,C,7/12),E=foot(I,B,C);
+ return Q('g73','stage',4,'△ABC で AB＝7、BC＝8、CA＝5 です。内心を I とし、直線 AI と BC の交点を D、内接円と BC の接点を E とします。DE の長さを求めなさい。',
+ [CIR(I,D2(I,E)),sg('sAB',A,B),sg('sBC',B,C),sg('sAC',A,C),sg('sAD',A,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(I,'I'),{t:'pt',p:D,s:'D',dir:235},{t:'pt',p:E,s:'E',dir:305},LEN('l1',B,A,'7',7,1),LEN('l2',A,C,'5',5,1),LEN('l3',B,C,'8',8,-1,{off:34})],
+ [CHO('c7e','D と E は、それぞれ何で決まる？','D は角の二等分線の比、E は接線の長さ',[['D と E は同じ点','角の二等分線が接点を通るとは限らないよ。'],['D は BC の中点','AD は中線ではないよ。']],['sAD'],'AI は ∠A の二等分線。E は内接円の接点。','BD：DC ＝ 7：5。BE は「1点からの接線の長さは等しい」で。','BD と BE を別々に出す'),
+  INP('BD の長さは？','14/3',{keys:'/',hint:'8 × 7/12',ans:'BD ＝ 14/3',sum:'BD ＝ 14/3'}),
+  INP('BE の長さは？',5,{hint:'BE ＝ x：(7 − x) ＋ (8 − x) ＝ 5',ans:'BE ＝ 5',sum:'BE ＝ 5'})],
+ FIN('DE の長さは？','1/3',{keys:'/'}),{ch:7,types:['c7e','c7a'],scale:sc,multiAns:1,chk:()=>NEAR(D2(D,E)/sc,1/3)&&NEAR(lnX(A,I,B,C)[0],D[0])});})(),
+
+(()=>{const O=[200,140],R=105,A=onCircle(O,R,270),B=onCircle(O,R,140),C=onCircle(O,R,70),D=onCircle(O,R,0),t=tanSeg('sT',O,A,150,150);
+ return Q('g74','stage',4,'四角形 ABCD は円に内接し、直線 TT′ は点 A で円に接しています。∠TAB＝65°、∠BAC＝35° のとき、∠x（∠ADC）の大きさを求めなさい。',
+ [CIR(O,R),t.s,sg('sAB',A,B),sg('sBC',B,C),sg('sCD',C,D),sg('sDA',D,A),sg('sAC',A,C),sg('sBD',B,D),pt(A,'A'),pt(B,'B'),pt(C,'C'),pt(D,'D'),{t:'pt',p:t.T2,s:'T'},{t:'pt',p:t.T1,s:'T′'},arcV('aT',A,t.T2,B,'65°',65,{r:34}),arcV('aBAC',A,B,C,'35°',35,{r:46}),arcV('d1',D,A,B,'65°',65,{r:34,hidden:1}),arcV('d2',D,B,C,'35°',35,{r:48,hidden:1}),arcV('ax',D,A,C,'x',100,{x:1,r:22,whole:1})],
+ [CHO('c7d','∠ADB は？','65°（接弦定理：接線と弦 AB の角）',[['35°','35° は弧 BC に対する角だよ。'],['115°','∠ADB は弦 AB の反対側の円周角。∠TAB と等しいよ。']],['aT'],'∠TAB は、接線と弦 AB の角。','∠ADB ＝ ∠TAB ＝ 65°。','∠ADB ＝ 65°',{show:['d1']}),
+  CHO('c5a','∠BDC は？','35°（∠BAC と同じ弧 BC の円周角）',[['65°','65° は弧 AB の円周角だよ。'],['145°','∠BDC は鋭角。弧 BC に対する円周角だよ。']],['aBAC'],'∠BDC と ∠BAC は、どちらも弧 BC に対する角。','∠BDC ＝ 35° → x ＝ 65 ＋ 35。','∠BDC ＝ 35°',{show:['d2']})],
+ FIN('∠x は何度？',100,{unit:'°'}),{ch:7,types:['c7d','c5a']});})()
+);
+
+/*CH7-END*/
 /*DATA-END*/
 
 /* ===== 章の情報 ===== */
