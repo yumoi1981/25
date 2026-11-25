@@ -110,6 +110,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .nextbar:empty{display:none}
 .sum{background:#fff;border:1.5px solid var(--ok);border-radius:14px;padding:14px}
 .sum h3{color:var(--ok);font-size:16px;margin-bottom:8px}
+.done-banner{margin-top:12px;background:var(--ok);color:#fff;border-radius:14px;padding:14px 16px}
+.done-banner .db-t{font-size:17px;font-weight:800}
+.done-banner .db-s{font-size:13px;margin-top:4px;opacity:.95}
 .sum ol{padding-left:20px;font-size:14px;line-height:1.8}
 
 /* 図 */
@@ -3204,7 +3207,17 @@ function finish(){
   $('#log').innerHTML='';
   $('#cur').innerHTML=`<div class="sum"><h3>この問題の筋道</h3><ol>${C.log.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
   ${C.log.length>1?`<p style="font-size:12px;color:var(--sub);margin-top:10px">最初の一手：<b style="color:var(--ink)">${esc(C.log[0])}</b></p>`:''}</div>`;
-  $('#nextbar').innerHTML=C.p.skill==='stage'?`<button class="btn pri" onclick="goHome()">ホームへ</button>`:`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startSkill('${C.p.skill}')">次の問題 ▶</button>`;
+  if(C.p.skill==='stage'){$('#nextbar').innerHTML=`<button class="btn pri" onclick="goHome()">ホームへ</button>`;return;}
+  const id=C.p.skill,sk=S.sk[id];
+  if(sk&&sk.st>=1){
+    // 習得ずみ：次へ進むことをはっきり見せる
+    const k=skillOf(id),list=chSkills(k.ch),nx=list[list.indexOf(k)+1],stg=!nx&&stageOpen(k.ch);
+    const go=nx?`この型は卒業。次は「${esc(nx.name)}」に進もう。`:(stg?`この章の型はすべて習得。総合ステージに挑戦しよう。`:`この章のほかの型も習得すると、総合ステージが開きます。`);
+    $('#cur').innerHTML+=`<div class="done-banner"><div class="db-t">✓「${esc(k.name)}」は習得ずみ</div><div class="db-s">${go}</div></div>`;
+    const main=nx?`<button class="btn pri" onclick="startSkill('${nx.id}')">次の型へ進む ▶</button>`:(stg?`<button class="btn pri" onclick="S.cur=${k.ch};save();startStage()">総合ステージへ ▶</button>`:`<button class="btn pri" onclick="goHome()">ホームへ ▶</button>`);
+    $('#nextbar').innerHTML=`<button class="btn ghost" onclick="startSkill('${id}')">もう1問</button>${main}`;
+    return;}
+  $('#nextbar').innerHTML=`<button class="btn ghost" onclick="goHome()">ホームへ</button><button class="btn pri" onclick="startSkill('${id}')">次の問題 ▶</button>`;
 }
 
 /* ===== 仕上げテスト・復習（数字または選択） ===== */
